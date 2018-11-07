@@ -1,10 +1,3 @@
-# Hello, world!
-#
-# This is an example function named 'hello'
-# which prints 'Hello, world!'.
-#
-# You can learn more about package authoring with RStudio at:
-#
 #   http://r-pkgs.had.co.nz/
 #
 # Some useful keyboard shortcuts for package authoring:
@@ -14,12 +7,18 @@
 #   Test Package:              'Ctrl + Shift + T'
 
 
-#' @export checkSufficientPower
-checkSufficientPower <- function(metaFile, nnodes=1, cutoff=5) {
+#' Check sufficiant power of all possible covariate groups
+#'
+#' @param metaFile a tab delimited file or data frame with row and colum names listing metadata for all samples
+#' @param nnodes number of nodes to be used for parallel computing
+#' @param cutoff minimamal number of sample size for each covariate in order to have sufficient power, default = 5
+#' @return data frame containing sample sizes for all covariates and sufficientPower as yes(1)/no(0)
+#' @export CheckSufficientPower
+CheckSufficientPower <- function(metaFile, nnodes=1, cutoff=5) {
 
-  metaMat <-
+  metaMat <- ##### is this necessary? user should import file themselves
     if (is.character(metaFile)) {
-      read.table(file = metaFile, header = T, sep = "\t", row.names = 1)
+      utils::read.table(file = metaFile, header = T, sep = "\t", row.names = 1)
     }
     else if (is.data.frame(metaFile)) {
       return(metaFile)

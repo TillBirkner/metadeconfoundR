@@ -9,5 +9,5 @@ License: GPL-2
 Encoding: UTF-8
 LazyData: true
 OS_type: unix
-Depends: orddom, lmtest, foreach, doParallel
+Imports: orddom, lmtest, foreach, doParallel
 RoxygenNote: 6.1.0
