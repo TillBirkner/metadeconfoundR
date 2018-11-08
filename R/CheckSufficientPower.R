@@ -13,6 +13,7 @@
 #' @param nnodes number of nodes to be used for parallel computing
 #' @param cutoff minimamal number of sample size for each covariate in order to have sufficient power, default = 5
 #' @return data frame containing sample sizes for all covariates and sufficientPower as yes(1)/no(0)
+#' @importFrom foreach %dopar%
 #' @export CheckSufficientPower
 CheckSufficientPower <- function(metaFile, nnodes=1, cutoff=5) {
 
@@ -41,6 +42,7 @@ CheckSufficientPower <- function(metaFile, nnodes=1, cutoff=5) {
   cl <- parallel::makeForkCluster(nnodes = nnodes, outfile="")  # the parent process uses another core (so 4 cores will be used with this command)
   doParallel::registerDoParallel(cl)
 
+  i <- 0
   parallelReturn <- foreach::foreach(i= 2:noCovariates,
                                      .combine = 'rbind',
                                      .export = "conditionMat") %dopar% {
