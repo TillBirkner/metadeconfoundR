@@ -33,37 +33,39 @@ NaiveAssociation <- function(featureFile, metaFile, nnodes=5) {
 
   # define spaces to hold output of tests
 
-  Ps <- matrix (NA, noFeatures, noCovariates) # base P value
-  Ds <- matrix (NA, noFeatures, noCovariates) # effect size
-  Qs <- matrix (NA, noFeatures, noCovariates) # FDR
-  Ss <- matrix (NA, noFeatures, noCovariates) # status of post-hoc test
-
-  colnames (Ps) <- covariates
-  colnames (Ds) <- covariates
-  colnames (Qs) <- covariates
-  colnames (Ss) <- covariates
-
-  row.names (Ps) <- features
-  row.names (Ds) <- features
-  row.names (Qs) <- features
-  row.names (Ss) <- features
+  # Ps <- matrix (NA, noFeatures, noCovariates) # base P value
+  # Ds <- matrix (NA, noFeatures, noCovariates) # effect size
+  # Qs <- matrix (NA, noFeatures, noCovariates) # FDR
+  # Ss <- matrix (NA, noFeatures, noCovariates) # status of post-hoc test
+  #
+  # colnames (Ps) <- covariates
+  # colnames (Ds) <- covariates
+  # colnames (Qs) <- covariates
+  # colnames (Ss) <- covariates
+  #
+  # row.names (Ps) <- features
+  # row.names (Ds) <- features
+  # row.names (Qs) <- features
+  # row.names (Ss) <- features
 
   old <- Sys.time()
   # load parralel processing environment
-  #cl<-makeCluster(3)
   cl <- parallel::makeForkCluster(nnodes=nnodes, outfile="")  # the parent process uses another core (so 4 cores will be used with this command)
   doParallel::registerDoParallel(cl)
   i <- 0
-  r = foreach::foreach(i= 1:5, .combine = 'rbind') %dopar% {
-    #print (i) # status marker to check it has not stalled or something
-    somePs <-vector(length=noCovariates)
-    someDs <-vector(length=noCovariates)
-    print(i)
+  init <- list("feature", "P", "D")
+  r = foreach::foreach(i= 1:5, .combine = 'rbind', .init = init) %dopar% {
+
+    somePs <- vector(length = noCovariates)
+    someDs <- vector(length = noCovariates)
+
+    names(somePs) <- covariates
+    names(someDs) <- covariates
+
     for (j in 1:noCovariates) {
 
       aFeature <- as.character (features [i])
       aCovariate <- as.character (covariates [j])
-      #rprintf(x = '%d Features processed\n',i)
       if (j==1) {
         write(paste(i, aCovariate, aFeature, noCovariates , sep = "\t" ), file="progress.txt", append = TRUE)
       }
@@ -94,14 +96,14 @@ NaiveAssociation <- function(featureFile, metaFile, nnodes=5) {
 
       #		Ps [as.character (aFeature), as.character (aCovariate)] <- aP
       #		Ds [as.character (aFeature), as.character (aCovariate)] <- aD
-      Ps[i,j] <- aP
-      Ds[i,j] <- aD
+      #Ps[i,j] <- aP
+      #Ds[i,j] <- aD
       somePs[j] <- aP
       someDs[j] <- aD
 
     }
 
-    return(list(somePs,someDs))
+    return(list(features[i], somePs, someDs))
 
   }
 
