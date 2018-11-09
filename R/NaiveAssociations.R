@@ -12,12 +12,13 @@
 #' @param featureFile a tab delimited file or data frame with row and colum names listing features for all samples
 #' @param metaFile a tab delimited file or data frame with row and colum names listing metadata for all samples
 #' @param nnodes number of nodes to be used for parallel computing
+#' @param cutoff minimamal number of sample size for each covariate in order to have sufficient power
 #' @return data frame containing p-values and effect sizes for all simple feature/covariate associations
 #' @importFrom foreach %dopar%
 #' @export NaiveAssociation
 #'
 
-NaiveAssociation <- function(featureFile, metaFile, nnodes=5) {
+NaiveAssociation <- function(featureFile, metaFile, nnodes = 1, cutoff = 5) {
 
   featureMat <- featureFile # your input data here
   samples <- row.names (featureMat)
@@ -48,13 +49,18 @@ NaiveAssociation <- function(featureFile, metaFile, nnodes=5) {
   # row.names (Qs) <- features
   # row.names (Ss) <- features
 
-  old <- Sys.time()
+  # check sufficient power for all the covariates in metaFile
+  # isRobust <- CheckSufficientPower(metaFile = md,
+  #                                  nnodes = nnodes,
+  #                                  cutoff = cutoff)
+
+  # print(isRobust)
   # load parralel processing environment
-  cl <- parallel::makeForkCluster(nnodes=nnodes, outfile="")  # the parent process uses another core (so 4 cores will be used with this command)
+  cl <- parallel::makeForkCluster(nnodes = nnodes, outfile = "")  # the parent process uses another core (so 4 cores will be used with this command)
   doParallel::registerDoParallel(cl)
   i <- 0
   init <- list("feature", "P", "D")
-  r = foreach::foreach(i= 1:5, .combine = 'rbind', .init = init) %dopar% {
+  r = foreach::foreach(i= 1:5, .combine = 'rbind') %dopar% {
 
     somePs <- vector(length = noCovariates)
     someDs <- vector(length = noCovariates)
@@ -67,8 +73,22 @@ NaiveAssociation <- function(featureFile, metaFile, nnodes=5) {
       aFeature <- as.character (features [i])
       aCovariate <- as.character (covariates [j])
       if (j==1) {
-        write(paste(i, aCovariate, aFeature, noCovariates , sep = "\t" ), file="progress.txt", append = TRUE)
+        write(paste
+              (i,
+                aCovariate,
+                aFeature,
+                noCovariates ,
+                sep = "\t" ),
+              file="progress.txt",
+              append = TRUE)
       }
+
+      aD <- NA
+      aP <- NA
+
+      # if (!isRobust[as.character(aCovariate), 4]) {
+      #   next
+      # }
 
       subFeatures <- featureMat [,i]
       subMerge <- md
@@ -76,34 +96,37 @@ NaiveAssociation <- function(featureFile, metaFile, nnodes=5) {
       # results should be a data frame with FeatureValue and all predictors/covariates (columns) for each sample (rows)
       # now test very basic association without considering covariation, does aCovariate predict aFeature?
 
-      aD <- NA
-      aP <- NA
-
-      if (length (unique (subMerge [, as.character (aCovariate)])) == 2 && length (subMerge [subMerge [[as.character (aCovariate)]] == 0, "FeatureValue"]) > 1 && length (subMerge [subMerge [[as.character (aCovariate)]] == 1, "FeatureValue"]) > 1) {
+      if (length (unique (subMerge [, as.character (aCovariate)])) == 2 &&
+          length (subMerge [subMerge [[as.character (aCovariate)]] == 0, "FeatureValue"]) > 1 &&
+          length (subMerge [subMerge [[as.character (aCovariate)]] == 1, "FeatureValue"]) > 1) {
 
         # MWU test if binary
-        aP <- stats::wilcox.test (subMerge [subMerge [[as.character (aCovariate)]] == 0, "FeatureValue"], subMerge [subMerge [[as.character (aCovariate)]] == 1, "FeatureValue"])$p.value
-        aD <- orddom::orddom (subMerge [subMerge [[as.character (aCovariate)]] == 0, "FeatureValue"], subMerge [subMerge [[as.character (aCovariate)]] == 1, "FeatureValue"]) [13]
+        aP <- stats::wilcox.test (subMerge [subMerge [[as.character (aCovariate)]] == 0, "FeatureValue"],
+                                  subMerge [subMerge [[as.character (aCovariate)]] == 1, "FeatureValue"])$p.value
+        aD <- orddom::orddom (subMerge [subMerge [[as.character (aCovariate)]] == 0, "FeatureValue"],
+                              subMerge [subMerge [[as.character (aCovariate)]] == 1, "FeatureValue"]) [13]
 
       }
 
-      else if (length (unique (subMerge [, as.character (aCovariate)])) > 2 && length (subMerge [subMerge [[as.character (aCovariate)]] == 0, "FeatureValue"]) > 1 && length (subMerge [subMerge [[as.character (aCovariate)]] == 1, "FeatureValue"]) > 1) {
+      else if (length (unique (subMerge [, as.character (aCovariate)])) > 2 &&
+               length (subMerge [subMerge [[as.character (aCovariate)]] == 0, "FeatureValue"]) > 1 &&
+               length (subMerge [subMerge [[as.character (aCovariate)]] == 1, "FeatureValue"]) > 1) {
 
         # spearman test if continuous
-        aP <- stats::cor.test (subMerge [, as.character (aCovariate)], subMerge [, "FeatureValue"], method = "spearman")$p.value
-        aD <- stats::cor.test (subMerge [, as.character (aCovariate)], subMerge [, "FeatureValue"], method = "spearman")$estimate
+        aP <- stats::cor.test (subMerge [, as.character (aCovariate)],
+                               subMerge [, "FeatureValue"],
+                               method = "spearman")$p.value
+        aD <- stats::cor.test (subMerge [, as.character (aCovariate)],
+                               subMerge [, "FeatureValue"],
+                               method = "spearman")$estimate
       }
 
-      #		Ps [as.character (aFeature), as.character (aCovariate)] <- aP
-      #		Ds [as.character (aFeature), as.character (aCovariate)] <- aD
-      #Ps[i,j] <- aP
-      #Ds[i,j] <- aD
       somePs[j] <- aP
       someDs[j] <- aD
 
     }
 
-    return(list(features[i], somePs, someDs))
+    return(data.frame(somePs, someDs))
 
   }
 

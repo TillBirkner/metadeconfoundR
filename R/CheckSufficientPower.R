@@ -15,14 +15,15 @@
 #' @return data frame containing sample sizes for all covariates and sufficientPower as yes(1)/no(0)
 #' @importFrom foreach %dopar%
 #' @export CheckSufficientPower
-CheckSufficientPower <- function(metaFile, nnodes=1, cutoff=5) {
+CheckSufficientPower <- function(metaFile, nnodes = 1, cutoff = 5) {
 
-  metaMat <- ##### is this necessary? user should import file themselves
+  metaMat <- data.frame()##### is this necessary? user should import file themselves
     if (is.character(metaFile)) {
-      utils::read.table(file = metaFile, header = T, sep = "\t", row.names = 1)
+      metaMat <- utils::read.table(file = metaFile, header = T, sep = "\t", row.names = 1)
     }
     else if (is.data.frame(metaFile)) {
-      return(metaFile)
+      print("is there a problem?")
+      metaMat <- metaFile
     } else {
       stop('Wrong metaFile argument! Needs to be either "path/to/file" or dataframe with row and column names.')
     }
@@ -56,11 +57,11 @@ CheckSufficientPower <- function(metaFile, nnodes=1, cutoff=5) {
                                aCovariate)))))  # count number of individuals having the phenotype and not taking/taking the covariate
     noConditionNegative <- condition[1]
     noConditionPositive <- condition[2]
-    robustCombination <- 0
+    robustCombination <- FALSE
     if ((noControl >= cutoff) &&
         (noConditionNegative >= cutoff) &&
         (noConditionPositive >= cutoff)) {
-      robustCombination <- 1
+      robustCombination <- TRUE
     }
     write(paste
           (aCovariate,

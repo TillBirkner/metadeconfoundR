@@ -4,7 +4,7 @@
 \alias{NaiveAssociation}
 \title{Check sufficiant power of all possible covariate groups}
 \usage{
-NaiveAssociation(featureFile, metaFile, nnodes = 5)
+NaiveAssociation(featureFile, metaFile, nnodes = 1, cutoff = 5)
 }
 \arguments{
 \item{featureFile}{a tab delimited file or data frame with row and colum names listing features for all samples}
@@ -12,6 +12,8 @@ NaiveAssociation(featureFile, metaFile, nnodes = 5)
 \item{metaFile}{a tab delimited file or data frame with row and colum names listing metadata for all samples}
 
 \item{nnodes}{number of nodes to be used for parallel computing}
+
+\item{cutoff}{minimamal number of sample size for each covariate in order to have sufficient power}
 }
 \value{
 data frame containing p-values and effect sizes for all simple feature/covariate associations
