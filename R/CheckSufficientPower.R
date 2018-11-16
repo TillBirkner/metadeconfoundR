@@ -15,6 +15,8 @@
 #' @return data frame containing sample sizes for all covariates and sufficientPower as yes(1)/no(0)
 #' @importFrom foreach %dopar%
 #' @export CheckSufficientPower
+
+## ---- test
 CheckSufficientPower <- function(metaFile, nnodes = 1, cutoff = 5) {
 
   metaMat <- data.frame()##### is this necessary? user should import file themselves
@@ -22,15 +24,17 @@ CheckSufficientPower <- function(metaFile, nnodes = 1, cutoff = 5) {
       metaMat <- utils::read.table(file = metaFile, header = T, sep = "\t", row.names = 1)
     }
     else if (is.data.frame(metaFile)) {
-      print("is there a problem?")
+
       metaMat <- metaFile
+      print(paste("CheckSufficientPower  -  dim(metaMat): ", nrow(metaMat)))
     } else {
       stop('Wrong metaFile argument! Needs to be either "path/to/file" or dataframe with row and column names.')
     }
-  covariates <- colnames (metaMat) [4:27] # each covariate + the status category, specific to example
+  covariates <- colnames (metaMat) # each covariate + the status category, specific to example
   noCovariates <- length (covariates)
 
-  conditionMat <- metaMat[metaMat$Case_status == "Schizo", ]
+  conditionMat <- metaMat[metaMat[,1] == 1, ]  # extract all "positive" samples
+  print(paste("CheckSufficientPower  -  dim(conditionMat): ", nrow(conditionMat)))
   noCondition <- nrow(conditionMat)
   noControl <- nrow(metaMat) - noCondition
 
@@ -39,7 +43,8 @@ CheckSufficientPower <- function(metaFile, nnodes = 1, cutoff = 5) {
               "condition_negative",
               "condition_positive",
               sep = "\t"),
-        file = "testfile.txt")
+        file = "testfile.txt",
+        append = FALSE)
   cl <- parallel::makeForkCluster(nnodes = nnodes, outfile="")  # the parent process uses another core (so 4 cores will be used with this command)
   doParallel::registerDoParallel(cl)
 
@@ -58,6 +63,14 @@ CheckSufficientPower <- function(metaFile, nnodes = 1, cutoff = 5) {
     noConditionNegative <- condition[1]
     noConditionPositive <- condition[2]
     robustCombination <- FALSE
+    write(paste
+          (aCovariate,
+            noControl,
+            noConditionNegative,
+            noConditionPositive,
+            sep = "\t"),
+          file = "testfile.txt",
+          append = TRUE)
     if ((noControl >= cutoff) &&
         (noConditionNegative >= cutoff) &&
         (noConditionPositive >= cutoff)) {

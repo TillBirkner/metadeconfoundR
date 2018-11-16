@@ -2,22 +2,23 @@
 % Please edit documentation in R/NaiveAssociations.R
 \name{NaiveAssociation}
 \alias{NaiveAssociation}
-\title{Check sufficiant power of all possible covariate groups}
+\title{Naive Associations}
 \usage{
-NaiveAssociation(featureFile, metaFile, nnodes = 1, cutoff = 5)
+NaiveAssociation(featureFile, metaFile, nnodes = 1, cutoff = 5,
+  adjustMethod = "fdr")
 }
 \arguments{
-\item{featureFile}{a tab delimited file or data frame with row and colum names listing features for all samples}
+\item{featureFile}{a tab delimited file or data frame with row(sample ID) and column(feature such as XXXXX) names listing features for all samples}
 
-\item{metaFile}{a tab delimited file or data frame with row and colum names listing metadata for all samples}
+\item{metaFile}{a tab delimited file or data frame with row(sample ID) and column(meta data such as age,BMI and all possible confounders) names listing metadata for all samples. first column should be case status with case=1 and control=0.}
 
-\item{nnodes}{number of nodes to be used for parallel computing}
+\item{nnodes}{number of nodes/cores to be used for parallel processing}
 
-\item{cutoff}{minimamal number of sample size for each covariate in order to have sufficient power}
+\item{cutoff}{minimamal number of sample size for each covariate in order to have sufficient power for association testing}
 }
 \value{
-data frame containing p-values and effect sizes for all simple feature/covariate associations
+XXXXdata frameXXX containing p-values and effect sizes for all simple feature/covariate associations
 }
 \description{
-Check sufficiant power of all possible covariate groups
+Naive Associations checks all feature <-> covariate combinations on significant associations with as few as possible assumptions about data structure.
 }
