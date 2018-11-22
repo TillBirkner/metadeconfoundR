@@ -19,8 +19,15 @@
 #' @export NaiveAssociation
 #'
 
-NaiveAssociation <- function(featureFile, metaFile, nnodes = 1, cutoff = 5, adjustMethod = "fdr") {
+NaiveAssociation <- function(featureFile, metaFile, isRobust, nnodes, maintenance, adjustMethod = "fdr") {
 
+
+  if (maintenance == TRUE) {
+    try(Qs <- read.table("~/Dropbox/UNI/Forslund_project/test_scripts_and_data/schizophrenia/output_provided/FDR.r", header = T, sep = "\t", row.names = 1))
+    try(Ds <- read.table("~/Dropbox/UNI/Forslund_project/test_scripts_and_data/schizophrenia/output_provided/D.r", header = T, sep = "\t", row.names = 1))
+    Ps <- "dummy"
+    return(list(Ps=Ps, Ds=Ds, Qs=Qs))
+  }
   featureMat <- featureFile # your input data here
   samples <- row.names (featureMat)
   features <- colnames (featureMat)
@@ -31,30 +38,6 @@ NaiveAssociation <- function(featureFile, metaFile, nnodes = 1, cutoff = 5, adju
   md <- metaFile # your input data here
   covariates <- colnames (md)# each covariate + the status category, specific to example
   noCovariates <- length (covariates)
-
-  # define spaces to hold output of tests
-
-  # Ps <- matrix (NA, noFeatures, noCovariates) # base P value
-  # Ds <- matrix (NA, noFeatures, noCovariates) # effect size
-  # Qs <- matrix (NA, noFeatures, noCovariates) # FDR
-  # Ss <- matrix (NA, noFeatures, noCovariates) # status of post-hoc test
-  #
-  # colnames (Ps) <- covariates
-  # colnames (Ds) <- covariates
-  # colnames (Qs) <- covariates
-  # colnames (Ss) <- covariates
-  #
-  # row.names (Ps) <- features
-  # row.names (Ds) <- features
-  # row.names (Qs) <- features
-  # row.names (Ss) <- features
-
-  # check sufficient power for all the covariates in metaFile
-
-  print("NaiveAssociation  -  Computing Robustness")
-  isRobust <- CheckSufficientPower(metaFile = md,
-                                   nnodes = nnodes,
-                                   cutoff = cutoff)
 
 
   # load parralel processing environment
@@ -73,7 +56,7 @@ NaiveAssociation <- function(featureFile, metaFile, nnodes = 1, cutoff = 5, adju
         file="progress.txt",
         append = FALSE)
 
-  r = foreach::foreach(i= 1:5, .combine='rbind') %dopar% {
+  r = foreach::foreach(i= 1:noFeatures, .combine='rbind') %dopar% {
 
     somePs <- vector(length = noCovariates)
     someDs <- vector(length = noCovariates)
@@ -114,27 +97,36 @@ NaiveAssociation <- function(featureFile, metaFile, nnodes = 1, cutoff = 5, adju
       # results should be a data frame with FeatureValue and all predictors/covariates (columns) for each sample (rows)
       # now test very basic association without considering covariation, does aCovariate predict aFeature?
 
-      if (length (unique (subMerge [, as.character (aCovariate)])) == 2 &&
-          length (subMerge [subMerge [[as.character (aCovariate)]] == 0, "FeatureValue"]) > 1 &&
-          length (subMerge [subMerge [[as.character (aCovariate)]] == 1, "FeatureValue"]) > 1) {
+      #########
+      #########
+      ######### I tried to leave the "as.character" part out in the followong
+      #########   (used to be as.character (aCovariate))
+      #########   now is only "aCovariate"
+      #########   beacause aCovaraite is generated as character!
+      #########
+      #########
+
+      if (length (unique (subMerge [, aCovariate])) == 2 &&  # if the distribution of the covariate is binary
+          length (subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"]) > 1 &&  # if feature has a measurement in more than one sample with covaraite status 0
+          length (subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"]) > 1) {  # if feature has a measurement in more than one sample with covaraite status 0
 
         # MWU test if binary
-        aP <- stats::wilcox.test (subMerge [subMerge [[as.character (aCovariate)]] == 0, "FeatureValue"],
-                                  subMerge [subMerge [[as.character (aCovariate)]] == 1, "FeatureValue"])$p.value
-        aD <- orddom::orddom (subMerge [subMerge [[as.character (aCovariate)]] == 0, "FeatureValue"],
-                              subMerge [subMerge [[as.character (aCovariate)]] == 1, "FeatureValue"]) [13]
+        aP <- stats::wilcox.test (subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"],
+                                  subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"])$p.value
+        aD <- orddom::orddom (subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"],
+                              subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"]) [13]
 
       }
 
-      else if (length (unique (subMerge [, as.character (aCovariate)])) > 2 &&
-               length (subMerge [subMerge [[as.character (aCovariate)]] == 0, "FeatureValue"]) > 1 &&
-               length (subMerge [subMerge [[as.character (aCovariate)]] == 1, "FeatureValue"]) > 1) {
+      else if (length (unique (subMerge [, aCovariate])) > 2 &&
+               length (subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"]) > 1 &&
+               length (subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"]) > 1) {
 
         # spearman test if continuous
-        aP <- stats::cor.test (subMerge [, as.character (aCovariate)],
+        aP <- stats::cor.test (subMerge [, aCovariate],
                                subMerge [, "FeatureValue"],
                                method = "spearman")$p.value
-        aD <- stats::cor.test (subMerge [, as.character (aCovariate)],
+        aD <- stats::cor.test (subMerge [, aCovariate],
                                subMerge [, "FeatureValue"],
                                method = "spearman")$estimate
       }

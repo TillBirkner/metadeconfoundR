@@ -16,25 +16,32 @@
 #' @importFrom foreach %dopar%
 #' @export CheckSufficientPower
 
-## ---- test
-CheckSufficientPower <- function(metaFile, nnodes = 1, cutoff = 5) {
+## ---- test-a ----
+CheckSufficientPower <- function(metaFile, nnodes, cutoff) {
 
   metaMat <- data.frame()##### is this necessary? user should import file themselves
     if (is.character(metaFile)) {
-      metaMat <- utils::read.table(file = metaFile, header = T, sep = "\t", row.names = 1)
+      metaMat <- utils::read.table(file = metaFile,
+                                   header = T,
+                                   sep = "\t",
+                                   row.names = 1)
     }
     else if (is.data.frame(metaFile)) {
 
       metaMat <- metaFile
-      print(paste("CheckSufficientPower  -  dim(metaMat): ", nrow(metaMat)))
+      print(paste("CheckSufficientPower  -  dim(metaMat): ",
+                  nrow(metaMat)))
     } else {
-      stop('Wrong metaFile argument! Needs to be either "path/to/file" or dataframe with row and column names.')
+      stop('Wrong metaFile argument!')
     }
+
+## ---- test-b ---
   covariates <- colnames (metaMat) # each covariate + the status category, specific to example
   noCovariates <- length (covariates)
 
   conditionMat <- metaMat[metaMat[,1] == 1, ]  # extract all "positive" samples
-  print(paste("CheckSufficientPower  -  dim(conditionMat): ", nrow(conditionMat)))
+  print(paste("CheckSufficientPower  -  dim(conditionMat): ",
+              nrow(conditionMat)))
   noCondition <- nrow(conditionMat)
   noControl <- nrow(metaMat) - noCondition
 
@@ -96,5 +103,13 @@ CheckSufficientPower <- function(metaFile, nnodes = 1, cutoff = 5) {
 
   parallel::stopCluster(cl)
   #return(as.data.frame(parallelReturn,stringsAsFactors=FALSE))
+
+  # colnames(parallelReturn) <- c("control",
+  #                               "condition_negative",
+  #                               "condition_positive",
+  #                               "result")
+
+  #rownames(parallelReturn) <- covariates[-1]
+  #print(paste0("nrow parallelReturn is ", nrow(parallelReturn), " and there are"))
   return(parallelReturn)
 }

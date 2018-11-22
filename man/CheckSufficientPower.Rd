@@ -4,7 +4,7 @@
 \alias{CheckSufficientPower}
 \title{Check sufficiant power of all possible covariate groups}
 \usage{
-CheckSufficientPower(metaFile, nnodes = 1, cutoff = 5)
+CheckSufficientPower(metaFile, nnodes, cutoff)
 }
 \arguments{
 \item{metaFile}{a tab delimited file or data frame with row and colum names listing metadata for all samples}
