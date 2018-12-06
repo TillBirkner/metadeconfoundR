@@ -1,4 +1,8 @@
-CheckReducibility <- function(noFeatures,
+#' @importFrom foreach %dopar%
+
+CheckReducibility <- function(featureMat,
+                              metaMat,
+                              noFeatures,
                               noCovariates,
                               features,
                               covariates,
@@ -10,6 +14,9 @@ CheckReducibility <- function(noFeatures,
                               maintenance,
                               verbosity) {
 
+
+  featureMat <- featureMat
+  md <- metaMat
   # load parralel processing environment
   cl <- parallel::makeForkCluster(nnodes = nnodes, outfile = "")  # the parent process uses another core
   doParallel::registerDoParallel(cl)

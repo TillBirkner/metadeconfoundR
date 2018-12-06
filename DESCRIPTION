@@ -10,4 +10,4 @@ Encoding: UTF-8
 LazyData: true
 OS_type: unix
 Imports: orddom, lmtest, foreach, doParallel
-RoxygenNote: 6.1.0
+RoxygenNote: 6.1.1

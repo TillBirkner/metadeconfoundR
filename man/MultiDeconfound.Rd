@@ -4,20 +4,28 @@
 \alias{MultiDeconfound}
 \title{Multi Deconfound}
 \usage{
-MultiDeconfound(featureMat, metaMat, nnodes = 1, robustCutoff = 5,
-  adjustMethod = "fdr", QCutoff = 0.1, DCutoff = 0, ...)
+MultiDeconfound(featureMat, metaMat, nnodes = 1, adjustMethod = "fdr",
+  robustCutoff = 5, QCutoff = 0.1, DCutoff = 0, ...)
 }
 \arguments{
-\item{featureMat}{a tab delimited file or data frame with row(sample ID) and column(feature such as XXXXX) names listing features for all samples}
+\item{featureMat}{a tab delimited file or data frame with row(sample ID) and column(feature such as metabolite or gut microbial OTU ) names listing features for all samples}
 
 \item{metaMat}{a tab delimited file or data frame with row(sample ID) and column(meta data such as age,BMI and all possible confounders) names listing metadata for all samples. first column should be case status with case=1 and control=0.}
 
 \item{nnodes}{number of nodes/cores to be used for parallel processing}
 
+\item{adjustMethod}{multiple testing p-value correction using one of the methods of stats::p.adjust.methods}
+
 \item{robustCutoff}{minimamal number of sample size for each covariate in order to have sufficient power for association testing}
+
+\item{QCutoff}{significance cutoff for q-value, DEFAULT = 0.1}
+
+\item{DCutoff}{effect size cutoff (either cliff's delta or spearman correlation test estimate), DEFAULT = 0}
+
+\item{...}{for additional arguments used internally (development/debugging)}
 }
 \value{
-XXXXdata frameXXX containing information on reducability/confounding
+list with elements Ds=effectsize, Ps=uncorrected p-value for naive association, Qs=corrected p-value/fdr, and status=confounding/mediation status for all feature <=> covariate combinations
 }
 \description{
 Multi Deconfound checks all feature <-> covariate combinations for counfounding effects of covariates on feature <-> effect corellation

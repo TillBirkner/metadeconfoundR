@@ -6,36 +6,42 @@
 #   Check Package:             'Ctrl + Shift + E'
 #   Test Package:              'Ctrl + Shift + T'
 
-#' Naive Associations
-#'
-#' Naive Associations checks all feature <-> covariate combinations on significant associations with as few as possible assumptions about data structure.
-#'
-#' @param featureFile a tab delimited file or data frame with row(sample ID) and column(feature such as XXXXX) names listing features for all samples
-#' @param metaFile a tab delimited file or data frame with row(sample ID) and column(meta data such as age,BMI and all possible confounders) names listing metadata for all samples. first column should be case status with case=1 and control=0.
-#' @param nnodes number of nodes/cores to be used for parallel processing
-#' @param cutoff minimamal number of sample size for each covariate in order to have sufficient power for association testing
-#' @return XXXXdata frameXXX containing p-values and effect sizes for all simple feature/covariate associations
+# Naive Associations
+#
+# Naive Associations checks all feature <-> covariate combinations on significant associations with as few as possible assumptions about data structure.
+#
+# @param featureFile a tab delimited file or data frame with row(sample ID) and column(feature such as XXXXX) names listing features for all samples
+# @param metaFile a tab delimited file or data frame with row(sample ID) and column(meta data such as age,BMI and all possible confounders) names listing metadata for all samples. first column should be case status with case=1 and control=0.
+# @param nnodes number of nodes/cores to be used for parallel processing
+# @param cutoff minimamal number of sample size for each covariate in order to have sufficient power for association testing
+# @return XXXXdata frameXXX containing p-values and effect sizes for all simple feature/covariate associations
 #' @importFrom foreach %dopar%
-#' @export NaiveAssociation
-#'
+# @export NaiveAssociation
+#
 
-NaiveAssociation <- function(featureFile, metaFile, isRobust, nnodes, maintenance, adjustMethod = "fdr") {
+NaiveAssociation <- function(featureMat,
+                             metaMat,
+                             isRobust,
+                             nnodes,
+                             maintenance,
+                             adjustMethod,
+                             verbosity) {
 
 
   if (maintenance == TRUE) {
-    try(Qs <- read.table("~/Dropbox/UNI/Forslund_project/test_scripts_and_data/schizophrenia/output_provided/FDR.r", header = T, sep = "\t", row.names = 1))
-    try(Ds <- read.table("~/Dropbox/UNI/Forslund_project/test_scripts_and_data/schizophrenia/output_provided/D.r", header = T, sep = "\t", row.names = 1))
+    try(Qs <- utils::read.table("~/Dropbox/UNI/Forslund_project/test_scripts_and_data/schizophrenia/output_provided/FDR.r", header = T, sep = "\t", row.names = 1))
+    try(Ds <- utils::read.table("~/Dropbox/UNI/Forslund_project/test_scripts_and_data/schizophrenia/output_provided/D.r", header = T, sep = "\t", row.names = 1))
     Ps <- "dummy"
     return(list(Ps=Ps, Ds=Ds, Qs=Qs))
   }
-  featureMat <- featureFile # your input data here
+  featureMat <- featureMat # your input data here
   samples <- row.names (featureMat)
   features <- colnames (featureMat)
   noFeatures <- length (features)
 
   # read in matrix of metadata
 
-  md <- metaFile # your input data here
+  md <- metaMat # your input data here
   covariates <- colnames (md)# each covariate + the status category, specific to example
   noCovariates <- length (covariates)
 
@@ -46,7 +52,8 @@ NaiveAssociation <- function(featureFile, metaFile, isRobust, nnodes, maintenanc
   i <- 0
 
 
-  write(paste
+  if (verbosity== "debug") {
+    write(paste
         ("counter",
           "aCovariate",
           "aFeature",
@@ -55,6 +62,7 @@ NaiveAssociation <- function(featureFile, metaFile, isRobust, nnodes, maintenanc
           sep = "\t" ),
         file="progress.txt",
         append = FALSE)
+  }
 
   r = foreach::foreach(i= 1:noFeatures, .combine='rbind') %dopar% {
 
@@ -70,7 +78,7 @@ NaiveAssociation <- function(featureFile, metaFile, isRobust, nnodes, maintenanc
 
       aFeature <- as.character (features [i])
       aCovariate <- as.character (covariates [j])
-      if (j>1) {
+      if (verbosity == "debug" && j>1) {
         write(paste
               (i,
                 aCovariate,
@@ -88,6 +96,12 @@ NaiveAssociation <- function(featureFile, metaFile, isRobust, nnodes, maintenanc
       if (!is.na(isRobust[aCovariate, 4]) && !isRobust[aCovariate, 4]) {
               somePs[j] <- aP
               someDs[j] <- aD
+              if (verbosity == "debug") {
+                write("skipped",
+                      file="progress.txt",
+                      append = TRUE)
+              }
+
               next
       }
 
@@ -96,15 +110,6 @@ NaiveAssociation <- function(featureFile, metaFile, isRobust, nnodes, maintenanc
       subMerge$FeatureValue <- subFeatures # caveat - this works for this input, but in another case you may have to verify the samples have the same order...
       # results should be a data frame with FeatureValue and all predictors/covariates (columns) for each sample (rows)
       # now test very basic association without considering covariation, does aCovariate predict aFeature?
-
-      #########
-      #########
-      ######### I tried to leave the "as.character" part out in the followong
-      #########   (used to be as.character (aCovariate))
-      #########   now is only "aCovariate"
-      #########   beacause aCovaraite is generated as character!
-      #########
-      #########
 
       if (length (unique (subMerge [, aCovariate])) == 2 &&  # if the distribution of the covariate is binary
           length (subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"]) > 1 &&  # if feature has a measurement in more than one sample with covaraite status 0
@@ -139,23 +144,30 @@ NaiveAssociation <- function(featureFile, metaFile, isRobust, nnodes, maintenanc
     return(c(as.numeric(somePs), as.numeric(someDs)))
 
   }
-
   parallel::stopCluster(cl)
+
+
   Ps <- r[, 1:(ncol(r)/2)]
   rownames(Ps) <- features[1:nrow(r)]
   colnames(Ps) <- covariates
+
   Ds <- r[, -(1:(ncol(r)/2))]
   rownames(Ds) <- features[1:nrow(r)]
   colnames(Ds) <- covariates
 
-  #Qs <- matrix (NA, noFeatures, noCovariates)
   Qs <- matrix (NA, length(features[1:nrow(r)]), length(covariates))
   rownames(Qs) <- features[1:nrow(r)]
   colnames(Qs) <- covariates
 
-  print(paste0
+  ##
+  ##
+  if (verbosity == "debug") {
+    print(paste0
         ("NaiveAssociation  -  compute multiple testing p adjustment using ",
           adjustMethod))
+  }
+  ##
+  ##
 
   for (i in 1:ncol(Ps)) {
     Qs[, i] <- stats::p.adjust (Ps[, i], method = adjustMethod)
@@ -163,6 +175,3 @@ NaiveAssociation <- function(featureFile, metaFile, isRobust, nnodes, maintenanc
 
   return(list(Ps=Ps, Ds=Ds, Qs=Qs))
 }
-
-
-
