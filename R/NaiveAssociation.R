@@ -1,20 +1,3 @@
-#   http://r-pkgs.had.co.nz/
-#
-# Some useful keyboard shortcuts for package authoring:
-#
-#   Build and Reload Package:  'Ctrl + Shift + B'
-#   Check Package:             'Ctrl + Shift + E'
-#   Test Package:              'Ctrl + Shift + T'
-
-# Naive Associations
-#
-# Naive Associations checks all feature <-> covariate combinations on significant associations with as few as possible assumptions about data structure.
-#
-# @param featureFile a tab delimited file or data frame with row(sample ID) and column(feature such as XXXXX) names listing features for all samples
-# @param metaFile a tab delimited file or data frame with row(sample ID) and column(meta data such as age,BMI and all possible confounders) names listing metadata for all samples. first column should be case status with case=1 and control=0.
-# @param nnodes number of nodes/cores to be used for parallel processing
-# @param cutoff minimamal number of sample size for each covariate in order to have sufficient power for association testing
-# @return XXXXdata frameXXX containing p-values and effect sizes for all simple feature/covariate associations
 #' @importFrom foreach %dopar%
 # @export NaiveAssociation
 #
@@ -29,8 +12,16 @@ NaiveAssociation <- function(featureMat,
 
 
   if (maintenance == TRUE) {
-    try(Qs <- utils::read.table("~/Dropbox/UNI/Forslund_project/test_scripts_and_data/schizophrenia/output_provided/FDR.r", header = T, sep = "\t", row.names = 1))
-    try(Ds <- utils::read.table("~/Dropbox/UNI/Forslund_project/test_scripts_and_data/schizophrenia/output_provided/D.r", header = T, sep = "\t", row.names = 1))
+    try(Qs <- utils::read.table(
+      "~/Dropbox/UNI/Forslund_project/schizo/output_provided/FDR.r",
+      header = TRUE,
+      sep = "\t",
+      row.names = 1))
+    try(Ds <- utils::read.table(
+      "~/Dropbox/UNI/Forslund_project/schizo/output_provided/D.r",
+      header = TRUE,
+      sep = "\t",
+      row.names = 1))
     Ps <- "dummy"
     return(list(Ps=Ps, Ds=Ds, Qs=Qs))
   }
@@ -41,13 +32,16 @@ NaiveAssociation <- function(featureMat,
 
   # read in matrix of metadata
 
-  md <- metaMat # your input data here
-  covariates <- colnames (md)# each covariate + the status category, specific to example
+  md <- metaMat
+    # your input data here
+  covariates <- colnames (md)
+    # each covariate + the status category, specific to example
   noCovariates <- length (covariates)
 
 
   # load parralel processing environment
-  cl <- parallel::makeForkCluster(nnodes = nnodes, outfile = "")  # the parent process uses another core (so 4 cores will be used with this command)
+  cl <- parallel::makeForkCluster(nnodes = nnodes, outfile = "")
+  # the parent process uses another core (nnodes - 1 might be good)
   doParallel::registerDoParallel(cl)
   i <- 0
 
@@ -107,27 +101,34 @@ NaiveAssociation <- function(featureMat,
 
       subFeatures <- featureMat [,i]
       subMerge <- md
-      subMerge$FeatureValue <- subFeatures # caveat - this works for this input, but in another case you may have to verify the samples have the same order...
-      # results should be a data frame with FeatureValue and all predictors/covariates (columns) for each sample (rows)
-      # now test very basic association without considering covariation, does aCovariate predict aFeature?
+      subMerge$FeatureValue <- subFeatures # caveat *1*: see snippets.R
 
-      if (length (unique (subMerge [, aCovariate])) == 2 &&  # if the distribution of the covariate is binary
-          length (subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"]) > 1 &&  # if feature has a measurement in more than one sample with covaraite status 0
-          length (subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"]) > 1) {  # if feature has a measurement in more than one sample with covaraite status 0
+      con1 <- length (unique (subMerge [, aCovariate])) == 2
+      # the distribution of the covariate is binary
+      con2 <- length (unique (subMerge [, aCovariate])) > 2
+      # the distribution of the covariate is continuous
+      con3 <- length (subMerge[subMerge[[aCovariate]] == 0, "FeatureValue"]) > 1
+      # feature has a measurement in more than one sample with
+      #covaraite status 0
+      con4 <- length (subMerge[subMerge[[aCovariate]] == 1, "FeatureValue"]) > 1
+      # feature has a measurement in more than one sample with
+      #covaraite status 1
 
-        # MWU test if binary
-        aP <- stats::wilcox.test (subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"],
-                                  subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"])$p.value
-        aD <- orddom::orddom (subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"],
-                              subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"]) [13]
+      if (con1 && con3 && con4) {  # MWU test if binary
+
+        aP <- stats::wilcox.test (subMerge [subMerge [[aCovariate]] == 0,
+                                            "FeatureValue"],
+                                  subMerge [subMerge [[aCovariate]] == 1,
+                                            "FeatureValue"])$p.value
+        aD <- orddom::orddom (subMerge [subMerge [[aCovariate]] == 0,
+                                        "FeatureValue"],
+                              subMerge [subMerge [[aCovariate]] == 1,
+                                        "FeatureValue"]) [13]
 
       }
 
-      else if (length (unique (subMerge [, aCovariate])) > 2 &&
-               length (subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"]) > 1 &&
-               length (subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"]) > 1) {
+      else if (con2 && con3 && con4) {  # spearman test if continuous
 
-        # spearman test if continuous
         aP <- stats::cor.test (subMerge [, aCovariate],
                                subMerge [, "FeatureValue"],
                                method = "spearman")$p.value

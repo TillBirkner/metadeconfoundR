@@ -1,18 +1,3 @@
-#   http://r-pkgs.had.co.nz/
-#
-# Some useful keyboard shortcuts for package authoring:
-#
-#   Build and Reload Package:  'Ctrl + Shift + B'
-#   Check Package:             'Ctrl + Shift + E'
-#   Test Package:              'Ctrl + Shift + T'
-
-
-# Check sufficiant power of all possible covariate groups
-#
-# @param metaFile a tab delimited file or data frame with row and colum names listing metadata for all samples
-# @param nnodes number of nodes to be used for parallel computing
-# @param cutoff minimamal number of sample size for each covariate in order to have sufficient power, default = 5
-# @return data frame containing sample sizes for all covariates and sufficientPower as yes(1)/no(0)
 #' @importFrom foreach %dopar%
 # @export CheckSufficientPower
 
@@ -24,7 +9,8 @@ CheckSufficientPower <- function(metaMat,
                                  verbosity) {
 
 ## ---- test-b ---
-  covariates <- colnames (metaMat) # each covariate + the status category, specific to example
+  covariates <- colnames (metaMat)
+  # each covariate + the status category, specific to example
   noCovariates <- length (covariates)
 
   conditionMat <- metaMat[metaMat[,1] == 1, ]  # extract all "positive" samples
@@ -47,7 +33,9 @@ CheckSufficientPower <- function(metaMat,
   ##
   ##
 
-  cl <- parallel::makeForkCluster(nnodes = nnodes, outfile="")  # the parent process uses another core (so 4 cores will be used with this command)
+  cl <- parallel::makeForkCluster(nnodes = nnodes, outfile="")
+    # the parent process uses another core
+      #(so 4 cores will be used with this command)
   doParallel::registerDoParallel(cl)
 
   i <- 0
@@ -61,7 +49,9 @@ CheckSufficientPower <- function(metaMat,
                          (text = as.character
                            (paste0
                              ("conditionMat$",
-                               aCovariate)))))  # count number of individuals having the phenotype and not taking/taking the covariate
+                               aCovariate)))))
+      # count number of individuals having the phenotype and not
+        #taking/taking the covariate
     noConditionNegative <- condition[1]
     noConditionPositive <- condition[2]
     robustCombination <- FALSE

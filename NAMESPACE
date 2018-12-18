@@ -2,3 +2,4 @@
 
 export(MultiDeconfound)
 importFrom(foreach,"%dopar%")
+importFrom(lmtest,lrtest)

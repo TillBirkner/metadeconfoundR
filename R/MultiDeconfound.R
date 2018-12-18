@@ -8,17 +8,29 @@
 
 #' Multi Deconfound
 #'
-#' Multi Deconfound checks all feature <-> covariate combinations for counfounding effects of covariates on feature <-> effect corellation
+#' Multi Deconfound checks all feature <-> covariate combinations for
+#' counfounding effects of covariates on feature <-> effect corellation
 #'
-#' @param featureMat a tab delimited file or data frame with row(sample ID) and column(feature such as metabolite or gut microbial OTU ) names listing features for all samples
-#' @param metaMat a tab delimited file or data frame with row(sample ID) and column(meta data such as age,BMI and all possible confounders) names listing metadata for all samples. first column should be case status with case=1 and control=0.
+#' @param featureMat a tab delimited file or data frame with row(sample ID) and
+#' column(feature such as metabolite or gut microbial OTU )
+#' names, listing features for all samples
+#' @param metaMat a tab delimited file or data frame with row(sample ID) and
+#' column(meta data such as age,BMI and all possible confounders)
+#' names listing metadata for all samples. first column should be case status
+#' with case=1 and control=0.
 #' @param nnodes number of nodes/cores to be used for parallel processing
-#' @param adjustMethod multiple testing p-value correction using one of the methods of stats::p.adjust.methods
-#' @param robustCutoff minimamal number of sample size for each covariate in order to have sufficient power for association testing
+#' @param adjustMethod multiple testing p-value correction using one of the
+#' methods of stats::p.adjust.methods
+#' @param robustCutoff minimamal number of sample size for each covariate
+#' in order to have sufficient power for association testing
 #' @param QCutoff significance cutoff for q-value, DEFAULT = 0.1
-#' @param DCutoff effect size cutoff (either cliff's delta or spearman correlation test estimate), DEFAULT = 0
+#' @param DCutoff effect size cutoff
+#' (either cliff's delta or spearman correlation test estimate), DEFAULT = 0
 #' @param ... for additional arguments used internally (development/debugging)
-#' @return list with elements Ds=effectsize, Ps=uncorrected p-value for naive association, Qs=corrected p-value/fdr, and status=confounding/mediation status for all feature <=> covariate combinations
+#' @return list with elements Ds = effectsize,
+#' Ps = uncorrected p-value for naive association, Qs = corrected p-value/fdr,
+#' and status=  confounding/mediation status for all
+#' feature <=> covariate combinations
 #' @export MultiDeconfound
 #'
 
@@ -68,7 +80,8 @@ MultiDeconfound <- function(featureMat,
   # read in matrix of metadata
 
   #md <- metaFile # your input data here
-  covariates <- colnames (metaMat)# each covariate + the status category, specific to example
+  covariates <- colnames (metaMat)
+    # each covariate + the status category, specific to example
   noCovariates <- length (covariates)
 
   isRobust <- CheckSufficientPower(metaMat = metaMat,
@@ -96,7 +109,7 @@ MultiDeconfound <- function(featureMat,
   }
 
 
-  reducabilityStatus <- CheckReducibility(featureMat = featureMat,
+  reducibilityStatus <- CheckReducibility(featureMat = featureMat,
                                           metaMat = metaMat,
                                           noFeatures = noFeatures,
                                           noCovariates = noCovariates,
@@ -112,5 +125,8 @@ MultiDeconfound <- function(featureMat,
   if (verbosity == "debug") {
     print("MultiDeconfound  --  All done!")
   }
-  return(list(Ps = naiveAssociation$Ps, Qs = naiveAssociation$Qs, Ds = naiveAssociation$Ds, status=reducabilityStatus))
+  return(list(Ps = naiveAssociation$Ps,
+              Qs = naiveAssociation$Qs,
+              Ds = naiveAssociation$Ds,
+              status=reducibilityStatus))
 }
