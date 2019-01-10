@@ -47,6 +47,7 @@ NaiveAssociation <- function(featureMat,
 
 
   if (verbosity== "debug") {
+    print(paste("NaiveAssociation -- noSamples, noFeatures, noCovariates:",length(samples), noFeatures, noCovariates))
     write(paste
         ("counter",
           "aCovariate",
@@ -57,8 +58,7 @@ NaiveAssociation <- function(featureMat,
         file="progress.txt",
         append = FALSE)
   }
-
-  r = foreach::foreach(i= 1:noFeatures, .combine='rbind') %dopar% {
+  r = foreach::foreach(i= seq_along(features), .combine='rbind') %dopar% {
 
     somePs <- vector(length = noCovariates)
     someDs <- vector(length = noCovariates)
@@ -68,20 +68,23 @@ NaiveAssociation <- function(featureMat,
 
 
 
-    for (j in 1:noCovariates) {
+    for (j in seq_along(covariates)) {
+
 
       aFeature <- as.character (features [i])
       aCovariate <- as.character (covariates [j])
-      if (verbosity == "debug" && j>1) {
-        write(paste
-              (i,
-                aCovariate,
-                aFeature,
-                noCovariates ,
-                isRobust[aCovariate, 4],
-                sep = "\t" ),
-              file="progress.txt",
-              append = TRUE)
+      if (verbosity == "debug") {
+        if (j>1) {
+          write(paste
+                (i,
+                  aCovariate,
+                  aFeature,
+                  noCovariates ,
+                  isRobust[aCovariate, 4],
+                  sep = "\t" ),
+                file="progress.txt",
+                append = TRUE)
+        }
       }
 
       aD <- NA_real_
@@ -103,28 +106,47 @@ NaiveAssociation <- function(featureMat,
       subMerge <- md
       subMerge$FeatureValue <- subFeatures # caveat *1*: see snippets.R
 
-      con1 <- length (unique (subMerge [, aCovariate])) == 2
+      #con1 <- length (unique (subMerge [, aCovariate])) == 2
+      con1 <- length (unique (subMerge[[aCovariate]])) == 2
       # the distribution of the covariate is binary
-      con2 <- length (unique (subMerge [, aCovariate])) > 2
+      #con2 <- length (unique (subMerge [, aCovariate])) > 2
+      con2 <- length (unique (subMerge[[aCovariate]])) > 2
       # the distribution of the covariate is continuous
-      con3 <- length (subMerge[subMerge[[aCovariate]] == 0, "FeatureValue"]) > 1
+      con3 <- length (na.exclude(subMerge[subMerge[[aCovariate]] == 0, "FeatureValue"])) > 10
       # feature has a measurement in more than one sample with
       #covaraite status 0
-      con4 <- length (subMerge[subMerge[[aCovariate]] == 1, "FeatureValue"]) > 1
+      con4 <- length (na.exclude(subMerge[subMerge[[aCovariate]] == 1, "FeatureValue"])) > 10
       # feature has a measurement in more than one sample with
       #covaraite status 1
 
+      # if (verbosity == "debug") {
+      #   write(paste("NaiveAssociation loop:",
+      #               i,
+      #               j,
+      #               "the 4 conditions are:",
+      #               con1,
+      #               con1,
+      #               con3,
+      #               con4),
+      #         file="progress.txt",
+      #         append = TRUE)
+      # }
+
+
       if (con1 && con3 && con4) {  # MWU test if binary
 
-        aP <- stats::wilcox.test (subMerge [subMerge [[aCovariate]] == 0,
-                                            "FeatureValue"],
-                                  subMerge [subMerge [[aCovariate]] == 1,
-                                            "FeatureValue"])$p.value
-        aD <- orddom::orddom (subMerge [subMerge [[aCovariate]] == 0,
-                                        "FeatureValue"],
-                              subMerge [subMerge [[aCovariate]] == 1,
-                                        "FeatureValue"]) [13]
-
+        aP <- stats::wilcox.test (
+          na.exclude (
+            subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"]),
+          na.exclude (
+            subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"]))$p.value
+        aD <- orddom::orddom (
+          as.vector (
+            na.exclude (
+              subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"])),
+          as.vector (
+            na.exclude (
+              subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"]))) [13]
       }
 
       else if (con2 && con3 && con4) {  # spearman test if continuous
@@ -148,6 +170,10 @@ NaiveAssociation <- function(featureMat,
   parallel::stopCluster(cl)
 
 
+  if (verbosity == "debug") {
+    print(paste("NaiveAssociation -- ncol(parallelreturn):", ncol(r)))
+  }
+
   Ps <- r[, 1:(ncol(r)/2)]
   rownames(Ps) <- features[1:nrow(r)]
   colnames(Ps) <- covariates
@@ -170,7 +196,7 @@ NaiveAssociation <- function(featureMat,
   ##
   ##
 
-  for (i in 1:ncol(Ps)) {
+  for (i in seq_len(ncol(Ps))) {
     Qs[, i] <- stats::p.adjust (Ps[, i], method = adjustMethod)
   }
 

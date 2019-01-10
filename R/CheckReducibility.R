@@ -23,7 +23,7 @@ CheckReducibility <- function(featureMat,
   doParallel::registerDoParallel(cl)
   i <- 0
 
-  r = foreach::foreach(i= 1:noFeatures, .combine='rbind') %dopar% {
+  r = foreach::foreach(i= seq_along(features), .combine='rbind') %dopar% {
 
     statusLine <- vector(length = noCovariates, mode = "character")
 
@@ -53,7 +53,7 @@ CheckReducibility <- function(featureMat,
             append = TRUE)
     }
 
-    for (j in 1:noCovariates) {
+    for (j in seq_along(covariates)) {
 
       status <- "NS"
 

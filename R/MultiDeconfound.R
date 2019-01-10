@@ -91,7 +91,8 @@ MultiDeconfound <- function(featureMat,
                                    verbosity = verbosity)
 
   if (verbosity == "debug") {
-    print(isRobust[1:10, ])
+    print("CheckSufficientPower -- head(isRobust):")
+    print(head(isRobust))
   }
 
 
@@ -103,8 +104,9 @@ MultiDeconfound <- function(featureMat,
                                        maintenance = maintenance,
                                        verbosity = verbosity)
   if (verbosity == "debug") {
-    print(naiveAssociation$Qs[1:5, 1:5])
-    print(naiveAssociation$Ds[1:5, 1:5])
+    print(naiveAssociation$Ps[1:5, 1:2])
+    print(naiveAssociation$Qs[1:5, 1:2])
+    print(naiveAssociation$Ds[1:5, 1:2])
     print("now computing confounding status")
   }
 

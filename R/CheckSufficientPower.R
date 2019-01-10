@@ -10,25 +10,30 @@ CheckSufficientPower <- function(metaMat,
 
 ## ---- test-b ---
   covariates <- colnames (metaMat)
+
   # each covariate + the status category, specific to example
   noCovariates <- length (covariates)
 
+
   conditionMat <- metaMat[metaMat[,1] == 1, ]  # extract all "positive" samples
-  print(paste("CheckSufficientPower  -  dim(conditionMat): ",
-              nrow(conditionMat)))
+
   noCondition <- nrow(conditionMat)
   noControl <- nrow(metaMat) - noCondition
 
   ##
   ##
   if (verbosity == "debug") {
-    write(paste("covariate",
-                "control",
-                "condition_negative",
-                "condition_positive",
-                sep = "\t"),
-          file = "testfile.txt",
-          append = FALSE)
+    print(paste("CheckSufficientPower -- covariates:", paste(covariates)))
+    print(paste("CheckSufficientPower -- noCovariates:", noCovariates))
+    print(paste("CheckSufficientPower -- dim(conditionMat): ",
+                nrow(conditionMat)))
+    # write(paste("covariate",
+    #             "control",
+    #             "condition_negative",
+    #             "condition_positive",
+    #             sep = "\t"),
+    #       file = "testfile.txt",
+    #       append = FALSE)
   }
   ##
   ##
@@ -64,17 +69,17 @@ CheckSufficientPower <- function(metaMat,
 
     ##
     ##
-    if (verbosity == "debug") {
-      write(paste
-            (aCovariate,
-              noControl,
-              noConditionNegative,
-              noConditionPositive,
-              robustCombination,
-              sep = "\t"),
-            file = "testfile.txt",
-            append = TRUE)
-    }
+    # if (verbosity == "debug") {
+    #   write(paste
+    #         (aCovariate,
+    #           noControl,
+    #           noConditionNegative,
+    #           noConditionPositive,
+    #           robustCombination,
+    #           sep = "\t"),
+    #         file = "testfile.txt",
+    #         append = TRUE)
+    # }
     ##
     ##
 
