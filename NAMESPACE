@@ -3,3 +3,4 @@
 export(MultiDeconfound)
 importFrom(foreach,"%dopar%")
 importFrom(lmtest,lrtest)
+importFrom(stats,na.exclude)

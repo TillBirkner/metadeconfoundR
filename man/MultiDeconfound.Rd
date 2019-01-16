@@ -5,11 +5,12 @@
 \title{Multi Deconfound}
 \usage{
 MultiDeconfound(featureMat, metaMat, nnodes = 1, adjustMethod = "fdr",
-  robustCutoff = 5, QCutoff = 0.1, DCutoff = 0, ...)
+  robustCutoff = 5, QCutoff = 0.1, DCutoff = 0, PHS_cutoff = 0.05,
+  ...)
 }
 \arguments{
-\item{featureMat}{a tab delimited file or data frame with row(sample ID) and
-column(feature such as metabolite or gut microbial OTU )
+\item{featureMat}{a tab delimited file or data frame with row(sample ID)
+and column(feature such as metabolite or microbial OTU )
 names, listing features for all samples}
 
 \item{metaMat}{a tab delimited file or data frame with row(sample ID) and
@@ -29,6 +30,8 @@ in order to have sufficient power for association testing}
 
 \item{DCutoff}{effect size cutoff
 (either cliff's delta or spearman correlation test estimate), DEFAULT = 0}
+
+\item{PHS_cutoff}{PostHoc Significance cutoff}
 
 \item{...}{for additional arguments used internally (development/debugging)}
 }

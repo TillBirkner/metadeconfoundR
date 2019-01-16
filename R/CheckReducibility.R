@@ -12,22 +12,20 @@ CheckReducibility <- function(featureMat,
                               nnodes,
                               QCutoff,
                               DCutoff,
+                              PHS_cutoff,
                               maintenance,
                               verbosity) {
 
-
-  featureMat <- featureMat
-  md <- metaMat
   # load parralel processing environment
   cl <- parallel::makeForkCluster(nnodes = nnodes, outfile = "")
   doParallel::registerDoParallel(cl)
   i <- 0
 
-  r = foreach::foreach(i= seq_along(features), .combine='rbind') %dopar% {
+  r = foreach::foreach(i = seq_along(features), .combine='rbind') %dopar% {
 
     statusLine <- vector(length = noCovariates, mode = "character")
 
-    # find all covariates which on their end has effect on the feature
+    # find all covariates which on their end have effect on the feature
     lCovariates <- covariates[which(Qs[i, ] < 0.1)]
 
     if (verbosity == "debug") {
@@ -45,12 +43,6 @@ CheckReducibility <- function(featureMat,
             file = "lCovariatesIsZero.txt",
             append = TRUE)
       return(statusLine)
-    }
-
-    if (length (lCovariates) == 0 ) {
-      write("This should never be printed!!!",
-            file = "lCovariatesIsZero.txt",
-            append = TRUE)
     }
 
     for (j in seq_along(covariates)) {
@@ -74,7 +66,7 @@ CheckReducibility <- function(featureMat,
       #     abs (Ds [i, j]) > DCutoff ) {  # effect size bigger than cutoff
 
         subFeatures <- featureMat [,i]
-        subMerge <- md
+        subMerge <- metaMat
         subMerge$FeatureValue <- subFeatures
 
         # find all covariates which on their end has effect on the feature
@@ -122,14 +114,14 @@ CheckReducibility <- function(featureMat,
             aP_reverse <- eval (parse (text = as.character (aP_call_reverse)))
 
             if (! is.na (aP_forward) &&
-                aP_forward >= 0.05 &&
-                aP_reverse < 0.05) {
+                aP_forward >= PHS_cutoff &&
+                aP_reverse < PHS_cutoff) {
               status <- "CONFOUNDED"; break;
             } # another feature fully explains this
 
             if (! is.na (aP_forward) &&
-                aP_forward >= 0.05 &&
-                aP_reverse >= 0.05) {
+                aP_forward >= PHS_cutoff &&
+                aP_reverse >= PHS_cutoff) {
               status <- "LAXLY DECONFOUNDED";
             } # cannot be ruled out another feature explains this
 

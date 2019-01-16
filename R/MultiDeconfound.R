@@ -11,8 +11,8 @@
 #' Multi Deconfound checks all feature <-> covariate combinations for
 #' counfounding effects of covariates on feature <-> effect corellation
 #'
-#' @param featureMat a tab delimited file or data frame with row(sample ID) and
-#' column(feature such as metabolite or gut microbial OTU )
+#' @param featureMat a tab delimited file or data frame with row(sample ID)
+#' and column(feature such as metabolite or microbial OTU )
 #' names, listing features for all samples
 #' @param metaMat a tab delimited file or data frame with row(sample ID) and
 #' column(meta data such as age,BMI and all possible confounders)
@@ -26,6 +26,7 @@
 #' @param QCutoff significance cutoff for q-value, DEFAULT = 0.1
 #' @param DCutoff effect size cutoff
 #' (either cliff's delta or spearman correlation test estimate), DEFAULT = 0
+#' @param PHS_cutoff PostHoc Significance cutoff
 #' @param ... for additional arguments used internally (development/debugging)
 #' @return list with elements Ds = effectsize,
 #' Ps = uncorrected p-value for naive association, Qs = corrected p-value/fdr,
@@ -42,6 +43,7 @@ MultiDeconfound <- function(featureMat,
                              robustCutoff = 5,
                              QCutoff = 0.1,
                              DCutoff = 0,
+                             PHS_cutoff = 0.05,
                              ...) {
 
   if (nrow(metaMat) != nrow(featureMat)) {
@@ -55,6 +57,7 @@ MultiDeconfound <- function(featureMat,
                    robustCutoff = robustCutoff,
                    QCutoff = QCutoff,
                    DCutoff = DCutoff,
+                   PHS_cutoff = PHS_cutoff,
                    ...
                    #maintenance = maintenance,
                    #verbosity = verbosity
@@ -68,23 +71,24 @@ MultiDeconfound <- function(featureMat,
                             adjustMethod = "fdr",
                             QCutoff = 0.1,
                             DCutoff = 0,
+                            PHS_cutoff = 0.05,
                             maintenance = FALSE,
                             verbosity = "silent") {
 
-  #featureMat <- featureFile # your input data here
 
   samples <- row.names (featureMat)
   features <- colnames (featureMat)
   noFeatures <- length (features)
-
-  # read in matrix of metadata
-
-  #md <- metaFile # your input data here
-  covariates <- colnames (metaMat)
-    # each covariate + the status category, specific to example
+  covariates <- colnames (metaMat) # each covariate + the status category
   noCovariates <- length (covariates)
 
+  if (nnodes > 1) {
+    nnodes <- nnodes - 1
+  }
+
   isRobust <- CheckSufficientPower(metaMat = metaMat,
+                                   covariates = covariates,
+                                   noCovariates = noCovariates,
                                    nnodes = nnodes,
                                    robustCutoff = robustCutoff,
                                    maintenance = maintenance,
@@ -92,21 +96,26 @@ MultiDeconfound <- function(featureMat,
 
   if (verbosity == "debug") {
     print("CheckSufficientPower -- head(isRobust):")
-    print(head(isRobust))
+    print(utils::head(isRobust))
   }
 
 
   naiveAssociation <- NaiveAssociation(featureMat = featureMat,
+                                       samples = samples,
+                                       features = features,
+                                       noFeatures = noFeatures,
                                        metaMat = metaMat,
+                                       covariates = covariates,
+                                       noCovariates = noCovariates,
                                        isRobust = isRobust,
                                        adjustMethod = adjustMethod,
                                        nnodes = nnodes,
                                        maintenance = maintenance,
                                        verbosity = verbosity)
   if (verbosity == "debug") {
-    print(naiveAssociation$Ps[1:5, 1:2])
-    print(naiveAssociation$Qs[1:5, 1:2])
-    print(naiveAssociation$Ds[1:5, 1:2])
+    print(naiveAssociation$Ps[1:5, 1:3])
+    print(naiveAssociation$Qs[1:5, 1:3])
+    print(naiveAssociation$Ds[1:5, 1:3])
     print("now computing confounding status")
   }
 
@@ -122,6 +131,7 @@ MultiDeconfound <- function(featureMat,
                                           nnodes = nnodes,
                                           QCutoff = QCutoff,
                                           DCutoff = DCutoff,
+                                          PHS_cutoff = PHS_cutoff,
                                           verbosity = verbosity)
 
   if (verbosity == "debug") {

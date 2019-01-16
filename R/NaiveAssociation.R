@@ -1,9 +1,15 @@
 #' @importFrom foreach %dopar%
+#' @importFrom stats na.exclude
 # @export NaiveAssociation
 #
 
 NaiveAssociation <- function(featureMat,
+                             samples,
+                             features,
+                             noFeatures,
                              metaMat,
+                             covariates,
+                             noCovariates,
                              isRobust,
                              nnodes,
                              maintenance,
@@ -25,19 +31,6 @@ NaiveAssociation <- function(featureMat,
     Ps <- "dummy"
     return(list(Ps=Ps, Ds=Ds, Qs=Qs))
   }
-  featureMat <- featureMat # your input data here
-  samples <- row.names (featureMat)
-  features <- colnames (featureMat)
-  noFeatures <- length (features)
-
-  # read in matrix of metadata
-
-  md <- metaMat
-    # your input data here
-  covariates <- colnames (md)
-    # each covariate + the status category, specific to example
-  noCovariates <- length (covariates)
-
 
   # load parralel processing environment
   cl <- parallel::makeForkCluster(nnodes = nnodes, outfile = "")
@@ -47,7 +40,12 @@ NaiveAssociation <- function(featureMat,
 
 
   if (verbosity== "debug") {
-    print(paste("NaiveAssociation -- noSamples, noFeatures, noCovariates:",length(samples), noFeatures, noCovariates))
+    cat("NaiveAssociation -- \n\tnoSamples: ",
+        length(samples),
+        "\n\tnoFeatures: ",
+        noFeatures,
+        "\n\tnoCovariates: ",
+        noCovariates)
     write(paste
         ("counter",
           "aCovariate",
@@ -66,6 +64,18 @@ NaiveAssociation <- function(featureMat,
     #names(somePs) <- covariates
     #names(someDs) <- covariates
 
+
+
+    if (anyNA(featureMat [, i])) {  # if feature i contains NAs
+                                      # exclude NA rows from feature and meta
+      subFeatures <- na.exclude(featureMat [, i])
+      subMerge <- metaMat[-(stats::na.action(subFeatures)),]
+      subMerge$FeatureValue <- as.vector(subFeatures) # caveat *1*
+    } else {
+      subFeatures <- featureMat [,i]
+      subMerge <- metaMat
+      subMerge$FeatureValue <- subFeatures # caveat *1*: see snippets.R
+    }
 
 
     for (j in seq_along(covariates)) {
@@ -90,7 +100,7 @@ NaiveAssociation <- function(featureMat,
       aD <- NA_real_
       aP <- NA_real_
 
-      if (!is.na(isRobust[aCovariate, 4]) && !isRobust[aCovariate, 4]) {
+      if (!is.na(isRobust[aCovariate, 2]) && !isRobust[aCovariate, 2]) {
               somePs[j] <- aP
               someDs[j] <- aD
               if (verbosity == "debug") {
@@ -102,9 +112,9 @@ NaiveAssociation <- function(featureMat,
               next
       }
 
-      subFeatures <- featureMat [,i]
-      subMerge <- md
-      subMerge$FeatureValue <- subFeatures # caveat *1*: see snippets.R
+      # subFeatures <- featureMat [,i]
+      # subMerge <- md
+      # subMerge$FeatureValue <- subFeatures # caveat *1*: see snippets.R
 
       #con1 <- length (unique (subMerge [, aCovariate])) == 2
       con1 <- length (unique (subMerge[[aCovariate]])) == 2
@@ -112,28 +122,21 @@ NaiveAssociation <- function(featureMat,
       #con2 <- length (unique (subMerge [, aCovariate])) > 2
       con2 <- length (unique (subMerge[[aCovariate]])) > 2
       # the distribution of the covariate is continuous
-      con3 <- length (na.exclude(subMerge[subMerge[[aCovariate]] == 0, "FeatureValue"])) > 10
+      con3 <- length (
+        na.exclude (
+          subMerge[subMerge[[aCovariate]] == 0, "FeatureValue"])) > 1
       # feature has a measurement in more than one sample with
       #covaraite status 0
-      con4 <- length (na.exclude(subMerge[subMerge[[aCovariate]] == 1, "FeatureValue"])) > 10
+      con4 <- length (
+        na.exclude (
+          subMerge[subMerge[[aCovariate]] == 1, "FeatureValue"])) > 1
       # feature has a measurement in more than one sample with
       #covaraite status 1
+      con5 <- is.numeric(subMerge[[aCovariate]])
+      # covariate is true numeric (distinguishes between continuous
+        # numeric data and "level" data, that is converted to numbers)
 
-      # if (verbosity == "debug") {
-      #   write(paste("NaiveAssociation loop:",
-      #               i,
-      #               j,
-      #               "the 4 conditions are:",
-      #               con1,
-      #               con1,
-      #               con3,
-      #               con4),
-      #         file="progress.txt",
-      #         append = TRUE)
-      # }
-
-
-      if (con1 && con3 && con4) {  # MWU test if binary
+      if (con1 && con3 && con4) {  # MWU test if binary and
 
         aP <- stats::wilcox.test (
           na.exclude (
@@ -149,7 +152,7 @@ NaiveAssociation <- function(featureMat,
               subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"]))) [13]
       }
 
-      else if (con2 && con3 && con4) {  # spearman test if continuous
+      else if (con2 && con5) {  # spearman test if continuous and numerical
 
         aP <- stats::cor.test (subMerge [, aCovariate],
                                subMerge [, "FeatureValue"],
@@ -157,6 +160,15 @@ NaiveAssociation <- function(featureMat,
         aD <- stats::cor.test (subMerge [, aCovariate],
                                subMerge [, "FeatureValue"],
                                method = "spearman")$estimate
+      }
+
+      else if (con2 && !con5) {  # kruskal-wallis test if
+                                  # not binary AND not numerical
+        aP <- stats::kruskal.test (
+          g = as.factor(subMerge [[aCovariate]]),
+          x = subMerge [["FeatureValue"]])$p.value
+
+        aD <- Inf
       }
 
       somePs[j] <- aP
