@@ -37,11 +37,19 @@ in order to have sufficient power for association testing}
 }
 \value{
 list with elements Ds = effectsize,
-Ps = uncorrected p-value for naive association, Qs = corrected p-value/fdr,
-and status=  confounding/mediation status for all
+Ps = uncorrected p-value for naive association,
+Qs = multiple testing corrected p-value/fdr,
+and status = confounding/mediation status for all
 feature <=> covariate combinations
 }
 \description{
 Multi Deconfound checks all feature <-> covariate combinations for
 counfounding effects of covariates on feature <-> effect corellation
+}
+\examples{
+data(reduced_feature)
+data(metaMatMetformin)
+example_output <- MultiDeconfound(featureMat = reduced_feature,
+                                  metaMat = metaMatMetformin)
+
 }

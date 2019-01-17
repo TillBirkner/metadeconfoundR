@@ -9,7 +9,8 @@ License: GPL-2
 Encoding: UTF-8
 LazyData: true
 OS_type: unix
-Imports: orddom, lmtest, foreach, doParallel
+Imports: orddom, lmtest, foreach, doParallel, stats
 RoxygenNote: 6.1.1
 VignetteBuilder: knitr
 Suggests: BiocStyle, knitr
+biocViews: Software, Metagenomics, Microbiome, MultipleComparison, Metabolomics, Transcriptomics

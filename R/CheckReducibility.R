@@ -38,7 +38,7 @@ CheckReducibility <- function(featureMat,
     }
 
     if (length (lCovariates) == 0 ) {
-      statusLine[1:noCovariates] <- "NS"
+      statusLine[seq_along(covariates)] <- "NS"
       write("returned whole NS line",
             file = "lCovariatesIsZero.txt",
             append = TRUE)

@@ -186,16 +186,16 @@ NaiveAssociation <- function(featureMat,
     print(paste("NaiveAssociation -- ncol(parallelreturn):", ncol(r)))
   }
 
-  Ps <- r[, 1:(ncol(r)/2)]
-  rownames(Ps) <- features[1:nrow(r)]
+  Ps <- r[, seq_len(nrow(r)/2)]
+  rownames(Ps) <- features[seq_len(nrow(r))]
   colnames(Ps) <- covariates
 
-  Ds <- r[, -(1:(ncol(r)/2))]
-  rownames(Ds) <- features[1:nrow(r)]
+  Ds <- r[, -(seq_len(nrow(r)/2))]
+  rownames(Ds) <- features[seq_len(nrow(r))]
   colnames(Ds) <- covariates
 
-  Qs <- matrix (NA, length(features[1:nrow(r)]), length(covariates))
-  rownames(Qs) <- features[1:nrow(r)]
+  Qs <- matrix (NA, length(features[seq_len(nrow(r))]), length(covariates))
+  rownames(Qs) <- features[seq_len(nrow(r))]
   colnames(Qs) <- covariates
 
   ##

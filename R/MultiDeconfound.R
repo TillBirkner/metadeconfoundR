@@ -29,10 +29,17 @@
 #' @param PHS_cutoff PostHoc Significance cutoff
 #' @param ... for additional arguments used internally (development/debugging)
 #' @return list with elements Ds = effectsize,
-#' Ps = uncorrected p-value for naive association, Qs = corrected p-value/fdr,
-#' and status=  confounding/mediation status for all
+#' Ps = uncorrected p-value for naive association,
+#' Qs = multiple testing corrected p-value/fdr,
+#' and status = confounding/mediation status for all
 #' feature <=> covariate combinations
-#' @export MultiDeconfound
+#' @examples
+#'data(reduced_feature)
+#'data(metaMatMetformin)
+#'example_output <- MultiDeconfound(featureMat = reduced_feature,
+#'                                   metaMat = metaMatMetformin)
+#'
+#' @export
 #'
 
 
@@ -113,9 +120,9 @@ MultiDeconfound <- function(featureMat,
                                        maintenance = maintenance,
                                        verbosity = verbosity)
   if (verbosity == "debug") {
-    print(naiveAssociation$Ps[1:5, 1:3])
-    print(naiveAssociation$Qs[1:5, 1:3])
-    print(naiveAssociation$Ds[1:5, 1:3])
+    print(naiveAssociation$Ps[seq_len(5), seq_len(3)])
+    print(naiveAssociation$Qs[seq_len(5), seq_len(3)])
+    print(naiveAssociation$Ds[seq_len(5), seq_len(3)])
     print("now computing confounding status")
   }
 

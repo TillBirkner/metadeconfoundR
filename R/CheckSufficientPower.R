@@ -25,13 +25,6 @@ CheckSufficientPower <- function(metaMat,
     print(paste("CheckSufficientPower -- noCovariates:", noCovariates))
     print(paste("CheckSufficientPower -- dim(conditionMat): ",
                 nrow(conditionMat)))
-    # write(paste("covariate",
-    #             "control",
-    #             "condition_negative",
-    #             "condition_positive",
-    #             sep = "\t"),
-    #       file = "testfile.txt",
-    #       append = FALSE)
   }
   ##
   ##
@@ -47,28 +40,14 @@ CheckSufficientPower <- function(metaMat,
   doParallel::registerDoParallel(cl)
 
   i <- 0
-  parallelReturn <- foreach::foreach(i= 2:noCovariates,
+  parallelReturn <- foreach::foreach(i= seq_along(covariates),
                                      .combine = 'rbind') %dopar% {
-
+    if (i == 1) {
+      next
+    }
     aCovariate <- as.character (covariates [i])
-    # condition <- table(eval
-    #                    (parse
-    #                      (text = as.character
-    #                        (paste0
-    #                          ("conditionMat$",
-    #                            aCovariate)))))
-      # count number of individuals having the phenotype and not
-        #taking/taking the covariate
-    # noConditionNegative <- condition[1]
-    # noConditionPositive <- condition[2]
+
     robustCombination <- FALSE
-#
-#     if ((noConditionNegative >= robustCutoff) &&
-#         (noConditionPositive >= robustCutoff)) {
-#       robustCombination <- TRUE
-#     }
-
-
 
     if ((length(unique (metaMat[[aCovariate]])) == 2) && # binary covariate
          (length(which(table(metaMat[,c(1,i)])[2, ] < robustCutoff)) == 0)) {
@@ -95,27 +74,9 @@ CheckSufficientPower <- function(metaMat,
     }
 
 
-    ##
-    ##
-    # if (verbosity == "debug") {
-    #   write(paste
-    #         (aCovariate,
-    #           noControl,
-    #           noConditionNegative,
-    #           noConditionPositive,
-    #           robustCombination,
-    #           sep = "\t"),
-    #         file = "testfile.txt",
-    #         append = TRUE)
-    # }
-    ##
-    ##
-
     return(data.frame
            (row.names = aCovariate,
              noControl,
-             #noConditionNegative,
-             #noConditionPositive,
              robustCombination))
 
   }
