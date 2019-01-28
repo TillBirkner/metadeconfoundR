@@ -46,10 +46,13 @@ feature <=> covariate combinations
 Multi Deconfound checks all feature <-> covariate combinations for
 counfounding effects of covariates on feature <-> effect corellation
 }
+\details{
+for more details and explanations please see the vignette
+}
 \examples{
 data(reduced_feature)
 data(metaMatMetformin)
+\donttest{
 example_output <- MultiDeconfound(featureMat = reduced_feature,
-                                  metaMat = metaMatMetformin)
-
+                                  metaMat = metaMatMetformin)}
 }
