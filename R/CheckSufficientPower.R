@@ -42,10 +42,16 @@ CheckSufficientPower <- function(metaMat,
   i <- 0
   parallelReturn <- foreach::foreach(i= seq_along(covariates),
                                      .combine = 'rbind') %dopar% {
-    if (i == 1) {
-      next
-    }
+
     aCovariate <- as.character (covariates [i])
+
+    if (i == 1) {
+      robustCombination <- TRUE
+      return(data.frame
+             (row.names = aCovariate,
+               noControl,
+               robustCombination))
+    }
 
     robustCombination <- FALSE
 

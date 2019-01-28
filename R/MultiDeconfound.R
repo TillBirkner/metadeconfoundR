@@ -1,11 +1,3 @@
-#   http://r-pkgs.had.co.nz/
-#
-# Some useful keyboard shortcuts for package authoring:
-#
-#   Build and Reload Package:  'Ctrl + Shift + B'
-#   Check Package:             'Ctrl + Shift + E'
-#   Test Package:              'Ctrl + Shift + T'
-
 #' Multi Deconfound
 #'
 #' Multi Deconfound checks all feature <-> covariate combinations for
@@ -33,12 +25,13 @@
 #' Qs = multiple testing corrected p-value/fdr,
 #' and status = confounding/mediation status for all
 #' feature <=> covariate combinations
+#' @details for more details and explanations please see the vignette
 #' @examples
 #'data(reduced_feature)
 #'data(metaMatMetformin)
+#'\donttest{
 #'example_output <- MultiDeconfound(featureMat = reduced_feature,
-#'                                   metaMat = metaMatMetformin)
-#'
+#'                                   metaMat = metaMatMetformin)}
 #' @export
 #'
 
