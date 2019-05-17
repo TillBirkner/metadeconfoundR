@@ -41,6 +41,7 @@ CheckReducibility <- function(featureMat,
       if(verbosity == "debug"){
         write("returned whole NS line",
                 file = "lCovariatesIsZero.txt",
+                sep = "\t",
                 append = TRUE)
       }
       statusLine[seq_along(covariates)] <- "NS"
@@ -49,18 +50,26 @@ CheckReducibility <- function(featureMat,
 
     for (j in seq_along(covariates)) {
 
+      aFeature <- as.character (features [i])
+      aCovariate <- as.character (covariates [j])
+
       status <- "NS"
 
       if (is.na (Qs [i, j]) |
           Qs [i, j] >= QCutoff |
           abs (Ds [i, j]) <= DCutoff) {
-
         statusLine[j] <- status
+
+        if(verbosity == "debug"){
+          write(paste(aFeature, aCovariate, status, sep = "\t"),
+                file = "LRT_pValue.txt",
+                append = TRUE)
+        }
+
         next
       }
 
-      aFeature <- as.character (features [i])
-      aCovariate <- as.character (covariates [j])
+
 
       # only do post-hoc test for feature that is significant by itself
       # if ((! is.na (Qs [i, j])) &&  # if q exists
@@ -78,7 +87,8 @@ CheckReducibility <- function(featureMat,
         if (length (lCovariates) > 0 &&
             paste0 (lCovariates, collapse = "") != aCovariate) {
 
-          status <- "STRICTLY DECONFOUNDED"
+          #status <- "STRICTLY DECONFOUNDED"
+          status <- "SD"
           # hardest to reach, means no covariate eliminates this signal
 
           for (anotherCovariate in lCovariates) {
@@ -118,20 +128,36 @@ CheckReducibility <- function(featureMat,
             if (! is.na (aP_forward) &&
                 aP_forward >= PHS_cutoff &&
                 aP_reverse < PHS_cutoff) {
-              status <- "CONFOUNDED"; break;
+              #status <- "CONFOUNDED"
+              status <- anotherCovariate
+              #break
             } # another feature fully explains this
 
             if (! is.na (aP_forward) &&
                 aP_forward >= PHS_cutoff &&
                 aP_reverse >= PHS_cutoff) {
-              status <- "LAXLY DECONFOUNDED";
+              #status <- "LAXLY DECONFOUNDED"
+              status <- "LD"
             } # cannot be ruled out another feature explains this
+
+            if(verbosity == "debug"){
+              write(paste(aFeature,
+                          aCovariate,
+                          anotherCovariate,
+                          aP_forward,
+                          aP_reverse,
+                          status,
+                          sep = "\t"),
+                    file = "LRT_pValue.txt",
+                    append = TRUE)
+            }
 
           }
 
         } else {
-          status <- "NO COVARIATES" # trivially unconfounded because no
-                                      #other features plays a role
+          #status <- "NO COVARIATES"
+          status <- "NC"# trivially unconfounded because no
+                                      #other features play a role
         }
 
       # }# status assignment for a sinlge feature <-> covariate combination

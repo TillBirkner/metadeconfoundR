@@ -1,6 +1,6 @@
 %\VignetteIndexEntry{1. Introduction to BiocParallel}
 %\VignetteKeywords{parallel, Infrastructure}
-%\VignettePackage{BiocParallel}
+%\VignettePackage{MultiDeconfoundR}
 %\VignetteEngine{knitr::knitr}
 
 
@@ -39,6 +39,12 @@ BiocStyle::latex()
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \packageVersion{\Sexpr{BiocStyle::pkg_ver("MultiDeconfounder")}}
+\Rpackage{MultideconfoundR} was developed to analyze large scale multi-omics datasets in parallel. It first looks for significant association between omics features like gut microbial OTUs and metadata like drug administration: After sufficient dataset size is checked,  simple association testing is done based on the data type of the respective metadata. %(Fig~\ref{fig:statistics}, left). 
+All three used tests(Wilcoxon/MWU \Rcode{wilcox.test()} for binary, Spearman correlation \Rcode{cor.test()} for continuous numerical, Kruskall \Rcode{kruskal.test()} for neither numerical nor binary) use ranked values. This way assumptions about data distribution are minimized.
+In addition to collecting p-values for all computed tests, effect size is measured if possible. In case of binary data, Cliff's Delta is computed using the \Rcode{orddom::orddom()} function. For continuous data the ``estimate" component from \Rcode{cor.test()} is used.
+
+In a second step, all hits are checked for confounding effects and a status is reported for feature, metadata combination.
+ 
 %Numerous approaches are available for parallel computing in \R{}. The
 %CRAN Task View for high performance and parallel computing provides
 %useful high-level summaries and package categorization.
@@ -92,18 +98,18 @@ BiocStyle::latex()
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%The \Rpackage{BiocParallel} package is available at bioconductor.org
-%and can be downloaded via \Rcode{BiocManager}:
-%<<BiocManager, eval=FALSE>>=
+The \Rpackage{MultideconfoundR} package is available at bioconductor.org
+and can be downloaded via \Rcode{BiocManager}:
+<<BiocManager, eval=FALSE>>=
+
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("MultideconfoundR")
+@
 %
-%if (!requireNamespace("BiocManager", quietly = TRUE))
-%    install.packages("BiocManager")
-%BiocManager::install("BiocParallel")
-%@
-%
-%Load \BiocParallel{}.
-%<<BiocParallel>>=
-%library(BiocParallel)
+%Load \MultideconfoundR{}.
+%<<MultideconfoundR>>=
+%library(MultideconfoundR)
 %@
 %
 %The test function simply returns the square root of ``x''.

@@ -9,11 +9,11 @@ MultiDeconfound(featureMat, metaMat, nnodes = 1, adjustMethod = "fdr",
   ...)
 }
 \arguments{
-\item{featureMat}{a tab delimited file or data frame with row(sample ID)
+\item{featureMat}{a data frame with row(sample ID)
 and column(feature such as metabolite or microbial OTU )
 names, listing features for all samples}
 
-\item{metaMat}{a tab delimited file or data frame with row(sample ID) and
+\item{metaMat}{a data frame with row(sample ID) and
 column(meta data such as age,BMI and all possible confounders)
 names listing metadata for all samples. first column should be case status
 with case=1 and control=0.}
@@ -40,7 +40,9 @@ list with elements Ds = effectsize,
 Ps = uncorrected p-value for naive association,
 Qs = multiple testing corrected p-value/fdr,
 and status = confounding/mediation status for all
-feature <=> covariate combinations
+feature <=> covariate combinations with following categories:
+(NS = not significant, SD = strictly deconfounded, LD = laxly deconfounded,
+NC = no covariates, "covariate name" = confounded by this covariate)
 }
 \description{
 Multi Deconfound checks all feature <-> covariate combinations for

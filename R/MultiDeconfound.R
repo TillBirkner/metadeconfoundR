@@ -3,10 +3,10 @@
 #' Multi Deconfound checks all feature <-> covariate combinations for
 #' counfounding effects of covariates on feature <-> effect corellation
 #'
-#' @param featureMat a tab delimited file or data frame with row(sample ID)
+#' @param featureMat a data frame with row(sample ID)
 #' and column(feature such as metabolite or microbial OTU )
 #' names, listing features for all samples
-#' @param metaMat a tab delimited file or data frame with row(sample ID) and
+#' @param metaMat a data frame with row(sample ID) and
 #' column(meta data such as age,BMI and all possible confounders)
 #' names listing metadata for all samples. first column should be case status
 #' with case=1 and control=0.
@@ -24,7 +24,9 @@
 #' Ps = uncorrected p-value for naive association,
 #' Qs = multiple testing corrected p-value/fdr,
 #' and status = confounding/mediation status for all
-#' feature <=> covariate combinations
+#' feature <=> covariate combinations with following categories:
+#' (NS = not significant, SD = strictly deconfounded, LD = laxly deconfounded,
+#' NC = no covariates, "covariate name" = confounded by this covariate)
 #' @details for more details and explanations please see the vignette
 #' @examples
 #'data(reduced_feature)
@@ -45,7 +47,12 @@ MultiDeconfound <- function(featureMat,
                              DCutoff = 0,
                              PHS_cutoff = 0.05,
                              ...) {
-
+  if (missing(metaMat)) {
+    stop('Error - Necessary argument "metaMat" missing.')
+  }
+  if (missing(featureMat)) {
+    stop('Error - Necessary argument "featureMat" missing.')
+  }
   if (nrow(metaMat) != nrow(featureMat)) {
     stop("featureMat and metaMat don't have same number of rows.")
   }
@@ -113,9 +120,9 @@ MultiDeconfound <- function(featureMat,
                                        maintenance = maintenance,
                                        verbosity = verbosity)
   if (verbosity == "debug") {
-    print(naiveAssociation$Ps[seq_len(5), seq_len(3)])
-    print(naiveAssociation$Qs[seq_len(5), seq_len(3)])
-    print(naiveAssociation$Ds[seq_len(5), seq_len(3)])
+    print(naiveAssociation$Ps[seq_len(3), seq_len(noCovariates)])
+    print(naiveAssociation$Qs[seq_len(3), seq_len(noCovariates)])
+    print(naiveAssociation$Ds[seq_len(3), seq_len(noCovariates)])
     print("now computing confounding status")
   }
 

@@ -1,5 +1,6 @@
 #' @importFrom foreach %dopar%
-#' @importFrom stats na.exclude
+# @importFrom stats na.exclude
+#' @import stats
 # @export NaiveAssociation
 #
 
@@ -38,7 +39,8 @@ NaiveAssociation <- function(featureMat,
   doParallel::registerDoParallel(cl)
   i <- 0
 
-
+  ##
+  ##
   if (verbosity== "debug") {
     cat("NaiveAssociation -- \n\tnoSamples: ",
         length(samples),
@@ -56,13 +58,18 @@ NaiveAssociation <- function(featureMat,
         file="progress.txt",
         append = FALSE)
   }
+  ##
+  ##
   r = foreach::foreach(i= seq_along(features), .combine='rbind') %dopar% {
 
     somePs <- vector(length = noCovariates)
     someDs <- vector(length = noCovariates)
 
-    #names(somePs) <- covariates
-    #names(someDs) <- covariates
+    if (var(featureMat[, i], na.rm = TRUE) == 0 ) {
+      somePs[seq_along(covariates)] <- 0
+      someDs[seq_along(covariates)] <- 0
+      return(c(as.numeric(somePs), as.numeric(someDs)))
+    }
 
 
 
