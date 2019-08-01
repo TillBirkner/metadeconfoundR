@@ -6,7 +6,7 @@
 \usage{
 MultiDeconfound(featureMat, metaMat, nnodes = 1, adjustMethod = "fdr",
   robustCutoff = 5, QCutoff = 0.1, DCutoff = 0, PHS_cutoff = 0.05,
-  ...)
+  NA_imputation = "remove", ...)
 }
 \arguments{
 \item{featureMat}{a data frame with row(sample ID)
@@ -32,6 +32,10 @@ in order to have sufficient power for association testing}
 (either cliff's delta or spearman correlation test estimate), DEFAULT = 0}
 
 \item{PHS_cutoff}{PostHoc Significance cutoff}
+
+\item{NA_imputation}{Missing data treatment. "remove": remove NA containing
+data from analysis (default).
+"others": Impute NAs with using methods from packages MICE or AMELIA}
 
 \item{...}{for additional arguments used internally (development/debugging)}
 }

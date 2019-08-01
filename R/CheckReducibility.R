@@ -38,12 +38,18 @@ CheckReducibility <- function(featureMat,
     }
 
     if (length (lCovariates) == 0 ) {
+
+      ##
+      ##
       if(verbosity == "debug"){
         write("returned whole NS line",
                 file = "lCovariatesIsZero.txt",
                 sep = "\t",
                 append = TRUE)
       }
+      ##
+      ##
+
       statusLine[seq_along(covariates)] <- "NS"
       return(statusLine)
     }
@@ -79,6 +85,7 @@ CheckReducibility <- function(featureMat,
         subFeatures <- featureMat [,i]
         subMerge <- metaMat
         subMerge$FeatureValue <- subFeatures
+        subMerge <- as.data.frame(na.exclude(subMerge))
 
         # find all covariates which on their end has effect on the feature
 
@@ -122,8 +129,44 @@ CheckReducibility <- function(featureMat,
                       aCovariate,
                       ", data = subMerge))$'Pr(>Chisq)' [2]")
 
-            aP_forward <- eval (parse (text = as.character (aP_call_forward)))
-            aP_reverse <- eval (parse (text = as.character (aP_call_reverse)))
+            if(verbosity == "debug"){
+              write(paste("I have come this far", i, j,  sep = "\t"),
+                    file = "LRT_pValue.txt",
+                    append = TRUE)
+            }
+
+            tryCatch({
+                        aP_forward <- eval (parse (text = as.character (aP_call_forward)))
+                      },
+                      error=function(cond){
+                        if(verbosity == "debug"){
+                          write(paste("there seems tpo be aproblem here", i, j, cond,  sep = "\t"),
+                                file = "LRT_pValue.txt",
+                                append = TRUE)
+                        }
+                        message("HEEEELP")
+                        message(cond)
+                        return(NA)
+                      }
+                     )
+
+            tryCatch({
+              aP_reverse <- eval (parse (text = as.character (aP_call_reverse)))
+            },
+            error=function(cond){
+              if(verbosity == "debug"){
+                write(paste("there seems tpo be aproblem here", i, j, cond,  sep = "\t"),
+                      file = "LRT_pValue.txt",
+                      append = TRUE)
+              }
+              message("HEEEELP")
+              message(cond)
+              return(NA)
+            }
+            )
+
+            #aP_forward <- try(eval (parse (text = as.character (aP_call_forward))), outFile = "~/IsItHere.txt")
+            #aP_reverse <- try(eval (parse (text = as.character (aP_call_reverse))), outFile = "~/IsItHere.txt")
 
             if (! is.na (aP_forward) &&
                 aP_forward >= PHS_cutoff &&

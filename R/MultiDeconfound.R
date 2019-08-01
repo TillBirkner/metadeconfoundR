@@ -19,6 +19,9 @@
 #' @param DCutoff effect size cutoff
 #' (either cliff's delta or spearman correlation test estimate), DEFAULT = 0
 #' @param PHS_cutoff PostHoc Significance cutoff
+#' @param NA_imputation Missing data treatment. "remove": remove NA containing
+#' data from analysis (default).
+#' "others": Impute NAs  using methods from packages MICE or AMELIA
 #' @param ... for additional arguments used internally (development/debugging)
 #' @return list with elements Ds = effectsize,
 #' Ps = uncorrected p-value for naive association,
@@ -27,7 +30,7 @@
 #' feature <=> covariate combinations with following categories:
 #' (NS = not significant, SD = strictly deconfounded, LD = laxly deconfounded,
 #' NC = no covariates, "covariate name" = confounded by this covariate)
-#' @details for more details and explanations please see the vignette
+#' @details for more details and explanations please see the vignette.
 #' @examples
 #'data(reduced_feature)
 #'data(metaMatMetformin)
@@ -46,6 +49,7 @@ MultiDeconfound <- function(featureMat,
                              QCutoff = 0.1,
                              DCutoff = 0,
                              PHS_cutoff = 0.05,
+                             NA_imputation = "remove",
                              ...) {
   if (missing(metaMat)) {
     stop('Error - Necessary argument "metaMat" missing.')
@@ -79,6 +83,7 @@ MultiDeconfound <- function(featureMat,
                             QCutoff = 0.1,
                             DCutoff = 0,
                             PHS_cutoff = 0.05,
+                            NA_imputation = "remove",
                             maintenance = FALSE,
                             verbosity = "silent") {
 
@@ -93,11 +98,18 @@ MultiDeconfound <- function(featureMat,
     nnodes <- nnodes - 1
   }
 
+  if (NA_imputation != "remove") {
+    #impute using mice or somn like dat
+    #featureMat <- mice(featuremat)
+    #metaMat <- mice(metaMat)
+  }
+
   isRobust <- CheckSufficientPower(metaMat = metaMat,
                                    covariates = covariates,
                                    noCovariates = noCovariates,
                                    nnodes = nnodes,
                                    robustCutoff = robustCutoff,
+                                   NA_imputation = NA_imputation,
                                    maintenance = maintenance,
                                    verbosity = verbosity)
 

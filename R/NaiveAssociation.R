@@ -73,16 +73,22 @@ NaiveAssociation <- function(featureMat,
 
 
 
-    if (anyNA(featureMat [, i])) {  # if feature i contains NAs
-                                      # exclude NA rows from feature and meta
-      subFeatures <- na.exclude(featureMat [, i])
-      subMerge <- metaMat[-(stats::na.action(subFeatures)),]
-      subMerge$FeatureValue <- as.vector(subFeatures) # caveat *1*
-    } else {
-      subFeatures <- featureMat [,i]
-      subMerge <- metaMat
-      subMerge$FeatureValue <- subFeatures # caveat *1*: see snippets.R
-    }
+    # if (anyNA(featureMat [, i])) {  # if feature i contains NAs
+    #                                   # exclude NA rows from feature and meta
+    #   subFeatures <- na.exclude(featureMat [, i])
+    #   subMerge <- metaMat[-(stats::na.action(subFeatures)),]
+    #   subMerge$FeatureValue <- as.vector(subFeatures) # caveat *1*
+    # } else {
+    #   subFeatures <- featureMat [,i]
+    #   subMerge <- metaMat
+    #   subMerge$FeatureValue <- subFeatures # caveat *1*: see snippets.R
+    # }
+
+    #new approach
+    subFeatures <- featureMat [,i]
+    subMerge <- metaMat
+    subMerge$FeatureValue <- subFeatures
+    #subMerge <- as.data.frame(na.exclude(subMerge))
 
 
     for (j in seq_along(covariates)) {
@@ -90,6 +96,9 @@ NaiveAssociation <- function(featureMat,
 
       aFeature <- as.character (features [i])
       aCovariate <- as.character (covariates [j])
+
+      ##
+      ##
       if (verbosity == "debug") {
         if (j>1) {
           write(paste
@@ -103,6 +112,8 @@ NaiveAssociation <- function(featureMat,
                 append = TRUE)
         }
       }
+      ##
+      ##
 
       aD <- NA_real_
       aP <- NA_real_
@@ -110,11 +121,16 @@ NaiveAssociation <- function(featureMat,
       if (!is.na(isRobust[aCovariate, 2]) && !isRobust[aCovariate, 2]) {
               somePs[j] <- aP
               someDs[j] <- aD
+
+              ##
+              ##
               if (verbosity == "debug") {
                 write("skipped",
                       file="progress.txt",
                       append = TRUE)
               }
+              ##
+              ##
 
               next
       }

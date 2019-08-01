@@ -8,6 +8,7 @@ CheckSufficientPower <- function(metaMat,
                                  noCovariates,
                                  nnodes,
                                  robustCutoff,
+                                 NA_imputation,
                                  maintenance,
                                  verbosity) {
 
@@ -15,8 +16,8 @@ CheckSufficientPower <- function(metaMat,
 
   conditionMat <- metaMat[metaMat[,1] == 1, ] # extract all "positive" samples
 
-  noCondition <- nrow(conditionMat)
-  noControl <- nrow(metaMat) - noCondition
+  noCondition <- nrow(conditionMat) # number of positives
+  noControl <- nrow(metaMat) - noCondition # number of negatives
 
   ##
   ##
@@ -65,7 +66,7 @@ CheckSufficientPower <- function(metaMat,
     } else if (length(unique (metaMat[[aCovariate]])) > 2) {  # not binary
       if (is.numeric(metaMat[[aCovariate]])) {  # continuous coavariate
         if (length(which(conditionMat[[aCovariate]] > 0)) >= robustCutoff) {
-        # if at least robustCutoff samples of
+        # if at least ~robustCutoff~ samples of
           # "deseased"-status are bigger than 0
           robustCombination <- TRUE
         }
