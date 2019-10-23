@@ -82,10 +82,11 @@ CheckReducibility <- function(featureMat,
       #     Qs [i, j] < QCutoff &&  # q smaller then cutoff
       #     abs (Ds [i, j]) > DCutoff ) {  # effect size bigger than cutoff
 
-        subFeatures <- featureMat [,i]
-        subMerge <- metaMat
-        subMerge$FeatureValue <- subFeatures
-        subMerge <- as.data.frame(na.exclude(subMerge))
+        #new approach --> append i-th feature to the metaMat dataframe
+      subMerge <- metaMat
+      subMerge$FeatureValue <- featureMat [,i]
+      subMerge <- na.exclude(subMerge)
+      #subMerge <- as.data.frame(na.exclude(subMerge))
 
         # find all covariates which on their end has effect on the feature
 

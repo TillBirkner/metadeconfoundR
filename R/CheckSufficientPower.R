@@ -14,25 +14,28 @@ CheckSufficientPower <- function(metaMat,
 
 ## ---- test-b ---
 
-  conditionMat <- metaMat[metaMat[,1] == 1, ] # extract all "positive" samples
-
-  noCondition <- nrow(conditionMat) # number of positives
-  noControl <- nrow(metaMat) - noCondition # number of negatives
+  metaMat <- na.exclude(metaMat)
+    # exclude NA entries from metaMat
+  noCondition <- nrow(metaMat[metaMat[,1] == 1, ])
+    # number of samples with Status == 1
+  noControl <- nrow(metaMat[metaMat[,1] == 0, ])
+    # number of samples with Status == 0
+  conditionMat <- metaMat[metaMat[,1] == 1, ]
 
   ##
   ##
   if (verbosity == "debug") {
-    print(paste("CheckSufficientPower -- covariates:", paste(covariates)))
+    print(paste("CheckSufficientPower -- covariates:", c(paste(covariates))))
     print(paste("CheckSufficientPower -- noCovariates:", noCovariates))
-    print(paste("CheckSufficientPower -- dim(conditionMat): ",
-                nrow(conditionMat)))
+    #print(paste("CheckSufficientPower -- dim(conditionMat): ",
+    #            nrow(conditionMat)))
   }
   ##
   ##
 
   if (noCondition < 10 | noControl < 10) {
-    stop("Number of samples with status (first column metaMat)
-         0 or 1 below robustCutoff")
+    stop(paste("Number of samples with status (first column metaMat)
+         0 or 1 below robustCutoff", noControl, noCondition))
   }
 
   cl <- parallel::makeForkCluster(nnodes = nnodes, outfile="")

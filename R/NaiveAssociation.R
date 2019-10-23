@@ -84,10 +84,9 @@ NaiveAssociation <- function(featureMat,
     #   subMerge$FeatureValue <- subFeatures # caveat *1*: see snippets.R
     # }
 
-    #new approach
-    subFeatures <- featureMat [,i]
+    #new approach --> append i-th feature to the metaMat dataframe
     subMerge <- metaMat
-    subMerge$FeatureValue <- subFeatures
+    subMerge$FeatureValue <- featureMat [,i] # caveat *1*: see snippets.R
     #subMerge <- as.data.frame(na.exclude(subMerge))
 
 
@@ -139,40 +138,43 @@ NaiveAssociation <- function(featureMat,
       # subMerge <- md
       # subMerge$FeatureValue <- subFeatures # caveat *1*: see snippets.R
 
-      #con1 <- length (unique (subMerge [, aCovariate])) == 2
-      con1 <- length (unique (subMerge[[aCovariate]])) == 2
-      # the distribution of the covariate is binary
-      #con2 <- length (unique (subMerge [, aCovariate])) > 2
-      con2 <- length (unique (subMerge[[aCovariate]])) > 2
-      # the distribution of the covariate is continuous
+      con1 <- length (unique (na.exclude(subMerge[[aCovariate]]))) == 2
+        # the distribution of the covariate is binary
+      con2 <- length (unique (na.exclude(subMerge[[aCovariate]]))) > 2
+        # the distribution of the covariate is continuous (more than 2 levels)
       con3 <- length (
-        na.exclude (
-          subMerge[subMerge[[aCovariate]] == 0, "FeatureValue"])) > 1
-      # feature has a measurement in more than one sample with
-      #covaraite status 0
+                na.exclude(
+                  subMerge[subMerge[[aCovariate]] == 0, "FeatureValue"])) > 1
+        # feature has a measurement in more than one sample with
+          #covaraite status == 0
       con4 <- length (
-        na.exclude (
-          subMerge[subMerge[[aCovariate]] == 1, "FeatureValue"])) > 1
-      # feature has a measurement in more than one sample with
-      #covaraite status 1
+                na.exclude(
+                  subMerge[subMerge[[aCovariate]] == 1, "FeatureValue"])) > 1
+        # feature has a measurement in more than one sample with
+          #covaraite status == 1
       con5 <- is.numeric(subMerge[[aCovariate]])
-      # covariate is true numeric (distinguishes between continuous
-        # numeric data and "level" data, that is converted to numbers)
+        # covariate is true numeric (distinguishes between continuous
+          # numeric data and "level" data, that is converted to numbers)
 
       if (con1 && con3 && con4) {  # MWU test if binary and
 
         aP <- stats::wilcox.test (
-          na.exclude (
-            subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"]),
-          na.exclude (
-            subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"]))$p.value
-        aD <- orddom::orddom (
+            subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"],
+            subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"])$p.value
+        # aD <- orddom::orddom (
+        #   as.vector (
+        #     na.exclude (
+        #       subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"])),
+        #   as.vector (
+        #     na.exclude (
+        #       subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"]))) [13]
+        aD <- CliffsDelta(
           as.vector (
             na.exclude (
               subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"])),
           as.vector (
             na.exclude (
-              subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"]))) [13]
+              subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"])))
       }
 
       else if (con2 && con5) {  # spearman test if continuous and numerical

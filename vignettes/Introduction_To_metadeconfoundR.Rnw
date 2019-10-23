@@ -21,10 +21,10 @@ BiocStyle::latex()
 %})
 %@
 
-\newcommand{\MultiDeconfounder}{\Biocpkg{MultiDeconfounder}}
+\newcommand{\metadeconfoundR}{\Biocpkg{metadeconfoundR}}
 
-\title{Introduction to \MultiDeconfounder}
-\author{all the names\footnote{\url{tillb@online.de}}}
+\title{Introduction to \metadeconfoundR}
+\author{Till Birkner\footnote{\url{tillb@online.de}}, Sofia K. Forslund}
 \date{Edited: December 13, 2018; Compiled: \today}
 
 \begin{document}
@@ -38,13 +38,13 @@ BiocStyle::latex()
 \section{Introduction}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\packageVersion{\Sexpr{BiocStyle::pkg_ver("MultiDeconfounder")}}
-\Rpackage{MultideconfoundR} was developed to analyze large scale multi-omics datasets in parallel. It first looks for significant association between omics features like gut microbial OTUs and metadata like drug administration: After sufficient dataset size is checked,  simple association testing is done based on the data type of the respective metadata. %(Fig~\ref{fig:statistics}, left). 
-All three used tests(Wilcoxon/MWU \Rcode{wilcox.test()} for binary, Spearman correlation \Rcode{cor.test()} for continuous numerical, Kruskall \Rcode{kruskal.test()} for neither numerical nor binary) use ranked values. This way assumptions about data distribution are minimized.
-In addition to collecting p-values for all computed tests, effect size is measured if possible. In case of binary data, Cliff's Delta is computed using the \Rcode{orddom::orddom()} function. For continuous data the ``estimate" component from \Rcode{cor.test()} is used.
-
-In a second step, all hits are checked for confounding effects and a status is reported for feature, metadata combination.
- 
+%\packageVersion{\Sexpr{BiocStyle::pkg_ver("metadeconfoundR")}}
+%\Rpackage{metadeconfoundR} was developed to analyze large scale multi-omics datasets in parallel. It first looks for significant association between omics features like gut microbial OTUs and metadata like drug administration: After sufficient dataset size is checked,  simple association testing is done based on the data type of the respective metadata. %(Fig~\ref{fig:statistics}, left). 
+%All three used tests(Wilcoxon/MWU \Rcode{wilcox.test()} for binary, Spearman correlation \Rcode{cor.test()} for continuous numerical, Kruskall \Rcode{kruskal.test()} for neither numerical nor binary) use ranked values. This way assumptions about data distribution are minimized.
+%In addition to collecting p-values for all computed tests, effect size is measured if possible. In case of binary data, Cliff's Delta is computed using the \Rcode{orddom::orddom()} function. For continuous data the ``estimate" component from \Rcode{cor.test()} is used.
+%
+%In a second step, all hits are checked for confounding effects and a status is reported for feature, metadata combination.
+ For now please direct questions and bug reports to Till Birkner, a detailed introduction to the package will be added at a later stage.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -52,7 +52,7 @@ In a second step, all hits are checked for confounding effects and a status is r
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Install via tar.gz file: \Rcode{install.packages("MultiDeconfounder\_0.1.0.tar.gz", repos = NULL)}
+Install via tar.gz file: \Rcode{install.packages("metadeconfoundR\_0.1.1.tar.gz", repos = NULL)}
 %The \Rpackage{MultideconfoundR} package is available at bioconductor.org
 %and can be downloaded via \Rcode{BiocManager}:
 %<<BiocManager, eval=FALSE>>=

@@ -1,6 +1,6 @@
-#' Multi Deconfound
+#' metadeconfoundR
 #'
-#' Multi Deconfound checks all feature <-> covariate combinations for
+#' metadeconfoundR checks all feature <-> covariate combinations for
 #' counfounding effects of covariates on feature <-> effect corellation
 #'
 #' @param featureMat a data frame with row(sample ID)
@@ -35,13 +35,13 @@
 #'data(reduced_feature)
 #'data(metaMatMetformin)
 #'\donttest{
-#'example_output <- MultiDeconfound(featureMat = reduced_feature,
+#'example_output <- MetaDeconfound(featureMat = reduced_feature,
 #'                                   metaMat = metaMatMetformin)}
 #' @export
 #'
 
 
-MultiDeconfound <- function(featureMat,
+MetaDeconfound <- function(featureMat,
                              metaMat,
                              nnodes = 1,
                              adjustMethod = "fdr",
@@ -61,7 +61,7 @@ MultiDeconfound <- function(featureMat,
     stop("featureMat and metaMat don't have same number of rows.")
   }
 
-  .MultiDeconfound(featureMat = featureMat,
+  .MetaDeconfound(featureMat = featureMat,
                    metaMat = metaMat,
                    nnodes = nnodes,
                    adjustMethod = adjustMethod,
@@ -75,7 +75,7 @@ MultiDeconfound <- function(featureMat,
                    )
 }
 
-.MultiDeconfound <- function(featureMat,
+.MetaDeconfound <- function(featureMat,
                             metaMat,
                             nnodes = 1,
                             robustCutoff = 5,

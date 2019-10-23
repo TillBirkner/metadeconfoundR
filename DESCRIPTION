@@ -1,7 +1,7 @@
-Package: MultiDeconfounder
+Package: metadeconfoundR
 Type: Package
 Title: Check Multiple Covariates for Potenial Counfinding Effects
-Version: 0.1.0
+Version: 0.1.1
 Author: Sofia Forslund, Ulrike Löber, Till Birkner
 Maintainer: Till Birkner <tillb@online.de>
 Description: Here comes the longer yet precise description.
@@ -9,7 +9,7 @@ License: GPL-2
 Encoding: UTF-8
 LazyData: true
 OS_type: unix
-Imports: orddom, lmtest, foreach, doParallel, stats
+Imports: lmtest, foreach, doParallel, stats, bigmemory
 RoxygenNote: 6.1.1
 VignetteBuilder: knitr
 Suggests: BiocStyle, knitr
