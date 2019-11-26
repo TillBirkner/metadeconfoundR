@@ -22,6 +22,7 @@
 #' @param NA_imputation Missing data treatment. "remove": remove NA containing
 #' data from analysis (default).
 #' "others": Impute NAs  using methods from packages MICE or AMELIA
+#' (not yet implemented)
 #' @param ... for additional arguments used internally (development/debugging)
 #' @return list with elements Ds = effectsize,
 #' Ps = uncorrected p-value for naive association,

@@ -35,7 +35,8 @@ in order to have sufficient power for association testing}
 
 \item{NA_imputation}{Missing data treatment. "remove": remove NA containing
 data from analysis (default).
-"others": Impute NAs  using methods from packages MICE or AMELIA}
+"others": Impute NAs  using methods from packages MICE or AMELIA
+(not yet implemented)}
 
 \item{...}{for additional arguments used internally (development/debugging)}
 }

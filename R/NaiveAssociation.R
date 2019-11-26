@@ -156,25 +156,31 @@ NaiveAssociation <- function(featureMat,
         # covariate is true numeric (distinguishes between continuous
           # numeric data and "level" data, that is converted to numbers)
 
+      if (verbosity == "debug" && i == 1) {
+        write(paste(covariates[j], con1, con2, con3, con4, con5),
+              file="data_type.txt",
+              append = TRUE)
+      }
+
       if (con1 && con3 && con4) {  # MWU test if binary and
 
         aP <- stats::wilcox.test (
             subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"],
             subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"])$p.value
-        # aD <- orddom::orddom (
-        #   as.vector (
-        #     na.exclude (
-        #       subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"])),
-        #   as.vector (
-        #     na.exclude (
-        #       subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"]))) [13]
-        aD <- CliffsDelta(
+        aD <- orddom::orddom (
           as.vector (
             na.exclude (
               subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"])),
           as.vector (
             na.exclude (
-              subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"])))
+              subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"]))) [13]
+        # aD <- CliffsDelta(
+        #   as.vector (
+        #     na.exclude (
+        #       subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"])),
+        #   as.vector (
+        #     na.exclude (
+        #       subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"])))
       }
 
       else if (con2 && con5) {  # spearman test if continuous and numerical
