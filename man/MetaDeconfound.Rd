@@ -2,11 +2,35 @@
 % Please edit documentation in R/MetaDeconfound.R
 \name{MetaDeconfound}
 \alias{MetaDeconfound}
-\title{metadeconfoundR}
+\title{Metadeconfound}
 \usage{
-MetaDeconfound(featureMat, metaMat, nnodes = 1, adjustMethod = "fdr",
-  robustCutoff = 5, QCutoff = 0.1, DCutoff = 0, PHS_cutoff = 0.05,
-  NA_imputation = "remove", ...)
+MetaDeconfound(
+  featureMat,
+  metaMat,
+  nnodes = 1,
+  adjustMethod = "fdr",
+  robustCutoff = 5,
+  QCutoff = 0.1,
+  DCutoff = 0,
+  PHS_cutoff = 0.05,
+  NA_imputation = "remove",
+  logfile = NULL,
+  intermediateOutput = NULL,
+  startStop = NA,
+  QValues = NA,
+  DValues = NA,
+  minQValues = NULL,
+  deconfT = NULL,
+  deconfF = NULL,
+  doConfs = 0,
+  doRanks = NA,
+  randomVar = NA,
+  robustCutoffRho = NULL,
+  typeCategorical = NULL,
+  typeContinuous = NULL,
+  logistic = FALSE,
+  ...
+)
 }
 \arguments{
 \item{featureMat}{a data frame with row(sample ID)
@@ -16,7 +40,7 @@ names, listing features for all samples}
 \item{metaMat}{a data frame with row(sample ID) and
 column(meta data such as age,BMI and all possible confounders)
 names listing metadata for all samples. first column should be case status
-with case=1 and control=0.}
+with case=1 and control=0. All binary variables need to be in 0/1 syntax!}
 
 \item{nnodes}{number of nodes/cores to be used for parallel processing}
 
@@ -38,6 +62,49 @@ data from analysis (default).
 "others": Impute NAs  using methods from packages MICE or AMELIA
 (not yet implemented)}
 
+\item{logfile}{name of optional logging file}
+
+\item{intermediateOutput}{name base for optional intermediate files
+(Ps, Qs and Ds from final ouput)}
+
+\item{startStop}{vector of optional strings controlling which
+parts of the pipeline should be executed.
+("naiveStop": only naive associations will be computed, no confounder analysis is done)}
+
+\item{QValues}{optional data.frame containing pre-computed multiple-testing corrected p-values for naive associations}
+
+\item{DValues}{optional data.frame containing pre-computed effect sizes for naive associations}
+
+\item{minQValues}{pessimistic qvalues}
+
+\item{deconfT}{vector of metavariable names *always* to be included as potenital confounder}
+
+\item{deconfF}{vector of metavariable names *never* to be included as potenital confounder}
+
+\item{doConfs}{optional parameter for additional computation of confidence
+interval of linear models in the deconfounding step
+(0 = no , 1 = logging, 2 = strict)}
+
+\item{doRanks}{optional vector of metavariable names, that should be rank
+transformed when building linear models in the doconfounding step}
+
+\item{randomVar}{optional list with 2 elements. First: character string that should be appended to all
+linear models used in the confounder analysis to account for random effect
+variables. This string is part of the input to lme4::lmer() so syntax must
+concur with that of lmer(). Second: vector of all variable names used in the string.
+(e.g list("+ (1 | D) + (1 | E:D)" , c("D", "E")))}
+
+\item{robustCutoffRho}{optional robustness cutoff for continuous variables}
+
+\item{typeCategorical}{optional character vector of metavariable names to
+always be treated as categorical}
+
+\item{typeContinuous}{optional character vector of metavariable names to
+always be treated as continuous}
+
+\item{logistic}{optional logical parameter; DEFAULT = FALSE;
+Set TRUE to treat supplied features as binary instead of continuous}
+
 \item{...}{for additional arguments used internally (development/debugging)}
 }
 \value{
@@ -50,7 +117,7 @@ feature <=> covariate combinations with following categories:
 NC = no covariates, "covariate name" = confounded by this covariate)
 }
 \description{
-metadeconfoundR checks all feature <-> covariate combinations for
+Metadeconfound checks all feature <-> covariate combinations for
 counfounding effects of covariates on feature <-> effect corellation
 }
 \details{
@@ -62,4 +129,5 @@ data(metaMatMetformin)
 \donttest{
 example_output <- MetaDeconfound(featureMat = reduced_feature,
                                   metaMat = metaMatMetformin)}
+
 }

@@ -1,11 +1,11 @@
-%\VignetteIndexEntry{1. Introduction to MultiDeconfounder}
+%\VignetteIndexEntry{Introduction to MultiDeconfounder}
 %\VignetteKeywords{Software, Metagenomics, Microbiome, MultipleComparison, Metabolomics, Transcriptomics}
-%\VignettePackage{MultiDeconfoundR}
+%\VignettePackage{metadeconfoundR}
 %\VignetteEngine{knitr::knitr}
 
-\pdfminorversion=5 
-\pdfcompresslevel=9
-\pdfobjcompresslevel=2
+%\pdfminorversion=5 
+%\pdfcompresslevel=9
+%\pdfobjcompresslevel=2
 
 
 \documentclass{article}
@@ -16,16 +16,6 @@
 BiocStyle::latex()
 @
 
-%<<setup, echo=FALSE>>=
-%suppressPackageStartupMessages({
-%    library(BiocParallel)
-%    library(BatchJobs)
-%    library(VariantAnnotation)
-%    library(GenomicAlignments)
-%    library(RNAseqData.HNRNPC.bam.chr14)
-%    library(TxDb.Hsapiens.UCSC.hg19.knownGene)
-%})
-%@
 
 \usepackage{booktabs}
 \usepackage{float}
@@ -33,7 +23,7 @@ BiocStyle::latex()
 \newcommand{\metadeconfoundR}{\Biocpkg{metadeconfoundR}}
 
 \title{Introduction to \metadeconfoundR}
-\author{Till Birkner\footnote{\url{tillb@online.de}}, Sofia K. Forslund}
+\author{Till Birkner\footnote{\email{tillb@online.de}}, Sofia K. Forslund}
 \date{Edited: November 06, 2019; Compiled: \today}
 
 \begin{document}
@@ -47,10 +37,10 @@ BiocStyle::latex()
 \section{Introduction}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%\packageVersion{\Sexpr{BiocStyle::pkg_ver("metadeconfoundR")}}
+\packageVersion{\Sexpr{BiocStyle::pkg_ver("metadeconfoundR")}}
 When analyzing multi omics datasets, the search for features that could serve as biomarkers is an important aspect. Because these biomarkers might be used in clinical settings for disease diagnosis etc., it is extremely important to minimize false positives. One possible error source are confounding variables: The biomarker is not directly linked to the disease but influenced by a third (confounding) variable, that in turn is linked to the disease.
 
-In this project work, the R package MultideconfoundR was developed to address this issue. It first uses univariate statistics to find associations between omics features and disease status or metadata. Using nested linear model comparison post hoc testing, those associations are checked for confounding effects form other covariates/metadata and a status label is returned. The tool is able to handle large datasets in a reasonable time, by parallel processing.*
+In this project work, the R package MultideconfoundR was developed to address this issue. It first uses univariate statistics to find associations between omics features and disease status or metadata. Using nested linear model comparison post hoc testing, those associations are checked for confounding effects from other covariates/metadata and a status label is returned. The tool is able to handle large datasets in a reasonable time, by parallel processing.
 
 
 \Rpackage{metadeconfoundR} was developed to conduct confounder-aware biomarker analysis of large scale multi-omics datasets in parallel. This analysis is a two step process. 
@@ -88,6 +78,10 @@ The actual confounder detection is done by a set of two likelihood ratio tests o
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Install via tar.gz file: \Rcode{install.packages("metadeconfoundR\_0.1.1.tar.gz", repos = NULL)}
+
+<<example, eval=TRUE, echo=FALSE, results="asis">>=
+BiocStyle::latex()
+@
 %The \Rpackage{MultideconfoundR} package is available at bioconductor.org
 %and can be downloaded via \Rcode{BiocManager}:
 %<<BiocManager, eval=FALSE>>=
@@ -111,53 +105,53 @@ Install via tar.gz file: \Rcode{install.packages("metadeconfoundR\_0.1.1.tar.gz"
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-<<chu_inf_run, cache = TRUE>>=
-library(metadeconfoundR)
-
-data(reduced_feature)
-data(metaMatMetformin)
-
-example_output <- MetaDeconfound(featureMat = reduced_feature,
-	metaMat = metaMatMetformin,
-	nnodes = 1)
-
-knitr::kable(example_output$Ds[1:3, 1:5], "latex", digits = 2, booktabs = TRUE)
-@
-
-\begin{table}
-	\caption{Summary of status assignments for each metadata variable}
-	\label{tab:status_summary_unsplit}
-		<<echo = FALSE>>=
-			knitr::kable(summary(example_output$status), "latex", digits = 2, booktabs = TRUE)
-		@
-\end{table}
-
-\begin{table}
-	\caption{Compostition of metadata ``Dataset"}
-	\label{tab:Dataset_composition}
-		<<echo = FALSE>>=
-			knitr::kable(t(summary(as.factor(metaMatMetformin$Dataset))), "latex", digits = 2, booktabs = TRUE)
-			
-			for (i in unique(metaMatMetformin$Dataset)) {
-			binaryDummy <- rep(0, length(metaMatMetformin$Dataset))
-			binaryDummy[metaMatMetformin$Dataset == i] <- 1
-			metaMatMetformin[[i]] <- binaryDummy
-			colnames(metaMatMetformin)[ncol(metaMatMetformin)] <- i
-			}
-			metaMatMetformin$Dataset <- NULL
-		@
-\end{table}
-
-Cliff's Delta for categorical variables with more than two levels can't be computed and gets set to \Rcode{Inf}. By splitting up these variables into binary pseudo-variables will circumvent this. As can be seen in table \ref{tab:status_summary_unsplit}, status assignment is not affected by missing Cliff's Delta.
-<<chu_split_run, cache = TRUE>>=
-
-example_output2 <- MetaDeconfound(featureMat = reduced_feature,
-	metaMat = metaMatMetformin, 
-	nnodes = 1)
-
-
-knitr::kable(example_output2$Ds[1:3, 1:7], "latex", digits = 2, booktabs = TRUE)
-@
+%<<chu_inf_run, cache = TRUE>>=
+%library(metadeconfoundR)
+%
+%data(reduced_feature)
+%data(metaMatMetformin)
+%
+%example_output <- MetaDeconfound(featureMat = reduced_feature,
+%	metaMat = metaMatMetformin,
+%	nnodes = 1)
+%
+%knitr::kable(example_output$Ds[1:3, 1:5], "latex", digits = 2, booktabs = TRUE)
+%@
+%
+%\begin{table}
+%	\caption{Summary of status assignments for each metadata variable}
+%	\label{tab:status_summary_unsplit}
+%		<<echo = FALSE>>=
+%			knitr::kable(summary(example_output$status), "latex", digits = 2, booktabs = TRUE)
+%		@
+%\end{table}
+%
+%\begin{table}
+%	\caption{Compostition of metadata ``Dataset"}
+%	\label{tab:Dataset_composition}
+%		<<echo = FALSE>>=
+%			knitr::kable(t(summary(as.factor(metaMatMetformin$Dataset))), "latex", digits = 2, booktabs = TRUE)
+%			
+%			for (i in unique(metaMatMetformin$Dataset)) {
+%			binaryDummy <- rep(0, length(metaMatMetformin$Dataset))
+%			binaryDummy[metaMatMetformin$Dataset == i] <- 1
+%			metaMatMetformin[[i]] <- binaryDummy
+%			colnames(metaMatMetformin)[ncol(metaMatMetformin)] <- i
+%			}
+%			metaMatMetformin$Dataset <- NULL
+%		@
+%\end{table}
+%
+%Cliff's Delta for categorical variables with more than two levels can't be computed and gets set to \Rcode{Inf}. By splitting up these variables into binary pseudo-variables will circumvent this. As can be seen in table \ref{tab:status_summary_unsplit}, status assignment is not affected by missing Cliff's Delta.
+%<<chu_split_run, cache = TRUE>>=
+%
+%example_output2 <- MetaDeconfound(featureMat = reduced_feature,
+%	metaMat = metaMatMetformin, 
+%	nnodes = 1)
+%
+%
+%knitr::kable(example_output2$Ds[1:3, 1:7], "latex", digits = 2, booktabs = TRUE)
+%@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

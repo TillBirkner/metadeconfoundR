@@ -1,1 +1,10 @@
-first release
+Version 0.1.8
+	-	introduction of global parameter "logistic"
+		-	logistic = TRUE: analysing binary features instead of continuous using logistic regression models
+
+Version 0.1.7
+
+	-	bug fix in BuildHeatmap function
+
+Version 0.1.2
+    -   critical bug fixed, that resulted in greatly increased "NS" status labeling

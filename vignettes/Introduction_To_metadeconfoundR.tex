@@ -1,11 +1,11 @@
-%\VignetteIndexEntry{1. Introduction to MultiDeconfounder}
+%\VignetteIndexEntry{Introduction to MultiDeconfounder}
 %\VignetteKeywords{Software, Metagenomics, Microbiome, MultipleComparison, Metabolomics, Transcriptomics}
-%\VignettePackage{MultiDeconfoundR}
+%\VignettePackage{metadeconfoundR}
 %\VignetteEngine{knitr::knitr}
 
-\pdfminorversion=5 
-\pdfcompresslevel=9
-\pdfobjcompresslevel=2
+%\pdfminorversion=5 
+%\pdfcompresslevel=9
+%\pdfobjcompresslevel=2
 
 
 \documentclass{article}\usepackage[]{graphicx}\usepackage[usenames,dvipsnames]{color}
@@ -38,20 +38,10 @@
 
 
 
-\RequirePackage[]{/home/tbirkne/R/x86_64-pc-linux-gnu-library/3.6/BiocStyle/resources/tex/Bioconductor}
-\AtBeginDocument{\bibliographystyle{/home/tbirkne/R/x86_64-pc-linux-gnu-library/3.6/BiocStyle/resources/tex/unsrturl}}
+\RequirePackage[]{/home/till/R/x86_64-pc-linux-gnu-library/3.6/BiocStyle/resources/tex/Bioconductor}
+\AtBeginDocument{\bibliographystyle{/home/till/R/x86_64-pc-linux-gnu-library/3.6/BiocStyle/resources/tex/unsrturl}}
 
 
-%<<setup, echo=FALSE>>=
-%suppressPackageStartupMessages({
-%    library(BiocParallel)
-%    library(BatchJobs)
-%    library(VariantAnnotation)
-%    library(GenomicAlignments)
-%    library(RNAseqData.HNRNPC.bam.chr14)
-%    library(TxDb.Hsapiens.UCSC.hg19.knownGene)
-%})
-%@
 
 \usepackage{booktabs}
 \usepackage{float}
@@ -59,7 +49,7 @@
 \newcommand{\metadeconfoundR}{\Biocpkg{metadeconfoundR}}
 
 \title{Introduction to \metadeconfoundR}
-\author{Till Birkner\footnote{\url{tillb@online.de}}, Sofia K. Forslund}
+\author{Till Birkner\footnote{\email{tillb@online.de}}, Sofia K. Forslund}
 \date{Edited: November 06, 2019; Compiled: \today}
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 \begin{document}
@@ -73,7 +63,12 @@
 \section{Introduction}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%\packageVersion{BiocStyle::pkg_ver("metadeconfoundR")}
+\packageVersion{metadeconfoundR 0.1.8}
+When analyzing multi omics datasets, the search for features that could serve as biomarkers is an important aspect. Because these biomarkers might be used in clinical settings for disease diagnosis etc., it is extremely important to minimize false positives. One possible error source are confounding variables: The biomarker is not directly linked to the disease but influenced by a third (confounding) variable, that in turn is linked to the disease.
+
+In this project work, the R package MultideconfoundR was developed to address this issue. It first uses univariate statistics to find associations between omics features and disease status or metadata. Using nested linear model comparison post hoc testing, those associations are checked for confounding effects from other covariates/metadata and a status label is returned. The tool is able to handle large datasets in a reasonable time, by parallel processing.
+
+
 \Rpackage{metadeconfoundR} was developed to conduct confounder-aware biomarker analysis of large scale multi-omics datasets in parallel. This analysis is a two step process. 
 
 First, significant associations between single omics features (like gut microbial OTUs) and metadata (like drug administration) are identified (fig\ref{fig:statistics}, left). Based on the data type of the respective metadata, either \Rcode{wilcox.test()} (for binary), \Rcode{cor.test()} (for continuous numerical) or \Rcode{kruskal.test()} (for neither numerical nor binary) is used. All three tests are rank-based to minimize assumptions about data distribution.
@@ -109,6 +104,10 @@ The actual confounder detection is done by a set of two likelihood ratio tests o
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Install via tar.gz file: \Rcode{install.packages("metadeconfoundR\_0.1.1.tar.gz", repos = NULL)}
+
+\RequirePackage[]{/home/till/R/x86_64-pc-linux-gnu-library/3.6/BiocStyle/resources/tex/Bioconductor}
+\AtBeginDocument{\bibliographystyle{/home/till/R/x86_64-pc-linux-gnu-library/3.6/BiocStyle/resources/tex/unsrturl}}
+
 %The \Rpackage{MultideconfoundR} package is available at bioconductor.org
 %and can be downloaded via \Rcode{BiocManager}:
 %<<BiocManager, eval=FALSE>>=
@@ -132,99 +131,53 @@ Install via tar.gz file: \Rcode{install.packages("metadeconfoundR\_0.1.1.tar.gz"
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.941, 0.941, 0.941}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{library}\hlstd{(metadeconfoundR)}
-
-\hlkwd{data}\hlstd{(reduced_feature)}
-\hlkwd{data}\hlstd{(metaMatMetformin)}
-
-\hlstd{example_output} \hlkwb{<-} \hlkwd{MetaDeconfound}\hlstd{(}\hlkwc{featureMat} \hlstd{= reduced_feature,}
-        \hlkwc{metaMat} \hlstd{= metaMatMetformin,}
-        \hlkwc{nnodes} \hlstd{=} \hlnum{1}\hlstd{)}
-
-\hlstd{knitr}\hlopt{::}\hlkwd{kable}\hlstd{(example_output}\hlopt{$}\hlstd{Ds[}\hlnum{1}\hlopt{:}\hlnum{3}\hlstd{,} \hlnum{1}\hlopt{:}\hlnum{5}\hlstd{],} \hlstr{"latex"}\hlstd{,} \hlkwc{digits} \hlstd{=} \hlnum{2}\hlstd{,} \hlkwc{booktabs} \hlstd{=} \hlnum{TRUE}\hlstd{)}
-\end{alltt}
-\end{kframe}
-\begin{tabular}{lrrrrr}
-\toprule
-  & Status & Dataset & Metformin & continuous\_dummy & altered\_dummy\\
-\midrule
-MS0001 & -0.14 & Inf & -0.16 & 0.01 & 0.08\\
-MS0006 & 0.20 & Inf & 0.13 & -0.02 & 0.13\\
-MS0007 & 0.24 & Inf & 0.30 & 0.02 & -0.02\\
-\bottomrule
-\end{tabular}
-
-
-\end{knitrout}
-
-\begin{table}
-	\caption{Summary of status assignments for each metadata variable}
-	\label{tab:status_summary_unsplit}
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.941, 0.941, 0.941}\color{fgcolor}
-\begin{tabular}{llllll}
-\toprule
-  &           Status & Dataset &   Metformin & continuous\_dummy & altered\_dummy\\
-\midrule
- & altered\_dummy: 1 & NC:11 & Dataset: 1 & NS:50 & Dataset:18\\
- & Dataset      : 1 & NS: 2 & LD     : 2 & NA & NS     :29\\
- & LD           : 3 & SD:37 & NS     :32 & NA & SD     : 3\\
- & Metformin    : 1 & NA & SD     :12 & NA & NA\\
- & NC           : 1 & NA & Status : 3 & NA & NA\\
-\addlinespace
- & NS           :26 & NA & NA & NA & NA\\
- & SD           :17 & NA & NA & NA & NA\\
-\bottomrule
-\end{tabular}
-
-
-\end{knitrout}
-\end{table}
-
-\begin{table}
-	\caption{Compostition of metadata ``Dataset"}
-	\label{tab:Dataset_composition}
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.941, 0.941, 0.941}\color{fgcolor}
-\begin{tabular}{rrr}
-\toprule
-CHN & MHD & SWE\\
-\midrule
-256 & 352 & 145\\
-\bottomrule
-\end{tabular}
-
-
-\end{knitrout}
-\end{table}
-
-Cliff's Delta for categorical variables with more than two levels can't be computed and gets set to \Rcode{Inf}. By splitting up these variables into binary pseudo-variables will circumvent this. As can be seen in table \ref{tab:status_summary_unsplit}, status assignment is not affected by missing Cliff's Delta.
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.941, 0.941, 0.941}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{example_output2} \hlkwb{<-} \hlkwd{MetaDeconfound}\hlstd{(}\hlkwc{featureMat} \hlstd{= reduced_feature,}
-        \hlkwc{metaMat} \hlstd{= metaMatMetformin,}
-        \hlkwc{nnodes} \hlstd{=} \hlnum{1}\hlstd{)}
-
-
-\hlstd{knitr}\hlopt{::}\hlkwd{kable}\hlstd{(example_output2}\hlopt{$}\hlstd{Ds[}\hlnum{1}\hlopt{:}\hlnum{3}\hlstd{,} \hlnum{1}\hlopt{:}\hlnum{7}\hlstd{],} \hlstr{"latex"}\hlstd{,} \hlkwc{digits} \hlstd{=} \hlnum{2}\hlstd{,} \hlkwc{booktabs} \hlstd{=} \hlnum{TRUE}\hlstd{)}
-\end{alltt}
-\end{kframe}
-\begin{tabular}{lrrrrrrr}
-\toprule
-  & Status & Metformin & continuous\_dummy & altered\_dummy & CHN & MHD & SWE\\
-\midrule
-MS0001 & -0.14 & -0.16 & 0.01 & 0.08 & -0.43 & 0.19 & 0.35\\
-MS0006 & 0.20 & 0.13 & -0.02 & 0.13 & 0.12 & -0.49 & 0.67\\
-MS0007 & 0.24 & 0.30 & 0.02 & -0.02 & 0.55 & -0.40 & -0.18\\
-\bottomrule
-\end{tabular}
-
-
-\end{knitrout}
+%<<chu_inf_run, cache = TRUE>>=
+%library(metadeconfoundR)
+%
+%data(reduced_feature)
+%data(metaMatMetformin)
+%
+%example_output <- MetaDeconfound(featureMat = reduced_feature,
+%	metaMat = metaMatMetformin,
+%	nnodes = 1)
+%
+%knitr::kable(example_output$Ds[1:3, 1:5], "latex", digits = 2, booktabs = TRUE)
+%@
+%
+%\begin{table}
+%	\caption{Summary of status assignments for each metadata variable}
+%	\label{tab:status_summary_unsplit}
+%		<<echo = FALSE>>=
+%			knitr::kable(summary(example_output$status), "latex", digits = 2, booktabs = TRUE)
+%		@
+%\end{table}
+%
+%\begin{table}
+%	\caption{Compostition of metadata ``Dataset"}
+%	\label{tab:Dataset_composition}
+%		<<echo = FALSE>>=
+%			knitr::kable(t(summary(as.factor(metaMatMetformin$Dataset))), "latex", digits = 2, booktabs = TRUE)
+%			
+%			for (i in unique(metaMatMetformin$Dataset)) {
+%			binaryDummy <- rep(0, length(metaMatMetformin$Dataset))
+%			binaryDummy[metaMatMetformin$Dataset == i] <- 1
+%			metaMatMetformin[[i]] <- binaryDummy
+%			colnames(metaMatMetformin)[ncol(metaMatMetformin)] <- i
+%			}
+%			metaMatMetformin$Dataset <- NULL
+%		@
+%\end{table}
+%
+%Cliff's Delta for categorical variables with more than two levels can't be computed and gets set to \Rcode{Inf}. By splitting up these variables into binary pseudo-variables will circumvent this. As can be seen in table \ref{tab:status_summary_unsplit}, status assignment is not affected by missing Cliff's Delta.
+%<<chu_split_run, cache = TRUE>>=
+%
+%example_output2 <- MetaDeconfound(featureMat = reduced_feature,
+%	metaMat = metaMatMetformin, 
+%	nnodes = 1)
+%
+%
+%knitr::kable(example_output2$Ds[1:3, 1:7], "latex", digits = 2, booktabs = TRUE)
+%@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -237,19 +190,36 @@ MS0007 & 0.24 & 0.30 & 0.02 & -0.02 & 0.55 & -0.40 & -0.18\\
 \hlkwd{toLatex}\hlstd{(}\hlkwd{sessionInfo}\hlstd{())}
 \end{alltt}
 \end{kframe}\begin{itemize}\raggedright
-  \item R version 3.6.1 (2019-07-05), \verb|x86_64-pc-linux-gnu|
-  \item Locale: \verb|LC_CTYPE=en_US.UTF-8|, \verb|LC_NUMERIC=C|, \verb|LC_TIME=de_DE.UTF-8|, \verb|LC_COLLATE=en_US.UTF-8|, \verb|LC_MONETARY=de_DE.UTF-8|, \verb|LC_MESSAGES=en_US.UTF-8|, \verb|LC_PAPER=de_DE.UTF-8|, \verb|LC_NAME=C|, \verb|LC_ADDRESS=C|, \verb|LC_TELEPHONE=C|, \verb|LC_MEASUREMENT=de_DE.UTF-8|, \verb|LC_IDENTIFICATION=C|
-  \item Running under: \verb|Ubuntu 18.04.3 LTS|
+  \item R version 3.6.3 (2020-02-29), \verb|x86_64-pc-linux-gnu|
+  \item Locale: \verb|LC_CTYPE=C.UTF-8|, \verb|LC_NUMERIC=C|, \verb|LC_TIME=C.UTF-8|, \verb|LC_COLLATE=C|, \verb|LC_MONETARY=C.UTF-8|, \verb|LC_MESSAGES=C.UTF-8|, \verb|LC_PAPER=C.UTF-8|, \verb|LC_NAME=C|, \verb|LC_ADDRESS=C|, \verb|LC_TELEPHONE=C|, \verb|LC_MEASUREMENT=C.UTF-8|, \verb|LC_IDENTIFICATION=C|
+  \item Running under: \verb|Ubuntu 18.04.4 LTS|
   \item Matrix products: default
-  \item BLAS:   \verb|/usr/lib/x86_64-linux-gnu/openblas/libblas.so.3|
-  \item LAPACK: \verb|/usr/lib/x86_64-linux-gnu/libopenblasp-r0.2.20.so|
-  \item Base packages: base, datasets, graphics, grDevices, methods,
+  \item BLAS:   \verb|/usr/lib/x86_64-linux-gnu/blas/libblas.so.3.7.1|
+  \item LAPACK: \verb|/usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.7.1|
+  \item Base packages: base, datasets, grDevices, graphics, methods,
     stats, utils
+  \item Other packages: metadeconfoundR~0.1.8
   \item Loaded via a namespace (and not attached):
-    BiocManager~1.30.8, BiocStyle~2.12.0, compiler~3.6.1,
-    digest~0.6.21, evaluate~0.14, htmltools~0.4.0, knitr~1.25,
-    magrittr~1.5, Rcpp~1.0.2, rlang~0.4.0, rmarkdown~1.16,
-    stringi~1.4.3, stringr~1.4.0, tools~3.6.1, xfun~0.10, yaml~2.2.0
+    BiocManager~1.30.10, BiocStyle~2.14.4, MASS~7.3-51.5,
+    Matrix~1.2-18, R6~2.4.1, Rcpp~1.0.4.6, assertthat~0.2.1,
+    backports~1.1.7, bigmemory~4.5.36, bigmemory.sri~0.1.3,
+    boot~1.3-24, callr~3.4.3, cli~2.0.2, codetools~0.2-16,
+    colorspace~1.4-1, compiler~3.6.3, crayon~1.3.4, desc~1.2.0,
+    digest~0.6.25, doParallel~1.0.15, dplyr~1.0.2, ellipsis~0.3.1,
+    evaluate~0.14, fansi~0.4.1, foreach~1.5.0, formatR~1.7,
+    futile.logger~1.4.3, futile.options~1.0.1, generics~0.0.2,
+    ggplot2~3.3.1, glue~1.4.1, grid~3.6.3, gtable~0.3.0,
+    htmltools~0.4.0, iterators~1.0.12, knitr~1.28, lambda.r~1.2.4,
+    lattice~0.20-40, lifecycle~0.2.0, lme4~1.1-23, lmtest~0.9-37,
+    magrittr~1.5, minqa~1.2.4, munsell~0.5.0, nlme~3.1-144,
+    nloptr~1.2.2.1, parallel~3.6.3, pillar~1.4.4, pkgbuild~1.0.6,
+    pkgconfig~2.0.3, pkgload~1.1.0, plyr~1.8.6, prettyunits~1.1.1,
+    processx~3.4.2, ps~1.3.3, purrr~0.3.4, reshape2~1.4.4,
+    rlang~0.4.8, rmarkdown~2.1, roxygen2~7.1.0, rprojroot~1.3-2,
+    rstudioapi~0.11, scales~1.1.0, splines~3.6.3, statmod~1.4.34,
+    stringi~1.4.6, stringr~1.4.0, testthat~2.3.2, tibble~3.0.1,
+    tidyselect~1.1.0, tools~3.6.3, vctrs~0.3.4, withr~2.2.0,
+    xfun~0.14, xml2~1.3.2, yaml~2.2.1, zoo~1.8-8
 \end{itemize}
 
 
