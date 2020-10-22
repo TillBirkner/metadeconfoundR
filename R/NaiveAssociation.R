@@ -4,18 +4,6 @@
 #' @importFrom  lmtest lrtest
 #' @import futile.logger
 # @export NaiveAssociation
-#
-
-
-
-# being able to specify a range of features (only columns 50-100) (low relevance)
-# report all confounders, not only the first one # fixed quick and dirty, might need to be revisited when deciding on new data outuput formats
-
-# whitelist/blacklist for metaVariables that should or schould not be rank transformed
-  # DONE: within one for loop all variabels listed in doRanks will be rank transformed in the "subMerge" data.frame
-
-# for the lm that is shared between forward and reverse call do optional: confint(lm(xxx)) and check if confint spans over 0
-  # DONE (without categorical covariates!!)
 
 NaiveAssociation <- function(featureMat,
                              samples,
@@ -25,9 +13,9 @@ NaiveAssociation <- function(featureMat,
                              covariates,
                              noCovariates,
                              isRobust,
-			     typeCategorical, # new SKF20200221
-			     typeContinuous, # new SKF20200221
-			     logistic, # new SKF20201017
+                             typeCategorical, # new SKF20200221
+                             typeContinuous, # new SKF20200221
+                             logistic, # new SKF20201017
                              nnodes,
                              maintenance,
                              adjustMethod,
@@ -99,27 +87,10 @@ NaiveAssociation <- function(featureMat,
       return(c(as.numeric(somePs), as.numeric(someDs)))
     }
 
-
-
-    # if (anyNA(featureMat [, i])) {  # if feature i contains NAs
-    #                                   # exclude NA rows from feature and meta
-    #   subFeatures <- na.exclude(featureMat [, i])
-    #   subMerge <- metaMat[-(stats::na.action(subFeatures)),]
-    #   subMerge$FeatureValue <- as.vector(subFeatures) # caveat *1*
-    # } else {
-    #   subFeatures <- featureMat [,i]
-    #   subMerge <- metaMat
-    #   subMerge$FeatureValue <- subFeatures # caveat *1*: see snippets.R
-    # }
-
-    #new approach --> append i-th feature to the metaMat dataframe
     subMerge <- metaMat
-    subMerge$FeatureValue <- featureMat [,i] # caveat *1*: see snippets.R
-    #subMerge <- as.data.frame(na.exclude(subMerge))
-
+    subMerge$FeatureValue <- featureMat [,i]
 
     for (j in seq_along(covariates)) {
-
 
       aFeature <- as.character (features [i])
       aCovariate <- as.character (covariates [j])
@@ -162,15 +133,7 @@ NaiveAssociation <- function(featureMat,
               next
       }
 
-      # subFeatures <- featureMat [,i]
-      # subMerge <- md
-      # subMerge$FeatureValue <- subFeatures # caveat *1*: see snippets.R
-
-
-	## BEGIN new section SKF20200221
-
 	getVariableType <- function (values, variable) {
-
 		if (is.numeric (values) && all (values %in% c (0, 1)) && ! (! is.null (typeContinuous) && variable %in% typeContinuous) && ! (! is.null (typeCategorical) && variable %in% typeCategorical)) {
 
 			return ("binary") # treat as binary
@@ -193,121 +156,85 @@ NaiveAssociation <- function(featureMat,
 
 	variableType <- getVariableType (na.exclude(subMerge[[aCovariate]]), aCovariate)
 
-	## END new section SKF20200221
-
-	## BEGIN section commented out SKF20200221
-
-#      con1 <- length (unique (na.exclude(subMerge[[aCovariate]]))) == 2
-#        # the distribution of the covariate is binary
-#      con2 <- length (unique (na.exclude(subMerge[[aCovariate]]))) > 2
-#        # the distribution of the covariate is continuous (more than 2 levels)
-#      con3 <- length (
-#                na.exclude(
-#                  subMerge[subMerge[[aCovariate]] == 0, "FeatureValue"])) > 1
-#        # feature has a measurement in more than one sample with
-#          #covaraite status == 0
-#      con4 <- length (
-#                na.exclude(
-#                  subMerge[subMerge[[aCovariate]] == 1, "FeatureValue"])) > 1
-#        # feature has a measurement in more than one sample with
-#          #covaraite status == 1
-#      con5 <- is.numeric(subMerge[[aCovariate]])
-#        # covariate is true numeric (distinguishes between continuous
-#          # numeric data and "level" data, that is converted to numbers)
-
-
-	## END section commented out SKF20200221
-
-
-      # if (verbosity == "debug" && i == 1) {
-      #   write(paste(covariates[j], con1, con2, con3, con4, con5),
-      #         file="data_type.txt",
-      #         append = TRUE)
-      # }
-
   conVar <- TRUE
   varX <- na.exclude (cbind (subMerge [[aCovariate]], subMerge [["FeatureValue"]]))
 
-  if (sum (! is.na (subMerge [["FeatureValue"]])) < 1 || # TRUE if only NA-values
-      nrow (varX) <= 2 || # TRUE if if there are not at least three rows without NAs
-      length (unique (varX [, 1])) < 2 || # TRUE if there are not at least two different metadata values in non-NA subset
-      length (unique (varX [, 2])) < 2) { # TRUE if there are not at least two different feature values in non-NA subset
+  if (sum (! is.na (subMerge [["FeatureValue"]])) < 1 ||
+      # TRUE if only NA-values
+      nrow (varX) <= 2 ||
+      # TRUE if if there are not at least three rows without NAs
+      length (unique (varX [, 1])) < 2 ||
+      # TRUE if there are not at least two different metadata values in non-NA subset
+      length (unique (varX [, 2])) < 2) {
+      # TRUE if there are not at least two different feature values in non-NA subset
         conVar <- FALSE
+  }
+
+
+  subSubMerge <- na.exclude(subMerge[, c(aCovariate, "FeatureValue")])
+    if (logistic == TRUE && conVar) {
+      formulaNull <- paste0 ("stats::glm (FeatureValue ~ 1, data = subSubMerge)", collapse = "")
+      formulaVar <- paste0 ("stats::glm (FeatureValue ~ ", aCovariate, ", data = subSubMerge)", collapse = "")
+
+      lmNull <- eval (parse (text = as.character (formulaNull)))
+      lmVar <- eval (parse (text = as.character (formulaVar)))
+
+      aP <- lmtest::lrtest (lmNull, lmVar)$'Pr(>Chisq)' [2]
+      aD <- Inf
+
     }
 
-      #varX <- as.data.frame(varX)
-      #colnames(varX) <- c(aCovariate, "FeatureValue")
-      subSubMerge <- na.exclude(subMerge[, c(aCovariate, "FeatureValue")])
-      if (logistic == TRUE && conVar) {
-        formulaNull <- paste0 ("stats::glm (FeatureValue ~ 1, data = subSubMerge)", collapse = "")
-        formulaVar <- paste0 ("stats::glm (FeatureValue ~ ", aCovariate, ", data = subSubMerge)", collapse = "")
+    else if (variableType == "categorical" && conVar) {
+      # KW test if false binary and 	# SKF20200221
 
-        lmNull <- eval (parse (text = as.character (formulaNull)))
-        lmVar <- eval (parse (text = as.character (formulaVar)))
+      aP <- stats::kruskal.test (
+        g = as.factor(subMerge [[aCovariate]]),
+        x = subMerge [["FeatureValue"]])$p.value
 
-        aP <- lmtest::lrtest (lmNull, lmVar)$'Pr(>Chisq)' [2]
-        aD <- Inf
+      aD <- Inf
+    }
 
-      }
+    else if (variableType == "binary" && conVar) {
+      # MWU test if binary and 	# SKF20200221
 
-      else if (variableType == "categorical" && conVar) {  # KW test if false binary and 	# SKF20200221
-#      if (con1 && !con5) {  # KW test if false binary and
+      aP <- stats::wilcox.test (
+          subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"],
+          subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"])$p.value
 
-        aP <- stats::kruskal.test (
-          g = as.factor(subMerge [[aCovariate]]),
-          x = subMerge [["FeatureValue"]])$p.value
+      aD <- CliffsDelta(
+        as.vector (
+          na.exclude (
+            subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"])),
+        as.vector (
+          na.exclude (
+            subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"])))
+    }
 
-        aD <- Inf
+    else if (variableType == "continuous" && conVar) {
+      # spearman test if continuous and numerical 	# SKF20200221
 
-      }
+      aP <- stats::cor.test (subMerge [, aCovariate],
+                             subMerge [, "FeatureValue"],
+                             method = "spearman")$p.value
+      aD <- stats::cor.test (subMerge [, aCovariate],
+                             subMerge [, "FeatureValue"],
+                             method = "spearman")$estimate
+    }
 
-      else if (variableType == "binary" && conVar) {  # MWU test if binary and 	# SKF20200221
-#      else if (con1 && con3 && con4 && con5) {  # MWU test if binary and
-
-        aP <- stats::wilcox.test (
-            subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"],
-            subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"])$p.value
-        # aD <- orddom::orddom (
-        #   as.vector (
-        #     na.exclude (
-        #       subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"])),
-        #   as.vector (
-        #     na.exclude (
-        #       subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"]))) [13]
-        aD <- CliffsDelta(
-          as.vector (
-            na.exclude (
-              subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"])),
-          as.vector (
-            na.exclude (
-              subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"])))
-      }
-
-      else if (variableType == "continuous" && conVar) {  # spearman test if continuous and numerical 	# SKF20200221
-#      else if (con2 && con5) {  # spearman test if continuous and numerical
-
-        aP <- stats::cor.test (subMerge [, aCovariate],
-                               subMerge [, "FeatureValue"],
-                               method = "spearman")$p.value
-        aD <- stats::cor.test (subMerge [, aCovariate],
-                               subMerge [, "FeatureValue"],
-                               method = "spearman")$estimate
-      }
-
-      else if (variableType == "categorical" && conVar) {  # now never happens, probably 	# SKF20200221
+    else if (variableType == "categorical" && conVar) {  # now never happens, probably 	# SKF20200221
 #      else if (con2 && !con5) {  # kruskal-wallis test if
                                   # not binary AND not numerical
-        aP <- stats::kruskal.test (
-          g = as.factor(subMerge [[aCovariate]]),
-          x = subMerge [["FeatureValue"]])$p.value
+      aP <- stats::kruskal.test (
+        g = as.factor(subMerge [[aCovariate]]),
+        x = subMerge [["FeatureValue"]])$p.value
 
-        aD <- Inf
-      }
+      aD <- Inf
+    }
 
       somePs[j] <- aP
       someDs[j] <- aD
 
-    }
+    } # for j
 
 
     if ((i %% 10) == 0) {
@@ -320,7 +247,8 @@ NaiveAssociation <- function(featureMat,
 
     return(c(as.numeric(somePs), as.numeric(someDs)))
 
-  }
+  } # for i (foreach)
+
   parallel::stopCluster(cl)
 
   flog.info(msg = paste("NaiveAssociation -- processed 100% of features."),
@@ -342,16 +270,6 @@ NaiveAssociation <- function(featureMat,
   Qs <- matrix (NA, length(features[seq_len(nrow(r))]), length(covariates))
   rownames(Qs) <- features[seq_len(nrow(r))]
   colnames(Qs) <- covariates
-
-  ##
-  ##
-  if (verbosity == "debug") {
-    print(paste0
-        ("NaiveAssociation  -  compute multiple testing p adjustment using ",
-          adjustMethod))
-  }
-  ##
-  ##
 
   for (i in seq_len(ncol(Ps))) {
     Qs[, i] <- stats::p.adjust (Ps[, i], method = adjustMethod)

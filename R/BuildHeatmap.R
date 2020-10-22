@@ -26,12 +26,14 @@
 #'                                   metaMat = metaMatMetformin)
 #'
 #'plotObject <- BuildHeatmap(example_output)
-#'print(plotObject)}
+#'print(plotObject)
+#'
+#'alternativePlot <- buildHeatmap(metadeconfoundR_output, coloring = 2, showConfounded = FALSE)
+#'print(alternativePlot)
+#'}
 #'
 #' @import ggplot2
 #' @importFrom reshape2 melt
-
-#'
 #' @export
 
 BuildHeatmap <- function(metaDeconfOutput,
@@ -42,25 +44,6 @@ BuildHeatmap <- function(metaDeconfOutput,
                          showConfounded = TRUE,
                          intermedData = FALSE
                          ) {
-  ## this function takes the output of metaDeconfoundR (metaDeconfOutput)
-  ##   and creates a summarizing heatmap or cuneiform plot
-  ##
-  ## the two cutoff parameters can be used to reduce row and column number of the
-  ##   resulting plot by excluding all rows/ columns that contain only
-  ##   effectsizes(d_cutoff)/fdr-values(q_cutoff) above/below the given cutoffs.
-  ##
-  ## if cuneiform == TRUE, a cuneiform plot will be created instead of a heatmap
-  ##
-  ## coloring can be 0,1,2;
-  ##      0: color all tiles according to effectsize
-  ##      1: don't color not significant tiles
-  ##      2: like 1 but also don't color confounded signal tiles
-  ##
-  ## if showConfounded == FALSE, significance markers for confounded
-  ##   signals won't be shown
-  ##
-  ## Example: buildHeatmap(metadeconfoundR_output, coloring = 2, showConfounded = FALSE)
-
 
   taxon <- "feature"
 
@@ -162,17 +145,8 @@ BuildHeatmap <- function(metaDeconfOutput,
     }
   }
 
-  # remove_metavariables <- unique(remove_metavariables)
-  # if (length(remove_metavariables) > 0) {
-  #   effectSize <- effectSize[-remove_metavariables, ]
-  # }
-  # effectSize <- droplevels(effectSize)
-
-
   # remove filtered out matavariables from the dataset
   effectSize <- effectSize[!(effectSize$metaVariable %in% remove_metavariables), ]
-
-
 
   # cluster heatmap by reordering the factor levels for both dimensions of the heatmap
   eff_cast <- reshape2::dcast(effectSize, effectSize[[1]]~metaVariable, value.var = "EffectSize")
@@ -188,14 +162,6 @@ BuildHeatmap <- function(metaDeconfOutput,
 
   effectSize[[taxon]] <- factor(as.factor(effectSize[[taxon]]),  levels = levels(as.factor(effectSize[[taxon]])) [ord])
   effectSize$metaVariable <- factor(as.factor(effectSize$metaVariable),  levels = levels(as.factor(effectSize$metaVariable)) [ord2])
-
-  # if (coloring == 1) {
-  #   effectSize$EffectSize[effectSize$insignificant] <- 0.000001
-  # }
-  # if (coloring == 2) {
-  #   effectSize$EffectSize[effectSize$trueDeconf] <- 0.000001
-  # }
-
 
   lowerLim <- min(effectSize$EffectSize)
   upperLim <- max(effectSize$EffectSize)
@@ -252,11 +218,6 @@ BuildHeatmap <- function(metaDeconfOutput,
            subtitle="FDR-values: < 0.001 = ***, < 0.01 = **, < 0.1 = * ", x = "Metadata variables", y = "Omics features")
 
   }
-
-
-  # show the finished heatmap and save it to specified location
-  #print(heatmapGGplot)
-  #ggsave(filename = svgFileName, plot = heatmapGGplot, device = "svg", width = 11, height = 6)
   return(heatmapGGplot)
 }
 

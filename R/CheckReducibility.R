@@ -43,13 +43,6 @@ CheckReducibility <- function(featureMat,
   }
   r = foreach::foreach(i = seq_along(features), .combine='rbind') %dopar% {
 
-
-    # if(verbosity == "debug"){
-    #   write(paste("I have come this far_35", i,  sep = "\t"),
-    #         file = "LRT_pValue.txt",
-    #         append = TRUE)
-    # }
-
     statusLine <- vector(length = noCovariates, mode = "character")
 
     # find all covariates which on their end have effect on the feature
@@ -79,11 +72,6 @@ CheckReducibility <- function(featureMat,
             sep = "\t")
     }
 
-    # if(verbosity == "debug"){
-    #   write(paste("I have come this far_58", i,  sep = "\t"),
-    #         file = "LRT_pValue.txt",
-    #         append = TRUE)
-    # }
 
 
     if (length (lCovariates) == 0 ) {
@@ -131,32 +119,16 @@ CheckReducibility <- function(featureMat,
 
       if (is.na (Qs [i, j]) |
           Qs [i, j] >= QCutoff |
-          is.na(Ds [i, j]) | # this little idiot was missing!
+          is.na(Ds [i, j]) |
           abs (Ds [i, j]) <= DCutoff) {
         statusLine[j] <- status
-
-        # if(verbosity == "debug"){
-        #   write(paste("skipped:", i, j, status, sep = "\t"),
-        #         file = "LRT_pValue.txt",
-        #         append = TRUE)
-        # }
-
         next
       }
 
-
-
-
-      # only do post-hoc test for feature that is significant by itself
-      # if ((! is.na (Qs [i, j])) &&  # if q exists
-      #     Qs [i, j] < QCutoff &&  # q smaller then cutoff
-      #     abs (Ds [i, j]) > DCutoff ) {  # effect size bigger than cutoff
-
-        #new approach --> append i-th feature to the metaMat dataframe
       subMerge <- metaMat
       subMerge$FeatureValue <- featureMat [,i]
-      #subMerge <- na.exclude(subMerge)
 
+      #remove NAs only in feature and acovariate column
       subMerge <- subset (subMerge, ! is.na (FeatureValue))
       subMerge <- eval (parse (text = paste0 ("subset (subMerge, ! is.na (", aCovariate, "))")))
 
@@ -212,13 +184,7 @@ CheckReducibility <- function(featureMat,
 
       } # end randomVar
 
-      # if(verbosity == "debug"){
-      #   write(paste("I have come this far_162", i,  sep = "\t"),
-      #         file = "LRT_pValue.txt",
-      #         append = TRUE)
-      # }
 
-      #subMerge <- as.data.frame(na.exclude(subMerge))
 
         # find all covariates which on their end have effect on the feature
 
@@ -226,10 +192,8 @@ CheckReducibility <- function(featureMat,
           #count if lax or strict status achieved
       confounders <- NULL
         if (length (lCovariates) > 0 &&
-            #paste0 (lCovariates, collapse = "") != aCovariate) {
-            (paste0 (lCovariates, collapse = "") != aCovariate || length (covariates[which(minQValues[i, ] < 0.1)]) > 1)) {
-
-
+            (paste0 (lCovariates, collapse = "") != aCovariate ||
+             length (covariates[which(minQValues[i, ] < 0.1)]) > 1)) {
 
           #status <- "STRICTLY DECONFOUNDED"
           status <- "SD"
@@ -239,65 +203,17 @@ CheckReducibility <- function(featureMat,
           # put new dataframe of qs in here
           otherCovariates <- lCovariates
           if (!is.null(minQValues[[1]])) {
-            #otherCovariates <- covariates[which(minQValues[i, ] < 0.1)]
             otherCovariates <- unique(c(covariates[which(minQValues[i, ] < 0.1)], lCovariates))
           }
           for (anotherCovariate in otherCovariates) {
 
+            # remove rows where anotherCovariate has NAs
             subsubMerge <- eval (parse (text = paste0 ("subset (subMerge, ! is.na (", anotherCovariate, "))")))
 
-
-
-            if (anotherCovariate == aCovariate) { next; }
-
-            if (!isRobust[aCovariate, anotherCovariate]) {
-              #status <- "NS"
-              #statusLine[j] <- status
-
-              # if(verbosity == "debug"){
-              #   write(paste("skipped:", i, j, anotherCovariate, status, sep = "\t"),
-              #         file = "LRT_pValue.txt",
-              #         append = TRUE)
-              # }
-
+            if ((anotherCovariate == aCovariate) ||
+                (!isRobust[aCovariate, anotherCovariate])) {
               next
-            }
-
-            # if fail too far, set status to CONFOUNDED
-            # otherwise set to LAX
-
-            # significance of post-hoc test:
-              #does the tested covariate/predictor add anything beyond what
-              #this confounder/covariate does?
-
-            # aP_call_forward <-
-            #   paste0 ("lmtest::lrtest (stats::lm (rank (FeatureValue) ~ ",
-            #           aCovariate,
-            #           " + ",
-            #           anotherCovariate,
-            #           ", data = subMerge), stats::lm (rank (FeatureValue) ~ ",
-            #           anotherCovariate,
-            #           ", data = subMerge))$'Pr(>Chisq)' [2]")
-
-            # significance of post-hoc test:
-              #does the confounder/covariate add anything beyond the
-              #covariate/predictor?
-
-            # aP_call_reverse <-
-            #   paste0 ("lmtest::lrtest (stats::lm (rank (FeatureValue) ~ ",
-            #           aCovariate,
-            #           " + ",
-            #           anotherCovariate,
-            #           ", data = subMerge), stats::lm (rank (FeatureValue) ~ ",
-            #           aCovariate,
-            #           ", data = subMerge))$'Pr(>Chisq)' [2]")
-
-            # if(verbosity == "debug"){
-            #   write(paste("I have come this far_198", i, j,  sep = "\t"),
-            #         file = "LRT_pValue.txt",
-            #         append = TRUE)
-            # }
-
+              }
 
             modAlg <- "stats::lm (rank (FeatureValue) ~ "
             lastPart <- paste0(", data = subsubMerge)", collapse = "")
@@ -350,12 +266,6 @@ CheckReducibility <- function(featureMat,
             aP_forward <- lmtest::lrtest (lmBoth, lmAnother)$'Pr(>Chisq)' [2]
             aP_reverse <- lmtest::lrtest (lmBoth, lmA)$'Pr(>Chisq)' [2]
 
-            # if(verbosity == "debug"){
-            #   write(paste("I have come this far_301", i, j, anotherCovariate,  sep = "\t"),
-            #         file = "LRT_pValue.txt",
-            #         append = TRUE)
-            # }
-
             # additonal control of confidence intervals for the covariates within the linear models
             conf_aCovariate <- TRUE
             conf_anotherCovariate <- TRUE
@@ -394,56 +304,6 @@ CheckReducibility <- function(featureMat,
               }
             }
 
-
-            # if(verbosity == "debug"){
-            #   write(paste("I have come this far 330", i, j,  sep = "\t"),
-            #         file = "LRT_pValue.txt",
-            #         append = TRUE)
-            # }
-
-            # tryCatch({
-            #             aP_forward <- eval (
-            #               parse (
-            #                 text = as.character (aP_call_forward)))
-            #           },
-            #           error=function(cond){
-            #             if(verbosity == "debug"){
-            #               write(paste("there seems tpo be aproblem here",
-            #                           i,
-            #                           j,
-            #                           cond,
-            #                           sep = "\t"),
-            #                     file = "LRT_pValue.txt",
-            #                     append = TRUE)
-            #             }
-            #             message("HEEEELP")
-            #             message(cond)
-            #             return(NA)
-            #           }
-            #          )
-            #
-            # tryCatch({
-            #   aP_reverse <- eval (parse (text = as.character (aP_call_reverse)))
-            # },
-            # error=function(cond){
-            #   if(verbosity == "debug"){
-            #     write(paste("there seems tpo be aproblem here",
-            #                 i,
-            #                 j,
-            #                 cond,
-            #                 sep = "\t"),
-            #           file = "LRT_pValue.txt",
-            #           append = TRUE)
-            #   }
-            #   message("HEEEELP")
-            #   message(cond)
-            #   return(NA)
-            # }
-            # )
-
-            #aP_forward <- try(eval (parse (text = as.character (aP_call_forward))), outFile = "~/IsItHere.txt")
-            #aP_reverse <- try(eval (parse (text = as.character (aP_call_reverse))), outFile = "~/IsItHere.txt")
-
             if (! is.na (aP_forward) &&
                 aP_forward >= PHS_cutoff &&
                 aP_reverse < PHS_cutoff) {
@@ -453,17 +313,6 @@ CheckReducibility <- function(featureMat,
               # all detected confounders are added to this vector
               confounders <- c(confounders, anotherCovariate)
 
-              # if(verbosity == "debug"){
-              #   write(paste("Eureka!",
-              #               i,
-              #               j,
-              #               status,
-              #               sep = "\t"),
-              #         file = "LRT_pValue.txt",
-              #         append = TRUE)
-              # }
-
-              #break
             } # another feature fully explains this
 
             if (! is.na (aP_forward) &&
@@ -472,18 +321,6 @@ CheckReducibility <- function(featureMat,
               #status <- "LAXLY DECONFOUNDED"
               status <- "LD"
             } # cannot be ruled out another feature explains this
-#
-#             if(verbosity == "debug"){
-#               write(paste(aFeature,
-#                           aCovariate,
-#                           anotherCovariate,
-#                           aP_forward,
-#                           aP_reverse,
-#                           status,
-#                           sep = "\t"),
-#                     file = "LRT_pValue.txt",
-#                     append = TRUE)
-#             }
 
             if(verbosity == "debug"){
               write(paste("436!",
@@ -497,29 +334,10 @@ CheckReducibility <- function(featureMat,
           } #end "for (anotherCovariate in lCovariates) {"
 
 
-          # if(verbosity == "debug"){
-          #   write(paste("Karamba!",
-          #               i,
-          #               j,
-          #               status,
-          #               sep = "\t"),
-          #         file = "LRT_pValue.txt",
-          #         append = TRUE)
-          # }
-
         } else {
           #status <- "NO COVARIATES"
           status <- "NC"# trivially unconfounded because no
-                                      #other features play a role
-          # if(verbosity == "debug"){
-          #   write(paste("EASY!",
-          #               i,
-          #               j,
-          #               status,
-          #               sep = "\t"),
-          #         file = "LRT_pValue.txt",
-          #         append = TRUE)
-          # }
+                            #other features play a role
         }
 
       # if confounders where detected, they will all be printed as a single string as status
@@ -528,22 +346,8 @@ CheckReducibility <- function(featureMat,
       }
       # }# status assignment for a sinlge feature <-> covariate combination
 
-
       statusLine[j] <- status
-      #Ss [as.character (aFeature), as.character (aCovariate)] <- status
-      # if(verbosity == "debug"){
-      #   write(paste("468!",
-      #               i,
-      #               j,
-      #               status,
-      #               sep = "\t"),
-      #         file = "LRT_pValue.txt",
-      #         append = TRUE)
-      # }
-
-
     }# inner nested for j loop
-
 
      if ((i %% 10) == 0) {
     progress <- paste0(round(x = ((i/length(features))*100),

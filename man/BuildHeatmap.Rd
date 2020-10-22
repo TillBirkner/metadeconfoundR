@@ -53,6 +53,10 @@ example_output <- MetaDeconfound(featureMat = reduced_feature,
                                   metaMat = metaMatMetformin)
 
 plotObject <- BuildHeatmap(example_output)
-print(plotObject)}
+print(plotObject)
+
+alternativePlot <- buildHeatmap(metadeconfoundR_output, coloring = 2, showConfounded = FALSE)
+print(alternativePlot)
+}
 
 }

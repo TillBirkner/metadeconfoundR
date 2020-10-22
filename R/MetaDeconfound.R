@@ -98,12 +98,11 @@ MetaDeconfound <- function(featureMat,
 			   typeContinuous = NULL, # new SKF20200221
 			   logistic = FALSE, # new SKF20201017
                            ...) {
+
   # create file for progress log
-
-
   flog.logger("my.logger", INFO, appender=appender.file(logfile))
   flog.appender(appender.tee(logfile), name = 'my.logger')
-  #flog.threshold(INFO, name = 'my.logger')
+
   if (is.null(logfile)) {
     flog.threshold(FATAL, name = 'my.logger')
   }
@@ -241,7 +240,7 @@ MetaDeconfound <- function(featureMat,
   if (!is.na(randomVar[[1]])) { # list input paramter is split for further use within pipeline
     RVnames <- randomVar[[2]]
     randomVar<- randomVar[[1]]
-    #covariates <- covariates[!(covariates %in% RVnames)] # random effect variables are not treated as covariates
+
 
     flog.info(msg = paste0("The following parameters will be added to all linear models: '", randomVar, "'"),
               name = "my.logger")
@@ -255,9 +254,10 @@ MetaDeconfound <- function(featureMat,
   }
 
   if (NA_imputation != "remove") {
-    #impute using mice or somn like dat
+    #impute using mice function
     #featureMat <- mice(featuremat)
     #metaMat <- mice(metaMat)
+    # implementation pending
   }
 
 
