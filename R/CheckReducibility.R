@@ -34,13 +34,13 @@ CheckReducibility <- function(featureMat,
   isRobust <- isRobust[[2]]
   #isRobust[!isRobust] <- TRUE
 
-  if(verbosity == "debug"){
-    write(paste(length(features),
-                length(covariates),
-                sep = "\t"),
-          file = "LRT_pValue.txt",
-          append = TRUE)
-  }
+  # if(verbosity == "debug"){
+  #   write(paste(length(features),
+  #               length(covariates),
+  #               sep = "\t"),
+  #         file = "LRT_pValue.txt",
+  #         append = TRUE)
+  # }
   r = foreach::foreach(i = seq_along(features), .combine='rbind') %dopar% {
 
     statusLine <- vector(length = noCovariates, mode = "character")
@@ -54,14 +54,14 @@ CheckReducibility <- function(featureMat,
       lCovariates <- lCovariates[!(lCovariates %in% RVnames)]
     }
 
-    if(verbosity == "debug"){
-      write(paste(length(features),
-                  length(covariates),
-                  length(lCovariates),
-                  sep = "\t"),
-            file = "LRT_pValue.txt",
-            append = TRUE)
-    }
+    # if(verbosity == "debug"){
+    #   write(paste(length(features),
+    #               length(covariates),
+    #               length(lCovariates),
+    #               sep = "\t"),
+    #         file = "LRT_pValue.txt",
+    #         append = TRUE)
+    # }
 
     if (verbosity == "debug") {
       write(paste0(as.character(i),
@@ -102,14 +102,15 @@ CheckReducibility <- function(featureMat,
 
     for (j in seq_along(covariates)) {
 
-      if(verbosity == "debug"){
-        write(paste("106!",
-                    i,
-                    j,
-                    sep = "\t"),
-              file = "LRT_pValue.txt",
-              append = TRUE)
-      }
+      # if(verbosity == "debug"){
+      #   write(paste("106!",
+      #               i,
+      #               j,
+      #               sep = "\t"),
+      #         file = "LRT_pValue.txt",
+      #         append = TRUE)
+      #
+      # }
 
 
       aFeature <- as.character (features [i])
@@ -121,6 +122,13 @@ CheckReducibility <- function(featureMat,
           Qs [i, j] >= QCutoff |
           is.na(Ds [i, j]) |
           abs (Ds [i, j]) <= DCutoff) {
+
+          if (aCovariate %in% RVnames) {
+            # set label to NA for all random vars
+            statusLine[j] <- NA
+            next
+          }
+
         statusLine[j] <- status
         next
       }
@@ -150,6 +158,12 @@ CheckReducibility <- function(featureMat,
           tail <- ", data = subMerge, family = \"binomial\")"
         }
 
+        if(verbosity == "debug"){
+          write(paste("LRT_randOnly_for", aFeature, aCovariate,  sep = "\t"),
+                file = "LRT_pValue.txt",
+                append = TRUE)
+        }
+
         mixedmodel1 <- eval(
           parse(
             text = as.character(
@@ -171,7 +185,7 @@ CheckReducibility <- function(featureMat,
 
         aP_mixed <- lmtest::lrtest(mixedmodel1, mixedmodel2)$'Pr(>Chisq)' [2]
         if(verbosity == "debug"){
-          write(paste("I have come this far_171", i, ", aP_mixed is", aP_mixed,  sep = "\t"),
+          write(paste("LRT_randOnly_for", aFeature, aCovariate, aP_mixed,  sep = "\t"),
                 file = "LRT_pValue.txt",
                 append = TRUE)
         }
@@ -232,6 +246,17 @@ CheckReducibility <- function(featureMat,
                 lastPart <- ", data = subsubMerge, family = \"binomial\")"
               }
             }
+
+            if(verbosity == "debug"){
+              write(paste("LRTsFwdRvsFor",
+                          aFeature,
+                          aCovariate,
+                          anotherCovariate,
+                          sep = "\t"),
+                    file = "LRT_pValue.txt",
+                    append = TRUE)
+            }
+
             # compute the three needed linear models
             lmBoth <- eval(
               parse(
@@ -323,10 +348,12 @@ CheckReducibility <- function(featureMat,
             } # cannot be ruled out another feature explains this
 
             if(verbosity == "debug"){
-              write(paste("436!",
-                          i,
-                          j,
+              write(paste("LRTsFwdRvsFor",
+                          aFeature,
+                          aCovariate,
                           anotherCovariate,
+                          aP_forward,
+                          aP_reverse,
                           sep = "\t"),
                     file = "LRT_pValue.txt",
                     append = TRUE)

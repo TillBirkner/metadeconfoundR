@@ -185,12 +185,12 @@ BuildHeatmap <- function(metaDeconfOutput,
       theme_classic() +
       theme(axis.text.x = element_text(size = 7,
                                        angle = 90,
-                                       hjust = 0.9,
+                                       hjust = 1,
                                        vjust = 0.3),
             axis.text.y = element_text(size = 7,
                                        angle = 0,
                                        hjust = 1,
-                                       vjust = 0)) +
+                                       vjust = 0.35)) +
       labs(title="MetaDeconfoundR summarizing coneiform plot",
            subtitle="FDR-values: < 0.001 = ***, < 0.01 = **, < 0.1 = * ", x = "Metadata variables", y = "Omics features")
 
@@ -202,18 +202,19 @@ BuildHeatmap <- function(metaDeconfOutput,
       # add significance stars/circles for deconfounded/confounded associations
       geom_text(aes(label=stars, colour = status), size=2, key_glyph = "point") +
       scale_color_manual(name = "Confounding status", values = c("gray45", "black"), labels = c("confounded", "deconfounded"), ) +
+      guides(color = guide_legend(override.aes = list(shape = c(1,8)) ) ) +
       #guides(color = guide_legend(override.aes = list(shape  = "*"))) +
 
       # make it pretty
       theme_classic() +
       theme(axis.text.x = element_text(size = 7,
                                        angle = 90,
-                                       hjust = 0.9,
+                                       hjust = 1,
                                        vjust = 0.3),
             axis.text.y = element_text(size = 7,
                                        angle = 0,
                                        hjust = 1,
-                                       vjust = 0)) +
+                                       vjust = 0.35)) +
       labs(title="MetaDeconfoundR summarizing heatmap",
            subtitle="FDR-values: < 0.001 = ***, < 0.01 = **, < 0.1 = * ", x = "Metadata variables", y = "Omics features")
 

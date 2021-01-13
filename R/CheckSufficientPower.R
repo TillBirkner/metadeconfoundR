@@ -14,7 +14,8 @@ CheckSufficientPower <- function(metaMat,
                                  typeContinuous, # new SKF20200221
                                  NA_imputation,
                                  maintenance,
-                                 verbosity) {
+                                 verbosity,
+                                 RVnames) {
 
 
   # global check for sufficient samples of each case and control groups
@@ -49,6 +50,11 @@ CheckSufficientPower <- function(metaMat,
 
 
   for (i in seq_along(covariates)) {
+
+    if (!is.na(RVnames) && covariates[i] %in% RVnames) {
+      # all random effect variables are labeled as "not robust"
+      next
+    }
 
     ## ---- getVariableType
     getVariableType <- function (values, variable) {

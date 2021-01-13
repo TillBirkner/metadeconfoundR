@@ -173,14 +173,14 @@ NaiveAssociation <- function(featureMat,
 
   subSubMerge <- na.exclude(subMerge[, c(aCovariate, "FeatureValue")])
     if (logistic == TRUE && conVar) {
-      formulaNull <- paste0 ("stats::glm (FeatureValue ~ 1, data = subSubMerge)", collapse = "")
-      formulaVar <- paste0 ("stats::glm (FeatureValue ~ ", aCovariate, ", data = subSubMerge)", collapse = "")
+      formulaNull <- paste0 ("stats::glm (FeatureValue ~ 1, data = subSubMerge, family = \"binomial\")", collapse = "")
+      formulaVar <- paste0 ("stats::glm (FeatureValue ~ ", aCovariate, ", data = subSubMerge, family = \"binomial\")", collapse = "")
 
       lmNull <- eval (parse (text = as.character (formulaNull)))
       lmVar <- eval (parse (text = as.character (formulaVar)))
 
       aP <- lmtest::lrtest (lmNull, lmVar)$'Pr(>Chisq)' [2]
-      aD <- Inf
+      aD <- lmVar$coef [2]
 
     }
 

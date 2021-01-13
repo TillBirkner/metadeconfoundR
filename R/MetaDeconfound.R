@@ -274,18 +274,21 @@ MetaDeconfound <- function(featureMat,
                                    typeContinuous = typeContinuous, # new SKF20200221
                                    NA_imputation = NA_imputation,
                                    maintenance = maintenance,
-                                   verbosity = verbosity)
+                                   verbosity = verbosity,
+                                   RVnames = RVnames)
 
   if (verbosity == "debug") {
-    print("CheckSufficientPower -- head(isRobust):")
+    print("CheckSufficientPower -- (dim(isRobust[[2]]):")
     print(dim(isRobust[[2]]))
   }
 
-  if (anyNA(isRobust[[1]]) || anyNA(isRobust[[2]])) {
-    flog.warn(msg = paste0(sum(is.na(isRobust[[1]])), " covariates where marked as too sparse and won't be considered in further analysis due to lack of sufficient data."),
+  if (!all(isRobust[[1]])
+      #|| !all(isRobust[[2]])
+      ) {
+    flog.info(msg = paste0((length(isRobust[[1]]) - sum(isRobust[[1]])), " covariates where marked as too sparse and won't be considered in further analysis due to lack of sufficient data."),
               name = "my.logger")
-    flog.warn(msg = paste0(sum(is.na(isRobust[[2]])), " covariate combinations where marked as too sparse and won't be considered as potential confunders of each other in the deconfounding step."),
-              name = "my.logger")
+    #flog.info(msg = paste0(sum(is.na(isRobust[[2]])), " covariate combinations where marked as too sparse and won't be considered as potential confunders of each other in the deconfounding step."),
+    #          name = "my.logger")
   }
 
 
