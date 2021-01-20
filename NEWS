@@ -1,3 +1,7 @@
+Version 0.1.9
+	-	bugfix concerning random effect variable behaviour
+	-	minor esthetic improvements in BuildHeatmap() output
+
 Version 0.1.8
 	-	introduction of global parameter "logistic"
 		-	logistic = TRUE: analysing binary features instead of continuous using logistic regression models

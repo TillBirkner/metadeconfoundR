@@ -1,7 +1,7 @@
 Package: metadeconfoundR
 Type: Package
 Title: Check Multiple Covariates for Potenial Counfinding Effects
-Version: 0.1.8
+Version: 0.1.9
 Author: Sofia Forslund, Ulrike Löber, Till Birkner
 Maintainer: Till Birkner <tillb@online.de>
 Description: Here comes the longer yet precise description.

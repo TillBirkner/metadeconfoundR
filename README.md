@@ -9,5 +9,5 @@ In a second step, potential confounding effects between different metadata varia
 ```
 # in R
 library(devtools)
-instal_github("TillBirkner/metadeconfoundR")
+install_github("TillBirkner/metadeconfoundR")
 ```
