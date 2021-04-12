@@ -5,7 +5,8 @@
 \alias{metaMatMetformin}
 \title{Documentation for the metaMatMetformin RData in /data}
 \description{
-set of features from the metformin dataset,
-containining status for 5 dfferent proprties for 753 samples
+set of features from the metformin dataset
+(Forslund et al. (2015), DOI: https://doi.org/10.1038/nature15766),
+containing status for 5 different properties for 753 samples
 }
 \keyword{data}

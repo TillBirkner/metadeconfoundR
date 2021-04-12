@@ -1,10 +1,15 @@
+Version 0.2.0
+  - new function ImportLongPrior() to easily import prior knowledge of feature
+  metadata associations present in the current dataset.
+  - slightly improved help pages
+
 Version 0.1.9
-	-	bugfix concerning random effect variable behaviour
-	-	minor esthetic improvements in BuildHeatmap() output
+	-	bugfix concerning random effect variable behavior
+	-	minor aesthetic improvements in BuildHeatmap() output
 
 Version 0.1.8
 	-	introduction of global parameter "logistic"
-		-	logistic = TRUE: analysing binary features instead of continuous using logistic regression models
+		-	logistic = TRUE: analyzing binary features instead of continuous using logistic regression models
 
 Version 0.1.7
 
