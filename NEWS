@@ -1,3 +1,11 @@
+Version 0.2.1
+  - added functionality to Metadeconfound()
+    - output can now also be generated in long format
+  - added functionality to BuildHeatmap()
+    - input can now also be read in long format
+    - "human readable"" names for features and metadata can be supplied in addition to the Metadeconfound() ouptut and will be plotted instead of "machine readable" names
+  - slightly improved help pages
+
 Version 0.2.0
   - new function ImportLongPrior() to easily import prior knowledge of feature
   metadata associations present in the current dataset.

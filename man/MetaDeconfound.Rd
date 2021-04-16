@@ -46,7 +46,7 @@ with case=1 and control=0. All binary variables need to be in 0/1 syntax!}
 \item{nnodes}{number of nodes/cores to be used for parallel processing}
 
 \item{adjustMethod}{multiple testing p-value correction using one of the
-methods of stats::p.adjust.methods}
+methods of \link[stats]{p.adjust.methods}}
 
 \item{robustCutoff}{minimal number of sample size for each covariate
 in order to have sufficient power for association testing}
