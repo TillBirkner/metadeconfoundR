@@ -12,7 +12,7 @@
 #' with case=1 and control=0. All binary variables need to be in 0/1 syntax!
 #' @param nnodes number of nodes/cores to be used for parallel processing
 #' @param adjustMethod multiple testing p-value correction using one of the
-#' methods of stats::p.adjust.methods
+#' methods of \link[stats]{p.adjust.methods}
 #' @param robustCutoff minimal number of sample size for each covariate
 #' in order to have sufficient power for association testing
 #' @param QCutoff significance cutoff for q-value, DEFAULT = 0.1
@@ -407,17 +407,12 @@ MetaDeconfound <- function(featureMat,
   }
 
 
-  long_out <- reshape2::melt(naiveAssociation$Ps, varnames = c("feature", "metadata"), value.name = "Ps")
+  long_out <- reshape2::melt(naiveAssociation$Ps, varnames = c("feature", "metaVariable"), value.name = "Ps")
   long_out$Qs <- reshape2::melt(naiveAssociation$Qs)[, 3]
   long_out$Ds <- reshape2::melt(naiveAssociation$Ds)[, 3]
   long_out$status <- reshape2::melt(reducibilityStatus)[, 3]
   long_out_signif <- subset(x = long_out, (status != "NS") & !is.na(status))
 
+  return(long_out)
 
-  long_out <- melt(metadeconf_Isolates_Metabo$status, varnames = c("feature", "metadata"))[, -3]
-  long_out$Ps <- melt(metadeconf_Isolates_Metabo$Ps)[, 3]
-  long_out$Qs <- melt(metadeconf_Isolates_Metabo$Qs)[, 3]
-  long_out$Ds <- melt(metadeconf_Isolates_Metabo$Ds)[, 3]
-  long_out$status <- melt(metadeconf_Isolates_Metabo$status)[, 3]
-  long_out_signif <- subset(x = long_out, (status != "NS") & !is.na(status))
 }

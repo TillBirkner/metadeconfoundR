@@ -11,11 +11,13 @@ BuildHeatmap(
   cuneiform = FALSE,
   coloring = 0,
   showConfounded = TRUE,
-  intermedData = FALSE
+  intermedData = FALSE,
+  featureNames = NULL,
+  metaVariableNames = NULL
 )
 }
 \arguments{
-\item{metaDeconfOutput}{output list of a metadeconfound run}
+\item{metaDeconfOutput}{output of a metadeconfound run}
 
 \item{q_cutoff}{optional FDR-value cutoff used to remove
 low-significance entries from data}
@@ -35,6 +37,18 @@ plot cuneiform instead of heatmap when cuneiform = TRUE}
 set to FALSE to remove significance markers from confounded signals}
 
 \item{intermedData}{only return intermediate data for plotting, default = FALSE}
+
+\item{featureNames}{optional two-column-dataframe containing corresponding
+"human-readable" names to the "machine-readable" feature names used as
+row.names in metaDeconfOutput. These human readable
+names will be displayed in the final plot. First column: machine-readable,
+second column: human-readable.}
+
+\item{metaVariableNames}{optional two-column-dataframe containing
+corresponding  "human-readable" names to the "machine-readable" metadata
+names used as col.names in metaDeconfOutput. These human readable
+names will be displayed in the final plot. First column: machine-readable,
+second column: human-readable.}
 }
 \value{
 ggplot2 object
