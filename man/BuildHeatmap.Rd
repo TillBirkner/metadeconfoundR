@@ -13,7 +13,11 @@ BuildHeatmap(
   showConfounded = TRUE,
   intermedData = FALSE,
   featureNames = NULL,
-  metaVariableNames = NULL
+  metaVariableNames = NULL,
+  d_range = "fit",
+  d_col = c("red", "white", "blue"),
+  keepMeta = NULL,
+  keepFeature = NULL
 )
 }
 \arguments{
@@ -46,9 +50,27 @@ second column: human-readable.}
 
 \item{metaVariableNames}{optional two-column-dataframe containing
 corresponding  "human-readable" names to the "machine-readable" metadata
-names used as col.names in metaDeconfOutput. These human readable
+names used as column names in metaDeconfOutput. These human readable
 names will be displayed in the final plot. First column: machine-readable,
 second column: human-readable.}
+
+\item{d_range}{range of effect sizes shown; "full": (default) range from
+-1 to +1;
+"fit": range reduced according to maximum and minimum effect size
+present in resulting plot}
+
+\item{d_col}{set color range for effect size as c(minimum, middle, maximum),
+default c("red", "white", "blue")}
+
+\item{keepFeature}{character vector of metavariable names
+(corresponding to names in metaDeconfOutput), that should be shown in
+resulting plot, even when they have no associations
+passing d_cutoff and q_cutoff}
+
+\item{keepMata}{character vector of metavariable names
+(corresponding to names in metaDeconfOutput), that should be shown in
+resulting plot, even when they have no associations
+passing d_cutoff and q_cutoff}
 }
 \value{
 ggplot2 object

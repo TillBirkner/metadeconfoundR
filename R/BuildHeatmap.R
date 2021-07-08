@@ -7,6 +7,12 @@
 #' low-significance entries from data
 #' @param d_cutoff optional effect size cutoff used to remove
 #' low effect size entries from data
+#' @param d_range range of effect sizes shown; "full": (default) range from
+#' -1 to +1;
+#' "fit": range reduced according to maximum and minimum effect size
+#' present in resulting plot
+#' @param d_col set color range for effect size as c(minimum, middle, maximum),
+#' default c("red", "white", "blue")
 #' @param cuneiform optional logical parameter,
 #' plot cuneiform instead of heatmap when cuneiform = TRUE
 #' @param coloring optional, can be 0,1,2;
@@ -23,9 +29,17 @@
 #' second column: human-readable.
 #' @param metaVariableNames optional two-column-dataframe containing
 #' corresponding  "human-readable" names to the "machine-readable" metadata
-#' names used as col.names in metaDeconfOutput. These human readable
+#' names used as column names in metaDeconfOutput. These human readable
 #' names will be displayed in the final plot. First column: machine-readable,
 #' second column: human-readable.
+#' @param keepMata character vector of metavariable names
+#' (corresponding to names in metaDeconfOutput), that should be shown in
+#' resulting plot, even when they have no associations
+#' passing d_cutoff and q_cutoff
+#' @param keepFeature character vector of metavariable names
+#' (corresponding to names in metaDeconfOutput), that should be shown in
+#' resulting plot, even when they have no associations
+#' passing d_cutoff and q_cutoff
 #' @return ggplot2 object
 #' @details for more details and explanations please see the package vignette.
 #' @examples
@@ -54,8 +68,20 @@ BuildHeatmap <- function(metaDeconfOutput,
                          showConfounded = TRUE,
                          intermedData = FALSE,
                          featureNames = NULL,
-                         metaVariableNames = NULL
+                         metaVariableNames = NULL,
+                         d_range = "fit",
+                         d_col = c("red", "white", "blue"),
+                         keepMeta = NULL,
+                         keepFeature = NULL
                          ) {
+
+
+  if (length(d_col) != 3) {
+    stop("wrong number of colors in d_col!")
+  }
+  if (!(d_range %in% c("fit", "full"))) {
+    stop('d_range must be either "fit" or "full"!')
+  }
 
   if (class(metaDeconfOutput) == "list") {
     # melt dataframes for fdr-valules, effectsizes, and confounding status
@@ -149,7 +175,13 @@ BuildHeatmap <- function(metaDeconfOutput,
   }
 
   remove <- unique(remove)
+  # check that there actually are features, that should be removed
   if (length(remove) > 0) {
+    # remove feature names from the list of to-be-removed features
+    if (!is.null(keepFeature)) {
+      remove <- remove[!(remove %in% keepFeature)]
+    }
+    # remove fetures not passing q_cutoff and d_cutoff filtering
     effectSize <- effectSize[-remove, ]
   }
   effectSize <- droplevels(effectSize)
@@ -169,6 +201,11 @@ BuildHeatmap <- function(metaDeconfOutput,
     }
   }
 
+  # remove metaVariabel names from the list of to-be-removed metaVariables
+  if (!is.null(keepMeta)) {
+    remove_metavariables <-
+      remove_metavariables[!(remove_metavariables %in% keepMeta)]
+  }
   # remove filtered out matavariables from the dataset
   effectSize <- effectSize[!(effectSize$metaVariable %in% remove_metavariables), ]
 
@@ -231,6 +268,11 @@ BuildHeatmap <- function(metaDeconfOutput,
   lowerLim <- min(effectSize$Ds)
   upperLim <- max(effectSize$Ds)
 
+  if (d_range == "full") {
+    lowerLim <- -1
+    upperLim <- 1
+  }
+
   # include added name coluns into plots!!
   if (cuneiform) {
     heatmapGGplot <- ggplot(effectSize, aes(x = metaVariable, y = feature)) +
@@ -242,9 +284,9 @@ BuildHeatmap <- function(metaDeconfOutput,
                           values = c (25, 24),
                           labels = c("negative association",
                                      "positive association")) +
-      scale_fill_gradient2(low = "red",
-                           mid = "white",
-                           high = "blue",
+      scale_fill_gradient2(low = d_col[1],
+                           mid = d_col[2],
+                           high = d_col[3],
                            midpoint = 0,
                            guide = guide_colorbar (raster = F),
                            limits = c(lowerLim,upperLim)) +
@@ -274,9 +316,9 @@ BuildHeatmap <- function(metaDeconfOutput,
     heatmapGGplot <- ggplot(effectSize, aes(x = metaVariableNames, y = featureNames)) +
       # do the heatmap tile coloring based on effect sizes
       geom_tile(aes(fill = Ds)) +
-      scale_fill_gradient2(low = "red",
-                           mid = "white",
-                           high = "blue",
+      scale_fill_gradient2(low = d_col[1],
+                           mid = d_col[2],
+                           high = d_col[3],
                            midpoint = 0,
                            guide = guide_colorbar (raster = F),
                            limits = c(lowerLim,upperLim)) +
