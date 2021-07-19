@@ -1,3 +1,7 @@
+Version 0.2.3
+  - fixed bug that only occured when metadata oncly has one column
+  - implemented speedup when startStop = "naiveStop"
+
 Version 0.2.2
   - added functionality to BuildHeatmap()
     - range of shown effectsizes in using d_range parameter (set to "full" for consitent legend between plots)

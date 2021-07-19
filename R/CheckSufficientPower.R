@@ -15,7 +15,8 @@ CheckSufficientPower <- function(metaMat,
                                  NA_imputation,
                                  maintenance,
                                  verbosity,
-                                 RVnames) {
+                                 RVnames,
+                                 startStop) {
 
 
   # global check for sufficient samples of each case and control groups
@@ -24,6 +25,11 @@ CheckSufficientPower <- function(metaMat,
   noControl <- nrow(metaMat[metaMat[,1] == 0, ])
     # number of samples with Status == 0
   conditionMat <- metaMat[metaMat[,1] == 1, ]
+
+  if (ncol(metaMat) == 1) {
+    noCondition <- length(metaMat[metaMat[,1] == 1, ])
+    noControl <- length(metaMat[metaMat[,1] == 0, ])
+  }
 
   ##
   ##
@@ -100,7 +106,7 @@ CheckSufficientPower <- function(metaMat,
 
 
     for (j in seq_along(covariates)) {
-      if (i == j) {
+      if (i == j || (!is.na(startStop) && startStop == "naiveStop")) {
         robustCombination[i,j] <- TRUE
         next
       }

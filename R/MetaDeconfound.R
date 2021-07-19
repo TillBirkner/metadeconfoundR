@@ -288,7 +288,8 @@ MetaDeconfound <- function(featureMat,
                                    NA_imputation = NA_imputation,
                                    maintenance = maintenance,
                                    verbosity = verbosity,
-                                   RVnames = RVnames)
+                                   RVnames = RVnames,
+                                   startStop = startStop)
 
   if (verbosity == "debug") {
     print("CheckSufficientPower -- (dim(isRobust[[2]]):")

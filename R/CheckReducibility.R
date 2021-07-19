@@ -50,6 +50,7 @@ CheckReducibility <- function(featureMat,
     lCovariates <- covariates[which(Qs[i, ] < 0.1)]
     lCovariates <- c(lCovariates, deconfT)
     lCovariates <- lCovariates[!(lCovariates %in% deconfF)]
+    # remove names of random variables from this list
     if (!is.na(RVnames)) {
       lCovariates <- lCovariates[!(lCovariates %in% RVnames)]
     }
