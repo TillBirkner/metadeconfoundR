@@ -275,15 +275,35 @@ BuildHeatmap <- function(metaDeconfOutput,
 
   # include added name coluns into plots!!
   if (cuneiform) {
+
+
+    divShapes <-
+      switch (as.character(length(unique(
+        sign(effectSize$Ds)
+      ))),
+      "1" = 23,
+      "2" = c(25, 24),
+      "3" = c(25, 23, 24))
+
+    divShapesMeaning <-
+      switch (as.character(length(unique(
+        sign(effectSize$Ds)
+      ))),
+      "1" = "no association/\nno data",
+      "2" = c("negative association",
+              "positive association"),
+      "3" = c("negative association",
+              "no association/\nno data",
+              "positive association"))
+
     heatmapGGplot <- ggplot(effectSize, aes(x = metaVariable, y = feature)) +
       # do cuneiform plot with coloring based on effectsizes
       geom_point (aes (fill = Ds,
                        shape = as.factor (sign (Ds)),
                        color = status)) +
       scale_shape_manual (name = "Direction",
-                          values = c (25, 24),
-                          labels = c("negative association",
-                                     "positive association")) +
+                          values = divShapes,
+                          labels = divShapesMeaning) +
       scale_fill_gradient2(low = d_col[1],
                            mid = d_col[2],
                            high = d_col[3],
@@ -294,7 +314,7 @@ BuildHeatmap <- function(metaDeconfOutput,
       scale_color_manual(name = "Confounding status",
                          values = c("gray45", "black"),
                          labels = c("confounded", "deconfounded")) +
-      guides(shape = FALSE,
+      guides(#shape = FALSE,
              color = guide_legend(override.aes = list(shape  = 24))) +
 
       # make it pretty

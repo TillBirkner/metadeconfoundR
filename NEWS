@@ -1,3 +1,6 @@
+Version 0.2.4
+  - Buildheatmap(cuneiform = TRUE) can now handle NA or zero effect sizes (added new symbol)
+
 Version 0.2.3
   - fixed bug that only occured when metadata oncly has one column
   - implemented speedup when startStop = "naiveStop"
