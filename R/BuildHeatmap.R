@@ -157,7 +157,6 @@ BuildHeatmap <- function(metaDeconfOutput,
   }
 
 
-
   #
   #
   #### fetching all rows/columns that have low Ds and Qs and removing them
