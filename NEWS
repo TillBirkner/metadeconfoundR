@@ -1,3 +1,8 @@
+Version 0.2.5
+  - fixed bug in "keepFeature" functionality of BuildHeatmap()
+  - fixed bug in BuildHeatmap() that resulted in incomplete removal of features showing not a single significant association
+  - implemented speedup for runs of Metadeconfound(startStop = "naiveStop") with large number of metadata
+
 Version 0.2.4
   - Buildheatmap(cuneiform = TRUE) can now handle NA or zero effect sizes (added new symbol)
 

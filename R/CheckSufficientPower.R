@@ -54,6 +54,24 @@ CheckSufficientPower <- function(metaMat,
   robustCombination <- as.data.frame(matrix(nrow = length(covariates), ncol = length(covariates), data = FALSE))
   rownames(robustCombination) <- colnames(robustCombination) <- covariates
 
+  ## ---- getVariableType
+  getVariableType <- function (values, variable) {
+    # variable == name of covariate
+    if (is.numeric (values) &&
+        all (values %in% c (0, 1)) &&
+        ! (! is.null(typeContinuous) && variable %in% typeContinuous) &&
+        ! (! is.null(typeCategorical) && variable %in% typeCategorical)) {
+      return ("binary") # treat as binary
+    }
+    else if ((is.numeric (values) ||
+              (! is.null (typeContinuous) && variable %in% typeContinuous)) &&
+             ! (! is.null (typeCategorical) && variable %in% typeCategorical)) {
+      return ("continuous") # treat as continuous
+    }
+    else {
+      return ("categorical") # treat as categorical
+    }
+  }
 
   for (i in seq_along(covariates)) {
 
@@ -61,26 +79,6 @@ CheckSufficientPower <- function(metaMat,
       # all random effect variables are labeled as "not robust"
       next
     }
-
-    ## ---- getVariableType
-    getVariableType <- function (values, variable) {
-      # variable == name of covariate
-      if (is.numeric (values) &&
-          all (values %in% c (0, 1)) &&
-          ! (! is.null(typeContinuous) && variable %in% typeContinuous) &&
-          ! (! is.null(typeCategorical) && variable %in% typeCategorical)) {
-        return ("binary") # treat as binary
-      }
-      else if ((is.numeric (values) ||
-                (! is.null (typeContinuous) && variable %in% typeContinuous)) &&
-               ! (! is.null (typeCategorical) && variable %in% typeCategorical)) {
-        return ("continuous") # treat as continuous
-      }
-      else {
-        return ("categorical") # treat as categorical
-      }
-    }
-    ## ---- robustSingle
 
     variableType <- getVariableType (metaMat [, i], covariates [i])
 
@@ -104,9 +102,14 @@ CheckSufficientPower <- function(metaMat,
 
     }
 
+    # skip combinations, if "naiveStop"
+    if ((!is.na(startStop) && startStop == "naiveStop")) {
+      next
+    }
+
 
     for (j in seq_along(covariates)) {
-      if (i == j || (!is.na(startStop) && startStop == "naiveStop")) {
+      if (i == j) {
         robustCombination[i,j] <- TRUE
         next
       }

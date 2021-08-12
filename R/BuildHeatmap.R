@@ -77,7 +77,7 @@ BuildHeatmap <- function(metaDeconfOutput,
 
 
   if (length(d_col) != 3) {
-    stop("wrong number of colors in d_col!")
+    stop("wrong number of colors in d_col!\nSupply colors for c(min, middle, max)!")
   }
   if (!(d_range %in% c("fit", "full"))) {
     stop('d_range must be either "fit" or "full"!')
@@ -159,43 +159,21 @@ BuildHeatmap <- function(metaDeconfOutput,
 
   #
   #
-  #### fetching all rows/columns that have low Ds and Qs and removing them
+  #### fetching all rows/columns that have low Ds and Qs
+  #### or don't contain any significant hits (i.e. all stars == "")
+  #### and removing them
   #
   #
-  remove <- vector()
-  for (i in unique(effectSize$feature)) { # identify omics features to be removed
-    aGenus <- fdr[fdr$feature == i, ]
-    aGenusD <- effectSize[effectSize$feature == i, ]
-    if (sum(na.exclude(abs(aGenus$Qs)) > q_cutoff) == length(na.exclude(aGenus$Qs)) ||
-        sum(na.exclude(abs(aGenusD$Ds)) < d_cutoff) == length(na.exclude(aGenusD$Ds))
-    ) {
-      remove <- c(remove, which(effectSize$feature == i))
-    }
-  }
-
-  remove <- unique(remove)
-  # check that there actually are features, that should be removed
-  if (length(remove) > 0) {
-    # remove feature names from the list of to-be-removed features
-    if (!is.null(keepFeature)) {
-      remove <- remove[!(remove %in% keepFeature)]
-    }
-    # remove fetures not passing q_cutoff and d_cutoff filtering
-    effectSize <- effectSize[-remove, ]
-  }
-  effectSize <- droplevels(effectSize)
-
-
-
   remove_metavariables <- vector()
   for (i in unique(effectSize$metaVariable)) { # identify metavariables to be removed
 
     aMetaVariable <- fdr[fdr$metaVariable == i, ]
     aMetaVariableD <- effectSize[effectSize$metaVariable == i, ]
     if (sum(na.exclude(abs(aMetaVariable$Qs)) > q_cutoff) == length(na.exclude(aMetaVariable$Qs)) ||
-        sum(na.exclude(abs(aMetaVariableD$Ds)) < d_cutoff) == length(na.exclude(aMetaVariableD$Ds))
+        sum(na.exclude(abs(aMetaVariableD$Ds)) < d_cutoff) == length(na.exclude(aMetaVariableD$Ds)) ||
+        all(aMetaVariableD$stars == "")
     ) {
-      remove <- c(remove, which(effectSize$metaVariable == i))
+      #remove <- c(remove, which(effectSize$metaVariable == i))
       remove_metavariables <- c(remove_metavariables, i)
     }
   }
@@ -207,6 +185,38 @@ BuildHeatmap <- function(metaDeconfOutput,
   }
   # remove filtered out matavariables from the dataset
   effectSize <- effectSize[!(effectSize$metaVariable %in% remove_metavariables), ]
+
+  remove <- vector()
+  for (i in unique(effectSize$feature)) { # identify omics features to be removed
+    aGenus <- fdr[fdr$feature == i, ]
+    aGenusD <- effectSize[effectSize$feature == i, ]
+    if (sum(na.exclude(abs(aGenus$Qs)) > q_cutoff) == length(na.exclude(aGenus$Qs)) |
+        sum(na.exclude(abs(aGenusD$Ds)) < d_cutoff) == length(na.exclude(aGenusD$Ds)) |
+        all(aGenusD$stars == "")
+    ) {
+      #remove <- c(remove, which(effectSize$feature == i))
+      remove <- c(remove, i)
+    }
+  }
+
+  remove <- as.vector(unique(remove))
+  # check that there actually are features, that should be removed
+  if (length(remove) > 0) {
+    # remove feature names from the list of to-be-removed features
+    if (!is.null(keepFeature)) {
+      remove <- remove[!(remove %in% keepFeature)]
+    }
+    # check again for empty remove, because
+    if (length(remove) > 0) {
+      # remove features not passing q_cutoff and d_cutoff filtering
+      effectSize <- effectSize[!(effectSize$feature %in% remove), ]
+    }
+
+  }
+  effectSize <- droplevels(effectSize)
+
+
+
 
   # cluster heatmap by reordering the factor levels for both dimensions of the heatmap
   eff_cast <- reshape2::dcast(effectSize, effectSize[[1]]~metaVariable, value.var = "Ds")
