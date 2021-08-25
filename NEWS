@@ -1,3 +1,6 @@
+Version 0.2.6
+  - fixed bug in legend creation of BuildHeatmap(cuneiform = TRUE), direction of association now labeled correctly
+
 Version 0.2.5
   - fixed bug in "keepFeature" functionality of BuildHeatmap()
   - fixed bug in BuildHeatmap() that resulted in incomplete removal of features showing not a single significant association

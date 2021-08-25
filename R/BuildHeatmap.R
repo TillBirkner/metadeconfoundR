@@ -285,25 +285,23 @@ BuildHeatmap <- function(metaDeconfOutput,
   # include added name coluns into plots!!
   if (cuneiform) {
 
+    # put together needed shapes and their meaning
+    divShapes <- c()
+    divShapesMeaning <- c()
+    signs <- unique(sign(effectSize$Ds))
+    if (-1 %in% signs) {
+      divShapes <- c(divShapes, 25)
+      divShapesMeaning <- c(divShapesMeaning, "negative association")
+    }
+    if (0 %in% signs) {
+      divShapes <- c(divShapes, 23)
+      divShapesMeaning <- c(divShapesMeaning, "no association/no data")
+    }
+    if (1 %in% signs) {
+      divShapes <- c(divShapes, 24)
+      divShapesMeaning <- c(divShapesMeaning, "positive association")
+    }
 
-    divShapes <-
-      switch (as.character(length(unique(
-        sign(effectSize$Ds)
-      ))),
-      "1" = 23,
-      "2" = c(25, 24),
-      "3" = c(25, 23, 24))
-
-    divShapesMeaning <-
-      switch (as.character(length(unique(
-        sign(effectSize$Ds)
-      ))),
-      "1" = "no association/\nno data",
-      "2" = c("negative association",
-              "positive association"),
-      "3" = c("negative association",
-              "no association/\nno data",
-              "positive association"))
 
     heatmapGGplot <- ggplot(effectSize, aes(x = metaVariable, y = feature)) +
       # do cuneiform plot with coloring based on effectsizes
@@ -337,7 +335,7 @@ BuildHeatmap <- function(metaDeconfOutput,
                                        hjust = 1,
                                        vjust = 0.35)) +
       labs(title="MetaDeconfoundR summarizing coneiform plot",
-           subtitle="FDR-values: < 0.001 = ***, < 0.01 = **, < 0.1 = * ",
+           #subtitle="FDR-values: < 0.001 = ***, < 0.01 = **, < 0.1 = * ",
            x = "Metadata variables",
            y = "Omics features")
 
