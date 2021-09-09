@@ -1,3 +1,7 @@
+Version 0.2.7
+  - improved error messages and behavior for no/low number of significant associations
+    - can now plot results with only a single feature/and or metadata
+
 Version 0.2.6
   - fixed bug in legend creation of BuildHeatmap(cuneiform = TRUE), direction of association now labeled correctly
 

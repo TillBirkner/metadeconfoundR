@@ -216,22 +216,45 @@ BuildHeatmap <- function(metaDeconfOutput,
   effectSize <- droplevels(effectSize)
 
 
-
+  if (length(unique(effectSize$metaVariable)) == 0) {
+    stop("No associations pass current q_cutoff and/or d_cutoff filters!")
+  }
 
   # cluster heatmap by reordering the factor levels for both dimensions of the heatmap
-  eff_cast <- reshape2::dcast(effectSize, effectSize[[1]]~metaVariable, value.var = "Ds")
-
+  # only if more than one feature or metavariable are present respectively
+  eff_cast <- reshape2::dcast(effectSize,
+                              effectSize[[1]] ~ metaVariable,
+                              value.var = "Ds")
   rownames(eff_cast) <- eff_cast[[1]]
   eff_cast[[1]] <- NULL # move feature names to rownames
-  ord <- hclust(dist(eff_cast, method = "euclidean"), method = "ward.D")$order
-  eff_cast <- scale(t(eff_cast))
-  ord2 <- hclust(dist(eff_cast, method = "euclidean"), method = "ward.D")$order
-  effectSize$metaVariable <- droplevels(effectSize$metaVariable)
 
-  effectSize$feature <- factor(as.factor(effectSize$feature),
-                               levels = levels(as.factor(effectSize$feature)) [ord])
-  effectSize$metaVariable <- factor(as.factor(effectSize$metaVariable),
-                                    levels = levels(as.factor(effectSize$metaVariable)) [ord2])
+  if (nrow(eff_cast) > 1) {
+    ord <-
+      hclust(dist(eff_cast, method = "euclidean"), method = "ward.D")$order
+    effectSize$feature <-
+      factor(as.factor(effectSize$feature),
+             levels = levels(as.factor(effectSize$feature)) [ord])
+  }
+  if (ncol(eff_cast) > 1) {
+    eff_cast <- scale(t(eff_cast))
+    ord2 <-
+      hclust(dist(eff_cast, method = "euclidean"), method = "ward.D")$order
+    effectSize$metaVariable <- droplevels(effectSize$metaVariable)
+    effectSize$metaVariable <-
+      factor(as.factor(effectSize$metaVariable),
+             levels = levels(as.factor(effectSize$metaVariable)) [ord2])
+  }
+
+
+  # ord <- hclust(dist(eff_cast, method = "euclidean"), method = "ward.D")$order
+  # eff_cast <- scale(t(eff_cast))
+  # ord2 <- hclust(dist(eff_cast, method = "euclidean"), method = "ward.D")$order
+  # effectSize$metaVariable <- droplevels(effectSize$metaVariable)
+  #
+  # effectSize$feature <- factor(as.factor(effectSize$feature),
+  #                              levels = levels(as.factor(effectSize$feature)) [ord])
+  # effectSize$metaVariable <- factor(as.factor(effectSize$metaVariable),
+  #                                   levels = levels(as.factor(effectSize$metaVariable)) [ord2])
 
 
   effectSize$featureNames <- effectSize$feature
