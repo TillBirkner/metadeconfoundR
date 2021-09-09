@@ -305,6 +305,14 @@ BuildHeatmap <- function(metaDeconfOutput,
     upperLim <- 1
   }
 
+
+  signifCol <- c("gray45", "black")
+  signifMeaning <- c("confounded", "deconfounded")
+  if (all(effectSize$status)) {
+    signifCol <- c("black")
+    signifMeaning <- c("deconfounded")
+  }
+
   # include added name coluns into plots!!
   if (cuneiform) {
 
@@ -325,7 +333,6 @@ BuildHeatmap <- function(metaDeconfOutput,
       divShapesMeaning <- c(divShapesMeaning, "positive association")
     }
 
-
     heatmapGGplot <- ggplot(effectSize, aes(x = metaVariable, y = feature)) +
       # do cuneiform plot with coloring based on effectsizes
       geom_point (aes (fill = Ds,
@@ -342,8 +349,8 @@ BuildHeatmap <- function(metaDeconfOutput,
                            limits = c(lowerLim,upperLim)) +
       # the shape lines color indicate confounding status
       scale_color_manual(name = "Confounding status",
-                         values = c("gray45", "black"),
-                         labels = c("confounded", "deconfounded")) +
+                         values = signifCol,
+                         labels = signifMeaning) +
       guides(#shape = FALSE,
              color = guide_legend(override.aes = list(shape  = 24))) +
 
@@ -377,8 +384,8 @@ BuildHeatmap <- function(metaDeconfOutput,
                 size=2,
                 key_glyph = "point") +
       scale_color_manual(name = "Confounding status",
-                         values = c("gray45", "black"),
-                         labels = c("confounded", "deconfounded"), ) +
+                         values = signifCol,
+                         labels = signifMeaning) +
       guides(color = guide_legend(override.aes = list(shape = c(1,8)) ) ) +
 
       # make it pretty
