@@ -40,6 +40,8 @@
 #' (corresponding to names in metaDeconfOutput), that should be shown in
 #' resulting plot, even when they have no associations
 #' passing d_cutoff and q_cutoff
+#' @param trusted character vector of confounding status labels to be treated
+#' as trustworthy, not-confounded signal. default = c("OK_sd", "OK_nc", "OK_d", "AD")
 #' @return ggplot2 object
 #' @details for more details and explanations please see the package vignette.
 #' @examples
@@ -70,9 +72,10 @@ BuildHeatmap <- function(metaDeconfOutput,
                          featureNames = NULL,
                          metaVariableNames = NULL,
                          d_range = "fit",
-                         d_col = c("red", "white", "blue"),
+                         d_col = c("blue", "white", "red"),
                          keepMeta = NULL,
-                         keepFeature = NULL
+                         keepFeature = NULL,
+                         trusted = c("OK_sd", "OK_nc", "OK_d", "AD")
                          ) {
 
 
@@ -82,6 +85,13 @@ BuildHeatmap <- function(metaDeconfOutput,
   if (!(d_range %in% c("fit", "full"))) {
     stop('d_range must be either "fit" or "full"!')
   }
+
+  if (length(trusted) == 0) {
+    stop('"trusted" must contain at least one trusted status label')
+  }
+
+  allLables <- c ("OK_sd", "OK_nc", "OK_d", "AD", "NS")
+  notTrusted <- allLables[!(allLables %in% trusted)]
 
   if (class(metaDeconfOutput) == "list") {
     # melt dataframes for fdr-valules, effectsizes, and confounding status
@@ -114,10 +124,10 @@ BuildHeatmap <- function(metaDeconfOutput,
 
   # identify all NS entries (both naive NS, and flagged "NS" by deconfounding step)
   insignificant <- unlist(lapply(strsplit(as.character(status$status), split = ", "),
-                                 function(l) any(l %in% c("NS"))))
+                                 function(l) any(l %in% notTrusted)))
   # identify all non-confounded significant entries
   trueDeconf <- unlist(lapply(strsplit(as.character(status$status), split = ", "),
-                              function(l) any(l %in% c("SD", "LD", "NC"))))
+                              function(l) any(l %in% trusted)))
 
 
   # assign stars according to significance level
@@ -363,8 +373,10 @@ BuildHeatmap <- function(metaDeconfOutput,
             axis.text.y = element_text(size = 7,
                                        angle = 0,
                                        hjust = 1,
-                                       vjust = 0.35)) +
-      labs(title="MetaDeconfoundR summarizing coneiform plot",
+                                       vjust = 0.35),
+            plot.title.position = "plot",
+            plot.title = element_text(hjust = 0)) +
+      labs(title="Summarizing cuneiform plot",
            #subtitle="FDR-values: < 0.001 = ***, < 0.01 = **, < 0.1 = * ",
            x = "Metadata variables",
            y = "Omics features")
@@ -397,8 +409,11 @@ BuildHeatmap <- function(metaDeconfOutput,
             axis.text.y = element_text(size = 7,
                                        angle = 0,
                                        hjust = 1,
-                                       vjust = 0.35)) +
-      labs(title="MetaDeconfoundR summarizing heatmap",
+                                       vjust = 0.35),
+            plot.title.position = "plot",
+            plot.title = element_text(hjust = 0),
+            plot.subtitle=element_text(size=8)) +
+      labs(title="Summarizing heatmap",
            subtitle="FDR-values: < 0.001 = ***, < 0.01 = **, < 0.1 = * ",
            x = "Metadata variables",
            y = "Omics features")

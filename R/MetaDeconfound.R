@@ -59,13 +59,14 @@
 #' @param returnLong DEFAULT = FALSE; Set TRUE to get output in one long
 #' format data.frame instead of list of four wide format data.frames
 #' @param ... for additional arguments used internally (development/debugging)
-#' @return list with elements Ds = effectsize,
+#' @return list with elements (or data.frame with columns, when returnLong = TRUE) Ds = effectsize,
 #' Ps = uncorrected p-value for naive association,
 #' Qs = multiple testing corrected p-value/fdr,
-#' and status = confounding/mediation status for all
+#' and status = confounding status for all
 #' feature <=> covariate combinations with following categories:
-#' (NS = not significant, SD = strictly deconfounded, LD = laxly deconfounded,
-#' NC = no covariates, "covariate name" = confounded by this covariate)\cr
+#' (NS = not significant, OK_sd = strictly deconfounded, OK_nc = no covariates,
+#' OK_d = doubtful, AD = ambiguously deconfounded, C: followed by comma
+#' separated covariate names = confounded by listed covariates)\cr
 #'
 #' Can be plotted using \link[metadeconfoundR]{BuildHeatmap}.
 #' @details for more details and explanations please see the vignette.
@@ -412,7 +413,7 @@ MetaDeconfound <- function(featureMat,
   long_out$Qs <- reshape2::melt(naiveAssociation$Qs)[, 3]
   long_out$Ds <- reshape2::melt(naiveAssociation$Ds)[, 3]
   long_out$status <- reshape2::melt(reducibilityStatus)[, 3]
-  long_out_signif <- subset(x = long_out, (status != "NS") & !is.na(status))
+  #long_out_signif <- subset(x = long_out, (status != "NS") & !is.na(status))
 
   return(long_out)
 

@@ -211,7 +211,7 @@ CheckReducibility <- function(featureMat,
              length (covariates[which(minQValues[i, ] < 0.1)]) > 1)) {
 
           #status <- "STRICTLY DECONFOUNDED"
-          status <- "SD"
+          status <- "OK_sd"
           # hardest to reach, means no covariate eliminates this signal
 
           # create vector to collect all confounder names for this feature <-> covariate pair
@@ -295,13 +295,13 @@ CheckReducibility <- function(featureMat,
             # additonal control of confidence intervals for the covariates within the linear models
             conf_aCovariate <- TRUE
             conf_anotherCovariate <- TRUE
-            if (doConfs > 0) { # doConfs = 1 --> just logging
+            if (doConfs >= 0) { # doConfs = 1 --> just logging
               if (is.numeric(subsubMerge$aCovariate) && is.numeric(subsubMerge$anotherCovariate)) { # categorical variables are excluded for easier processing
                 confints <- confint(lmBoth)
                 conf_aCovariate <- !(sign(confints[1, 1]) == sign(confints[1, 2])) # signs are different, if confint is spanning 0
                 conf_anotherCovariate  <- !(sign(confints[2, 1]) == sign(confints[2, 2]))
 
-                if ((aP_forward < PHS_cutoff) && conf_aCovariate) { # if forward test is significant, but aCovariate confint spans 0
+                if (! is.na (aP_forward) && (aP_forward < PHS_cutoff) && conf_aCovariate) { # if forward test is significant, but aCovariate confint spans 0
                   flog.warn(msg = paste('lrt: ',
                                         features[i],
                                         aCovariate,
@@ -312,9 +312,10 @@ CheckReducibility <- function(featureMat,
                   if (doConfs > 1) { # if doConfs ==2 make lrt non-significant
                     aP_forward <- 1
                   }
+                  status <- "OK_d"
                 }
 
-                if ((aP_reverse < PHS_cutoff) && conf_anotherCovariate) { # if reverse test is significant, but anotherCovariate confint spans 0
+                if (! is.na (aP_forward) && (aP_reverse < PHS_cutoff) && conf_anotherCovariate) { # if reverse test is significant, but anotherCovariate confint spans 0
                   flog.warn(msg = paste('lrt: ',
                                         features[i],
                                         aCovariate,
@@ -345,7 +346,7 @@ CheckReducibility <- function(featureMat,
                 aP_forward >= PHS_cutoff &&
                 aP_reverse >= PHS_cutoff) {
               #status <- "LAXLY DECONFOUNDED"
-              status <- "LD"
+              status <- "AD"
             } # cannot be ruled out another feature explains this
 
             if(verbosity == "debug"){
@@ -364,13 +365,13 @@ CheckReducibility <- function(featureMat,
 
         } else {
           #status <- "NO COVARIATES"
-          status <- "NC"# trivially unconfounded because no
+          status <- "OK_nc"# trivially unconfounded because no
                             #other features play a role
         }
 
       # if confounders where detected, they will all be printed as a single string as status
       if (!is.null(confounders)) {
-        status <- paste(confounders, collapse = ", ")
+        status <- paste0("C: ", paste(confounders, collapse = ", "))
       }
       # }# status assignment for a sinlge feature <-> covariate combination
 

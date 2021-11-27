@@ -1,3 +1,9 @@
+Version 0.2.8
+  - changes in status label names and correspondong plotting behavior
+  - reversed default color scheme for effect size plotting (red = low, blue= high)
+  - computation of confidence intervals in model building step now default
+  (with added OK_d label for deconfounded but doubtful associations)
+
 Version 0.2.7
   - improved error messages and behavior for no/low number of significant associations
     - can now plot results with only a single feature/and or metadata
