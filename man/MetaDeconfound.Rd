@@ -117,13 +117,14 @@ format data.frame instead of list of four wide format data.frames}
 \item{...}{for additional arguments used internally (development/debugging)}
 }
 \value{
-list with elements Ds = effectsize,
+list with elements (or data.frame with columns, when returnLong = TRUE) Ds = effectsize,
 Ps = uncorrected p-value for naive association,
 Qs = multiple testing corrected p-value/fdr,
-and status = confounding/mediation status for all
+and status = confounding status for all
 feature <=> covariate combinations with following categories:
-(NS = not significant, SD = strictly deconfounded, LD = laxly deconfounded,
-NC = no covariates, "covariate name" = confounded by this covariate)\cr
+(NS = not significant, OK_sd = strictly deconfounded, OK_nc = no covariates,
+OK_d = doubtful, AD = ambiguously deconfounded, C: followed by comma
+separated covariate names = confounded by listed covariates)\cr
 
 Can be plotted using \link[metadeconfoundR]{BuildHeatmap}.
 }

@@ -15,9 +15,10 @@ BuildHeatmap(
   featureNames = NULL,
   metaVariableNames = NULL,
   d_range = "fit",
-  d_col = c("red", "white", "blue"),
+  d_col = c("blue", "white", "red"),
   keepMeta = NULL,
-  keepFeature = NULL
+  keepFeature = NULL,
+  trusted = c("OK_sd", "OK_nc", "OK_d", "AD")
 )
 }
 \arguments{
@@ -66,6 +67,9 @@ default c("red", "white", "blue")}
 (corresponding to names in metaDeconfOutput), that should be shown in
 resulting plot, even when they have no associations
 passing d_cutoff and q_cutoff}
+
+\item{trusted}{character vector of confounding status labels to be treated
+as trustworthy, not-confounded signal. default = c("OK_sd", "OK_nc", "OK_d", "AD")}
 
 \item{keepMata}{character vector of metavariable names
 (corresponding to names in metaDeconfOutput), that should be shown in
