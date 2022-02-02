@@ -24,10 +24,11 @@ CheckReducibility <- function(featureMat,
                               RVnames,
                               isRobust,
                               logistic, # new SKF20201017
+                              rawCounts, # new TB20220202
                               maintenance,
                               verbosity) {
 
-  # load parralel processing environment
+  # load parallel processing environment
   cl <- parallel::makeForkCluster(nnodes = nnodes, outfile = "")
   doParallel::registerDoParallel(cl)
   i <- 0
@@ -41,6 +42,18 @@ CheckReducibility <- function(featureMat,
   #         file = "LRT_pValue.txt",
   #         append = TRUE)
   # }
+
+  #new TB20220202
+  if (rawCounts == TRUE) {
+    # compute totReadCount per sample and append to metaMat
+    totReadCount <- as.data.frame(colSums(featureMat, na.rm = T))
+    metaMat <- merge(metaMat, totReadCount, by = 0, sort = FALSE)
+    colnames(metaMat)[ncol(metaMat)] <- "totReadCount"
+    row.names(metaMat) <- metaMat$Row.names
+    metaMat$Row.names <- NULL
+  }
+
+
   r = foreach::foreach(i = seq_along(features), .combine='rbind') %dopar% {
 
     statusLine <- vector(length = noCovariates, mode = "character")
@@ -158,6 +171,10 @@ CheckReducibility <- function(featureMat,
           head <- "lme4::glmer (FeatureValue ~ "
           tail <- ", data = subMerge, family = \"binomial\")"
         }
+        if (rawCounts == TRUE) { # alternative behavior for not rarefied abundances
+          modAlg <- "lme4::glmer (cbind(FeatureValue, totReadCount) ~ "
+          lastPart <- ", data = subsubMerge, family = \"binomial\")"
+        }
 
         if(verbosity == "debug"){
           write(paste("LRT_randOnly_for", aFeature, aCovariate,  sep = "\t"),
@@ -233,8 +250,12 @@ CheckReducibility <- function(featureMat,
             modAlg <- "stats::lm (rank (FeatureValue) ~ "
             lastPart <- paste0(", data = subsubMerge)", collapse = "")
 
-            if (logistic == TRUE) { # alternative behaviour for binary features
+            if (logistic == TRUE) { # alternative behavior for binary features
               modAlg <- "stats::glm (FeatureValue ~ "
+              lastPart <- ", data = subsubMerge, family = \"binomial\")"
+            }
+            if (rawCounts == TRUE) { # alternative behavior for not rarefied abundances
+              modAlg <- "stats::glm (cbind(FeatureValue, totReadCount) ~ "
               lastPart <- ", data = subsubMerge, family = \"binomial\")"
             }
 
@@ -242,8 +263,12 @@ CheckReducibility <- function(featureMat,
               modAlg <- "lme4::lmer (rank (FeatureValue) ~ "
               lastPart <- paste0(randomVar, ", data = subsubMerge, REML = FALSE)", collapse = "")
 
-              if (logistic == TRUE) { # alternative behaviour for binary features
+              if (logistic == TRUE) { # alternative behavior for binary features
                 modAlg <- "lme4::glmer (FeatureValue ~ "
+                lastPart <- ", data = subsubMerge, family = \"binomial\")"
+              }
+              if (rawCounts == TRUE) { # alternative behavior for not rarefied abundances
+                modAlg <- "lme4::glmer (cbind(FeatureValue, totReadCount) ~ "
                 lastPart <- ", data = subsubMerge, family = \"binomial\")"
               }
             }

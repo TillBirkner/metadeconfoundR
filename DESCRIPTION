@@ -1,7 +1,7 @@
 Package: metadeconfoundR
 Type: Package
 Title: Check Multiple Covariates for Potenial Counfinding Effects
-Version: 0.2.8
+Version: 0.2.9
 Author: Sofia Forslund, Ulrike Löber, Till Birkner
 Maintainer: Till Birkner <tillb@online.de>
 Description: Using non-parametric tests, naive associations between omics features and metadata are detected. In a second step, confounding effects between metadata associated to the same omics feature are detected.

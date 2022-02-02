@@ -1,3 +1,7 @@
+Version 0.2.9
+  - addition of new "rawCount" mode, that runs modelling steps on not normalied/rarefied data by including totalReadCount per sample information into the models
+    - should not be used to compute naive associations!
+
 Version 0.2.8
   - changes in status label names and correspondong plotting behavior
   - reversed default color scheme for effect size plotting (red = low, blue= high)

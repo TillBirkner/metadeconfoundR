@@ -56,6 +56,13 @@
 #' always be treated as continuous
 #' @param logistic optional logical parameter; DEFAULT = FALSE;
 #' Set TRUE to treat supplied features as binary instead of continuous
+#' @param rawCounts optional logical parameter; DEFAULT = FALSE;
+#' Set TRUE to treat supplied features as not normalized/rarefied counts;
+#' metadeconfoundR will compute total read count per sample and include this
+#' information in the modelling steps. WARNING: naive associations computed in
+#' first part of metadeconfoundR are reliant on normalized/rarefied data.
+#' Please split your analysis up into 2 parts as shown in the documentation
+#' when using this mode..
 #' @param returnLong DEFAULT = FALSE; Set TRUE to get output in one long
 #' format data.frame instead of list of four wide format data.frames
 #' @param ... for additional arguments used internally (development/debugging)
@@ -108,6 +115,7 @@ MetaDeconfound <- function(featureMat,
 			   typeCategorical = NULL, # new SKF20200221
 			   typeContinuous = NULL, # new SKF20200221
 			   logistic = FALSE, # new SKF20201017
+			   rawCounts = FALSE, # new TB20220202
 			   returnLong = FALSE, # new TB20210409
                            ...) {
 
@@ -183,6 +191,12 @@ MetaDeconfound <- function(featureMat,
   }
 
 
+  if (rawCounts == TRUE) {
+    flog.warn(msg = 'Raw count mode is anabled! Naive associations computed in first part of MetadeconfoundR are relying on normalized or rarefied data! Please split your analyses up in two parts as described in the documentation.',
+              name = "my.logger")
+  }
+
+
 
   .MetaDeconfound(featureMat = featureMat,
                    metaMat = metaMat,
@@ -207,6 +221,7 @@ MetaDeconfound <- function(featureMat,
 		  typeCategorical = typeCategorical, # new SKF20200221
 		  typeContinuous = typeContinuous, # new SKF20200221
 		  logistic = logistic, # new SKF20201017
+		  rawCounts = rawCounts, # new TB20220202
 		  returnLong = returnLong, # new TB20210409
                    ...
                    #maintenance = maintenance,
@@ -239,6 +254,7 @@ MetaDeconfound <- function(featureMat,
 			    typeCategorical = NULL, # new SKF20200221
  			    typeContinuous = NULL, # new SKF20200221
 			    logistic = FALSE, # new SKF20201017
+			    rawCounts = FALSE, # new TB20220202
 			    returnLong = FALSE, # new TB20210409
                             verbosity = "silent") {
 
