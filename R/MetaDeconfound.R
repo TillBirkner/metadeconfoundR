@@ -406,7 +406,8 @@ MetaDeconfound <- function(featureMat,
                                           randomVar = randomVar,
                                           RVnames = RVnames,
                                           isRobust = isRobust,
-                                          logistic = logistic, # new SKF20201017
+                                          logistic = logistic, # new SKF20201017,
+                                          rawCounts = rawCounts, # new TB20220202
                                           verbosity = verbosity)
 
   if (verbosity == "debug") {

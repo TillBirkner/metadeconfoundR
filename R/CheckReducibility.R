@@ -28,6 +28,23 @@ CheckReducibility <- function(featureMat,
                               maintenance,
                               verbosity) {
 
+
+
+
+  #new TB20220202
+  if (rawCounts == TRUE) {
+    # compute totReadCount per sample and append to metaMat
+    #print(head(featureMat))
+    totReadCount <- as.data.frame(rowSums(featureMat, na.rm = T))
+    #print(head(totReadCount))
+    metaMat <- merge(metaMat, totReadCount, by = 0, sort = FALSE)
+    #print(head(metaMat))
+    colnames(metaMat)[ncol(metaMat)] <- "totReadCount"
+    row.names(metaMat) <- metaMat$Row.names
+    metaMat$Row.names <- NULL
+    #print(head(metaMat))
+  }
+
   # load parallel processing environment
   cl <- parallel::makeForkCluster(nnodes = nnodes, outfile = "")
   doParallel::registerDoParallel(cl)
@@ -42,17 +59,6 @@ CheckReducibility <- function(featureMat,
   #         file = "LRT_pValue.txt",
   #         append = TRUE)
   # }
-
-  #new TB20220202
-  if (rawCounts == TRUE) {
-    # compute totReadCount per sample and append to metaMat
-    totReadCount <- as.data.frame(colSums(featureMat, na.rm = T))
-    metaMat <- merge(metaMat, totReadCount, by = 0, sort = FALSE)
-    colnames(metaMat)[ncol(metaMat)] <- "totReadCount"
-    row.names(metaMat) <- metaMat$Row.names
-    metaMat$Row.names <- NULL
-  }
-
 
   r = foreach::foreach(i = seq_along(features), .combine='rbind') %dopar% {
 
