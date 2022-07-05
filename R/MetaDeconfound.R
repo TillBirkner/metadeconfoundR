@@ -306,7 +306,8 @@ MetaDeconfound <- function(featureMat,
                                    maintenance = maintenance,
                                    verbosity = verbosity,
                                    RVnames = RVnames,
-                                   startStop = startStop)
+                                   startStop = startStop,
+                                   deconfF = deconfF) # new TB20220704
 
   if (verbosity == "debug") {
     print("CheckSufficientPower -- (dim(isRobust[[2]]):")
