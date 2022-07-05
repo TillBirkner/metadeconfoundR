@@ -105,7 +105,7 @@ CheckSufficientPower <- function(metaMat,
     }
 
     # skip combinations, if "naiveStop"
-    if ((!is.na(startStop) && startStop == "naiveStop")) {
+    if ((!is.na(startStop[[1]]) && startStop == "naiveStop")) {
       next
     }
 

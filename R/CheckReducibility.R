@@ -70,7 +70,7 @@ CheckReducibility <- function(featureMat,
     lCovariates <- c(lCovariates, deconfT)
     lCovariates <- lCovariates[!(lCovariates %in% deconfF)]
     # remove names of random variables from this list
-    if (!is.na(RVnames)) {
+    if (!is.na(RVnames[[1]])) {
       lCovariates <- lCovariates[!(lCovariates %in% RVnames)]
     }
 
@@ -161,13 +161,13 @@ CheckReducibility <- function(featureMat,
       subMerge <- eval (parse (text = paste0 ("subset (subMerge, ! is.na (", aCovariate, "))")))
 
       # rank transfer the metavariables listed in doRanks
-      if (!is.na(doRanks)) {
+      if (!is.na(doRanks[[1]])) {
         for (toRank in doRanks) {
           subMerge[toRank] <- rank(subMerge[toRank])
         }
       }
 
-      if (!is.na(randomVar)) {
+      if (!is.na(randomVar[[1]])) {
 
         # standard behaviour for continuous features
         head <- "lme4::lmer (rank (FeatureValue) ~ "
@@ -265,7 +265,7 @@ CheckReducibility <- function(featureMat,
               lastPart <- ", data = subsubMerge, family = \"binomial\")"
             }
 
-            if (!is.na(randomVar)) { # switch to lmer and REML = FALSE when randomEffects are included
+            if (!is.na(randomVar[[1]])) { # switch to lmer and REML = FALSE when randomEffects are included
               modAlg <- "lme4::lmer (rank (FeatureValue) ~ "
               lastPart <- paste0(randomVar, ", data = subsubMerge, REML = FALSE)", collapse = "")
 
