@@ -343,7 +343,7 @@ BuildHeatmap <- function(metaDeconfOutput,
       divShapesMeaning <- c(divShapesMeaning, "positive association")
     }
 
-    heatmapGGplot <- ggplot(effectSize, aes(x = metaVariable, y = feature)) +
+    heatmapGGplot <- ggplot(effectSize, aes(x = metaVariableNames, y = featureNames)) +
       # do cuneiform plot with coloring based on effectsizes
       geom_point (aes (fill = Ds,
                        shape = as.factor (sign (Ds)),

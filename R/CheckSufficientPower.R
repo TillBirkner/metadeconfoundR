@@ -16,7 +16,9 @@ CheckSufficientPower <- function(metaMat,
                                  maintenance,
                                  verbosity,
                                  RVnames,
-                                 startStop) {
+                                 startStop,
+                                 deconfF # new TB20220704
+                                 )  {
 
 
   # global check for sufficient samples of each case and control groups
@@ -75,7 +77,7 @@ CheckSufficientPower <- function(metaMat,
 
   for (i in seq_along(covariates)) {
 
-    if (!is.na(RVnames) && covariates[i] %in% RVnames) {
+    if (!is.na(RVnames[[1]]) && covariates[i] %in% RVnames) {
       # all random effect variables are labeled as "not robust"
       next
     }
@@ -107,6 +109,12 @@ CheckSufficientPower <- function(metaMat,
       next
     }
 
+    # new TB20220704
+    # if a covariate is listed in deconfF, set its whole column to FALSE
+    if (covariates[i] %in% deconfF) {
+      robustCombination[i,] <- FALSE
+      next
+    }
 
     for (j in seq_along(covariates)) {
       if (i == j) {
