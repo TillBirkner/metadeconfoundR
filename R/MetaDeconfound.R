@@ -375,9 +375,17 @@ MetaDeconfound <- function(featureMat,
       flog.warn(msg = paste('Process stopped before computing confounding status because "startStop" parameter contained "naiveStop". '),
                 name = "my.logger")
 
-      return(list(Ps = naiveAssociation$Ps,
-                  Qs = naiveAssociation$Qs,
-                  Ds = naiveAssociation$Ds))
+      if (!returnLong) {
+        return(list(Ps = naiveAssociation$Ps,
+                    Qs = naiveAssociation$Qs,
+                    Ds = naiveAssociation$Ds
+                    ))
+      }
+
+      long_out <- reshape2::melt(naiveAssociation$Ps, varnames = c("feature", "metaVariable"), value.name = "Ps")
+      long_out$Qs <- reshape2::melt(naiveAssociation$Qs)[, 3]
+      long_out$Ds <- reshape2::melt(naiveAssociation$Ds)[, 3]
+      return(long_out)
     }
   } else { # if precomputed Qs and Ds are supplied as arguments
     naiveAssociation <- list(Qs = QValues, Ds = DValues)
