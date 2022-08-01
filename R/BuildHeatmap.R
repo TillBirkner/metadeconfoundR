@@ -304,7 +304,14 @@ BuildHeatmap <- function(metaDeconfOutput,
   }
 
   if (intermedData == TRUE) {
+    if (!any(c("*", "**", "***") %in% unique(effectSize$stars))) {
+      waring("No unconfounded associations remain with the current cutoff values. ")
+    }
     return(effectSize)
+  }
+
+  if (!any(c("*", "**", "***") %in% unique(effectSize$stars))) {
+    stop("No unconfounded associations remain with the current cutoff values. Consider manually including categorical metaVariables into the Heatmap by listing them through the 'keepMeta' argument.")
   }
 
   lowerLim <- min(effectSize$Ds)
