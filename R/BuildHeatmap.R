@@ -1,6 +1,6 @@
 #' BuildHeatmap
 #'
-#' BuildHeatmap summarizes Metadecofound output in a heatmap or cuneiform plot
+#' BuildHeatmap summarizes \link[metadeconfoundR]{MetaDeconfound} output in a heatmap or cuneiform plot
 #'
 #' @param metaDeconfOutput output of a metadeconfound run
 #' @param q_cutoff optional FDR-value cutoff used to remove
@@ -54,7 +54,7 @@
 #'plotObject <- BuildHeatmap(example_output)
 #'print(plotObject)
 #'
-#'alternativePlot <- buildHeatmap(metadeconfoundR_output, coloring = 2, showConfounded = FALSE)
+#'alternativePlot <- buildHeatmap(example_output, coloring = 2, showConfounded = FALSE)
 #'print(alternativePlot)
 #'}
 #'

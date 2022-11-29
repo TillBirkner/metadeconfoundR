@@ -114,7 +114,11 @@ NaiveAssociation <- function(featureMat,
     somePs <- vector(length = noCovariates)
     someDs <- vector(length = noCovariates)
 
-    if ((var(featureMat[, i], na.rm = TRUE) == 0 ) ) {
+    if ((var(featureMat[, i], na.rm = TRUE) == 0 ||
+         length(na.exclude(featureMat[, i])) < 2) ) {
+      # if variance of a feature == 0 OR
+        # less than 2 elements of a feature are non-NA:
+        # set all associations for that feature to NA
       somePs[seq_along(covariates)] <- NA
       someDs[seq_along(covariates)] <- NA
 

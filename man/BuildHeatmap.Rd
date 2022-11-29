@@ -80,7 +80,7 @@ passing d_cutoff and q_cutoff}
 ggplot2 object
 }
 \description{
-BuildHeatmap summarizes Metadecofound output in a heatmap or cuneiform plot
+BuildHeatmap summarizes \link[metadeconfoundR]{MetaDeconfound} output in a heatmap or cuneiform plot
 }
 \details{
 for more details and explanations please see the package vignette.
@@ -95,7 +95,7 @@ example_output <- MetaDeconfound(featureMat = reduced_feature,
 plotObject <- BuildHeatmap(example_output)
 print(plotObject)
 
-alternativePlot <- buildHeatmap(metadeconfoundR_output, coloring = 2, showConfounded = FALSE)
+alternativePlot <- buildHeatmap(example_output, coloring = 2, showConfounded = FALSE)
 print(alternativePlot)
 }
 

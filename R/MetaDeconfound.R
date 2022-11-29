@@ -338,22 +338,25 @@ MetaDeconfound <- function(featureMat,
   if (is.na(QValues[[1]]) | is.na(DValues[[1]])) {
     flog.info(msg = paste0("Computation of naive associations started."),
               name = "my.logger")
-    naiveAssociation <- NaiveAssociation(featureMat = featureMat,
-                                         samples = samples,
-                                         features = features,
-                                         noFeatures = noFeatures,
-                                         metaMat = metaMat,
-                                         covariates = covariates,
-                                         noCovariates = noCovariates,
-                                         isRobust = isRobust,
-					 typeCategorical = typeCategorical, # new SKF20200221
-					 typeContinuous = typeContinuous, # new SKF20200221
-					 logistic = logistic, # new SKF20201017
-                                         adjustMethod = adjustMethod,
-                                         nnodes = nnodes,
-                                         rawCounts = rawCounts, # new TB20221129
-                                         maintenance = maintenance,
-                                         verbosity = verbosity)
+
+    naiveAssociation <- NaiveAssociation(
+      featureMat = featureMat,
+      samples = samples,
+      features = features,
+      noFeatures = noFeatures,
+      metaMat = metaMat,
+      covariates = covariates,
+      noCovariates = noCovariates,
+      isRobust = isRobust,
+      typeCategorical = typeCategorical,# new SKF20200221
+      typeContinuous = typeContinuous,# new SKF20200221
+      logistic = logistic, # new SKF20201017
+      adjustMethod = adjustMethod,
+      nnodes = nnodes,
+      rawCounts = rawCounts,# new TB20221129
+      maintenance = maintenance,
+      verbosity = verbosity
+    )
     if (verbosity == "debug") {
       print(naiveAssociation$Ps[seq_len(3), seq_len(noCovariates)])
       print(naiveAssociation$Qs[seq_len(3), seq_len(noCovariates)])

@@ -5,6 +5,7 @@ Version 0.3.0
   - implemented computational speedup for datasets with large number of metavariables
   - improved error messaging for an error in BuildHeatmap function
   - metadeconfoundR is now compatible with Unix AND Windows operation systems
+  - fixed a bug that lead to an error when a feature with extremely low number non-NA values was present in featureMat
 
 Version 0.2.8
   - changes in status label names and correspondong plotting behavior
