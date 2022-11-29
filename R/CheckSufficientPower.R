@@ -53,7 +53,9 @@ CheckSufficientPower <- function(metaMat,
   robustSingle <- vector(length = length(covariates), mode = "logical")
   names(robustSingle) <- covariates
 
-  robustCombination <- as.data.frame(matrix(nrow = length(covariates), ncol = length(covariates), data = FALSE))
+  robustCombination <- as.data.frame(matrix(nrow = length(covariates),
+                                            ncol = length(covariates),
+                                            data = FALSE))
   rownames(robustCombination) <- colnames(robustCombination) <- covariates
 
   ## ---- getVariableType

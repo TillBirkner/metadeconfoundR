@@ -44,11 +44,10 @@
 #' (0 = no , 1 = logging, 2 = strict)
 #' @param doRanks optional vector of metavariable names, that should be rank
 #' transformed when building linear models in the doconfounding step
-#' @param randomVar optional list with 2 elements. First: character string that should be appended to all
-#' linear models used in the confounder analysis to account for random effect
-#' variables. This string is part of the input to lme4::lmer() so syntax must
-#' concur with that of lmer(). Second: vector of all variable names used in the string.
-#' (e.g list("+ (1 | D) + (1 | E:D)" , c("D", "E")))
+#' @param randomVar optional vector of metavariable names to be treated as
+#' random effect variables. These variabels will not be tested for naive
+#' associations and will not be included as potential confounders,
+#' but will be added as random effects "+ (1|variable)" into ay models being built.
 #' @param robustCutoffRho optional robustness cutoff for continuous variables
 #' @param typeCategorical optional character vector of metavariable names to
 #' always be treated as categorical
@@ -192,7 +191,12 @@ MetaDeconfound <- function(featureMat,
 
 
   if (rawCounts == TRUE) {
-    flog.warn(msg = 'Raw count mode is anabled! Naive associations computed in first part of MetadeconfoundR are relying on normalized or rarefied data! Please split your analyses up in two parts as described in the documentation.',
+    if (logistic == TRUE) {
+      flog.error(msg = "rawCounts and logistic can not be bth set tu TRUE!",
+                 name = "my.logger")
+      stop("rawCounts and logistic can not be bth set tu TRUE!")
+    }
+    flog.warn(msg = 'Raw count mode is anabled!For computation of naive associations only, raw counts are being normalized by dividing each sample by its total count! ',
               name = "my.logger")
   }
 
@@ -267,12 +271,16 @@ MetaDeconfound <- function(featureMat,
 
   RVnames <- NA
   covariates <- colnames (metaMat) # each covariate + the status category
-  if (!is.na(randomVar[[1]])) { # list input paramter is split for further use within pipeline
-    RVnames <- randomVar[[2]]
-    randomVar<- randomVar[[1]]
+  if (!is.na(randomVar[[1]])) { # list input parameter is split for further use within pipeline
+    RVnames <- randomVar
+  # if (!is.na(randomVar[[1]])) { # list input parameter is split for further use within pipeline
+  #   RVnames <- randomVar[[2]]
+  #   randomVar<- randomVar[[1]]
 
 
-    flog.info(msg = paste0("The following parameters will be added to all linear models: '", randomVar, "'"),
+    flog.info(msg = paste0("The following parameters will be added to all linear models as random effects: '", randomVar, "'"),
+              name = "my.logger")
+    flog.info(msg = paste(randomVar),
               name = "my.logger")
     flog.warn(msg = paste0("the following random effect covariates will be excluded as potential donfounders: ", paste0(RVnames, collapse = ", ")),
               name = "my.logger")
@@ -289,6 +297,8 @@ MetaDeconfound <- function(featureMat,
     #metaMat <- mice(metaMat)
     # implementation pending
   }
+
+
 
 
   flog.info(msg = paste0("Checking robustness of data for covariates"),
@@ -341,6 +351,7 @@ MetaDeconfound <- function(featureMat,
 					 logistic = logistic, # new SKF20201017
                                          adjustMethod = adjustMethod,
                                          nnodes = nnodes,
+                                         rawCounts = rawCounts, # new TB20221129
                                          maintenance = maintenance,
                                          verbosity = verbosity)
     if (verbosity == "debug") {
@@ -392,6 +403,8 @@ MetaDeconfound <- function(featureMat,
     flog.warn(msg = paste('Confonding status is computed based on Q-values and effect sizes supplied via "QValue" and "DValue" parameters. '),
               name = "my.logger")
   }
+
+
 
 
 

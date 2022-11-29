@@ -1,7 +1,10 @@
-Version 0.2.9
-  - addition of new "rawCount" mode, that runs modelling steps on not normalied/rarefied data by including totalReadCount per sample information into the models
-    - should not be used to compute naive associations!
+Version 0.3.0
+  - radomVar argument is now simplified: just supply character vector of metaMat variables to be treated as random effects (e.g. randomVar = c("var1", "var5"))
+  - addition of new "rawCount" mode, that runs modelling steps on not normalized/rarefied data by including totalReadCount per sample information into glm/glmer comparisons
+    - for naive significance test and effect size calulation, rawCounts will normalized by dividing by totalReadCount per sample
   - implemented computational speedup for datasets with large number of metavariables
+  - improved error messaging for an error in BuildHeatmap function
+  - metadeconfoundR is now compatible with Unix AND Windows operation systems
 
 Version 0.2.8
   - changes in status label names and correspondong plotting behavior

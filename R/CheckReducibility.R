@@ -45,9 +45,20 @@ CheckReducibility <- function(featureMat,
     #print(head(metaMat))
   }
 
-  # load parallel processing environment
-  cl <- parallel::makeForkCluster(nnodes = nnodes, outfile = "")
-  doParallel::registerDoParallel(cl)
+  if (!is.na(randomVar[[1]])) {
+    randomVarLine <- paste0("+ (1|", randomVar, ")", collapse = ' ')
+  }
+
+  # load parralel processing environment
+  if (.Platform$OS.type == "unix") {
+    # unix
+    cl <- parallel::makeForkCluster(nnodes = nnodes, outfile = "")
+    doParallel::registerDoParallel(cl)
+  } else {
+    # windows
+    cl <- snow::makeCluster(nnodes, type = "SOCK", outfile = "")
+    doSNOW::registerDoSNOW(cl)
+  }
   i <- 0
   isRobust <- isRobust[[2]]
   #isRobust[!isRobust] <- TRUE
@@ -187,14 +198,15 @@ CheckReducibility <- function(featureMat,
                 file = "LRT_pValue.txt",
                 append = TRUE)
         }
-
+        #try
+        # paste0("+ (1|", c("first", "second"), ")", collapse = ' ')
         mixedmodel1 <- eval(
           parse(
             text = as.character(
               paste0 (
                 head,
                 aCovariate,
-                randomVar,
+                randomVarLine,
                 tail))))
 
 
@@ -203,7 +215,9 @@ CheckReducibility <- function(featureMat,
             text = as.character(
               paste0 (
                 head,
-                substr(randomVar, 2, nchar(randomVar)), # remove the "+" from the string, as randomVar is first argument here
+                substr(randomVarLine,
+                       2,
+                       nchar(randomVarLine)), # remove the "+" from the string, as randomVar is first argument here
                 tail))))
 
 
@@ -267,7 +281,9 @@ CheckReducibility <- function(featureMat,
 
             if (!is.na(randomVar[[1]])) { # switch to lmer and REML = FALSE when randomEffects are included
               modAlg <- "lme4::lmer (rank (FeatureValue) ~ "
-              lastPart <- paste0(randomVar, ", data = subsubMerge, REML = FALSE)", collapse = "")
+              lastPart <- paste0(randomVarLine,
+                                 ", data = subsubMerge, REML = FALSE)",
+                                 collapse = "")
 
               if (logistic == TRUE) { # alternative behavior for binary features
                 modAlg <- "lme4::glmer (FeatureValue ~ "
@@ -429,7 +445,13 @@ CheckReducibility <- function(featureMat,
 
 
   }# foreach loop
-  parallel::stopCluster(cl)
+
+  # close parallel processing environment
+  if (.Platform$OS.type == "unix") {
+    parallel::stopCluster(cl) # unix
+  } else {
+    snow::stopCluster(cl) # windows
+  }
 
   if(verbosity == "debug"){
     write("Everything done in checkReducibility!",

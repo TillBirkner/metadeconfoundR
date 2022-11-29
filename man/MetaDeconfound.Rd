@@ -95,11 +95,10 @@ interval of linear models in the deconfounding step
 \item{doRanks}{optional vector of metavariable names, that should be rank
 transformed when building linear models in the doconfounding step}
 
-\item{randomVar}{optional list with 2 elements. First: character string that should be appended to all
-linear models used in the confounder analysis to account for random effect
-variables. This string is part of the input to lme4::lmer() so syntax must
-concur with that of lmer(). Second: vector of all variable names used in the string.
-(e.g list("+ (1 | D) + (1 | E:D)" , c("D", "E")))}
+\item{randomVar}{optional vector of metavariable names to be treated as
+random effect variables. These variabels will not be tested for naive
+associations and will not be included as potential confounders,
+but will be added as random effects "+ (1|variable)" into ay models being built.}
 
 \item{robustCutoffRho}{optional robustness cutoff for continuous variables}
 
