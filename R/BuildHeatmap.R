@@ -42,6 +42,8 @@
 #' passing d_cutoff and q_cutoff
 #' @param trusted character vector of confounding status labels to be treated
 #' as trustworthy, not-confounded signal. default = c("OK_sd", "OK_nc", "OK_d", "AD")
+#' @param tileBordCol tile border color of  heatmap tiles, default: "black"
+#' @param reOrder reorder features and/or metadata? possible options: c("both", "feat", "meta", "none"), default: "both"
 #' @return ggplot2 object
 #' @details for more details and explanations please see the package vignette.
 #' @examples
@@ -75,7 +77,9 @@ BuildHeatmap <- function(metaDeconfOutput,
                          d_col = c("blue", "white", "red"),
                          keepMeta = NULL,
                          keepFeature = NULL,
-                         trusted = c("OK_sd", "OK_nc", "OK_d", "AD")
+                         trusted = c("OK_sd", "OK_nc", "OK_d", "AD"),
+                         tileBordCol = "black",
+                         reOrder = "both"
                          ) {
 
 
@@ -89,6 +93,8 @@ BuildHeatmap <- function(metaDeconfOutput,
   if (length(trusted) == 0) {
     stop('"trusted" must contain at least one trusted status label')
   }
+
+  fromIntermed <- FALSE
 
   allLables <- c ("OK_sd", "OK_nc", "OK_d", "AD", "NS")
   notTrusted <- allLables[!(allLables %in% trusted)]
@@ -112,6 +118,11 @@ BuildHeatmap <- function(metaDeconfOutput,
     status <- reshape2::melt(data = metaDeconfOutput$status,
                    varnames = c("feature", "metaVariable"),
                    value.name = "status")
+  } else if (ncol(metaDeconfOutput) == 9) {
+    print("treating input as 'intermedData = T' Buildheatmap output!!")
+    fromIntermed <- TRUE
+    effectSize <- metaDeconfOutput
+
   } else {
     effectSize <- metaDeconfOutput[, c("feature", "metaVariable", "Ds")]
     fdr <- metaDeconfOutput[, c("feature", "metaVariable", "Qs")]
@@ -122,6 +133,7 @@ BuildHeatmap <- function(metaDeconfOutput,
     fdr$Qs[is.na(fdr$Qs)] <- 1
   }
 
+  if (!fromIntermed) {
   # identify all NS entries (both naive NS, and flagged "NS" by deconfounding step)
   insignificant <- unlist(lapply(strsplit(as.character(status$status), split = ", "),
                                  function(l) any(l %in% notTrusted)))
@@ -238,14 +250,14 @@ BuildHeatmap <- function(metaDeconfOutput,
   rownames(eff_cast) <- eff_cast[[1]]
   eff_cast[[1]] <- NULL # move feature names to rownames
 
-  if (nrow(eff_cast) > 1) {
+  if ((reOrder %in% c("both", "feat")) & (nrow(eff_cast) > 1)) {
     ord <-
       hclust(dist(eff_cast, method = "euclidean"), method = "ward.D")$order
     effectSize$feature <-
       factor(as.factor(effectSize$feature),
              levels = levels(as.factor(effectSize$feature)) [ord])
   }
-  if (ncol(eff_cast) > 1) {
+  if ((reOrder %in% c("both", "meta")) & (ncol(eff_cast) > 1)) {
     eff_cast <- scale(t(eff_cast))
     ord2 <-
       hclust(dist(eff_cast, method = "euclidean"), method = "ward.D")$order
@@ -302,6 +314,8 @@ BuildHeatmap <- function(metaDeconfOutput,
       effectSize$metaVariableNames <- factor(as.factor(effectSize$metaVariableNames),
                                         levels = map[levels(effectSize$metaVariable)])
   }
+}
+
 
   if (intermedData == TRUE) {
     if (!any(c("*", "**", "***") %in% unique(effectSize$stars))) {
@@ -309,6 +323,10 @@ BuildHeatmap <- function(metaDeconfOutput,
     }
     return(effectSize)
   }
+  if (fromIntermed) {
+    print("now plotting from IntermedData.")
+  }
+
 
   if (!any(c("*", "**", "***") %in% unique(effectSize$stars))) {
     stop("No unconfounded associations remain with the current cutoff values. Consider manually including categorical metaVariables into the Heatmap by listing them through the 'keepMeta' argument.")
@@ -391,7 +409,7 @@ BuildHeatmap <- function(metaDeconfOutput,
   } else {
     heatmapGGplot <- ggplot(effectSize, aes(x = metaVariableNames, y = featureNames)) +
       # do the heatmap tile coloring based on effect sizes
-      geom_tile(aes(fill = Ds)) +
+      geom_tile(aes(fill = Ds), color = tileBordCol) +
       scale_fill_gradient2(low = d_col[1],
                            mid = d_col[2],
                            high = d_col[3],

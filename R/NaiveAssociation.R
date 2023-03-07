@@ -38,6 +38,10 @@ NaiveAssociation <- function(featureMat,
     return(list(Ps=Ps, Ds=Ds, Qs=Qs))
   }
 
+  if (nnodes < 1) {
+    nnodes <- 1
+  }
+
   #new TB20221125
   if (rawCounts == TRUE) {
     # compute totReadCount per sample and append to metaMat
@@ -206,7 +210,22 @@ NaiveAssociation <- function(featureMat,
       lmVar <- eval (parse (text = as.character (formulaVar)))
 
       aP <- lmtest::lrtest (lmNull, lmVar)$'Pr(>Chisq)' [2]
-      aD <- lmVar$coef [2]
+      if (variableType == "categorical") {
+        aD <- Inf
+      } else if (variableType == "binary") {
+        aD <- stats::cor.test (subMerge [, aCovariate],
+                               subMerge [, "FeatureValue"],
+                               )$estimate
+      } else  if (variableType == "continuous") {
+        aD <- CliffsDelta(
+          as.vector (
+            na.exclude (
+              subMerge [subMerge [["FeatureValue"]] == 0, aCovariate])),
+          as.vector (
+            na.exclude (
+              subMerge [subMerge [["FeatureValue"]] == 1, aCovariate])))
+      }
+      #aD <- lmVar$coef [2]
 
     }
 

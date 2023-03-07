@@ -93,7 +93,7 @@ BiocStyle::latex()
 
 		First, significant associations between single omics features (like gut microbial OTUs) and metadata (like disease status, drug administration, BMI) are identified \textit{(Fig.~\ref{fig:statistics}, left)}. Based on the data type of the respective metadata, either \Rcode{wilcox.test()} (for binary), \Rcode{cor.test()} (for continuous numerical) or \Rcode{kruskal.test()} (for neither numerical nor binary) is used. All three tests are rank-based to minimize assumptions about data distribution.
 
-		In addition to collecting p-values for all computed tests, effect size is measured if possible. In case of binary data, Cliff's Delta is computed. For continuous data the ``estimate" component from \Rcode{cor.test()} is used. Since there is no suitable effect size metric for categorical data with more than 2 levels, no value is reported here. It is recommended to introduce binary pseudo-variables for each level of the categorical metadata to partially circumvent this drawback.
+		In addition to collecting p-values for all computed tests, effect size is measured as Cliff's Delta and Spearman's Rho for binary and continuous data, respectively. Since there is no suitable effect size metric for categorical data with more than 2 levels, no value is reported here. It is recommended to introduce binary pseudo-variables for each level of the categorical metadata to partially circumvent this drawback.
     
 \begin{figure}[H]
 	%\captionsetup{width=.9\linewidth, justification=raggedright,singlelinecheck=false}
@@ -120,7 +120,7 @@ BiocStyle::latex()
 	\label{fig:flowChart}
 \end{figure}
 
-		In the second step, all hits are checked for confounding effects \textit{(Fig.~\ref{fig:statistics}, center and right)} and a status is reported for each feature $\leftrightarrow$  metadata combination \textit{(Fig.~\ref{fig:flowChart})}. A ``hit" here is defined as a feature $\leftrightarrow$ metadata association with small enough fdr-corrected p-value and big enough  effect size. Thresholds for both parameters can be set via \Rcode{QCutoff} and \Rcode{DCutoff} when starting the analysis. Since confounding of signal can only happen with more than one different metadata associated to a certain feature, all features with only one significant metadata are trivially deconfounded and get status ``No Covariates (NC)". \\
+		In the second step, all hits are checked for confounding effects \textit{(Fig.~\ref{fig:statistics}, center and right)} and a status is reported for each feature $\leftrightarrow$  metadata combination \textit{(Fig.~\ref{fig:flowChart})}. A ``hit" here is defined as a feature $\leftrightarrow$ metadata association with small enough fdr-corrected p-value and big enough  effect size. Thresholds for both parameters can be set via \Rcode{QCutoff} and \Rcode{DCutoff} when starting the analysis. Since confounding of signal can only happen with more than one different metadata associated to a certain feature, all features with only one significant metadata are trivially deconfounded and get status ``No Covariates (OK\_nc)". \\
 %The actual confounder detection is done by a set of two likelihood ratio tests of nested linear models: For each feature with multiple covariates
  
 	\subsection{\Rcode{BuildHeatmap()}}
@@ -147,6 +147,7 @@ library(metadeconfoundR)
 library(metadeconfoundR)
 library(ggplot2)
 library(cowplot)
+library(kableExtra)
 @
 
 
@@ -160,7 +161,26 @@ library(cowplot)
 
 	\subsection{\Rcode{Metadeconfound()}}
 		
-		\textbf{Minimal input} consists of two data.frames for feature data and metadata, respectively. Both data.frames must have one row per sample (sample names as rownames) with matching order of sampleIDs and one feature/meta-variable per column. The first column of the metadata data.frame must be binary (i.e consist of only 0/1 entries.) Usually this is the control/case variable, but any other binary meta-variable will work as well. Ensure that colnames and rownames should not contain any problematic characters by e.g running them through \Rcode{make.names()}. See included test data.frames \Rcode{reduced\_feature} and \Rcode{metaMatMetformin} for illustration of format requirements and \textit{Fig.~\ref{fig:defaultHeatmap}, left} for summarizing heatmap of output.
+		\textbf{Minimal input} consists of two data.frames for feature data (\textit{Tab.~\ref{tab:feature}}) and metadata (\textit{Tab.~\ref{tab:meta}}), respectively. Both data.frames must have one row per sample (sample names as rownames) with matching order of sampleIDs and one feature/meta-variable per column. The first column of the metadata data.frame must be binary (i.e consist of only 0/1 entries.) Usually this is the control/case variable, but any other binary meta-variable will work as well. Ensure that colnames and rownames should not contain any problematic characters by e.g running them through \Rcode{make.names()}. See \textit{Fig.~\ref{fig:defaultHeatmap}, left} for summarizing heatmap of output.
+
+  
+	\begin{table}
+		\caption{included example feature data.frame \Rcode{reduced\_feature}}
+		<<showTableF, eval=TRUE, echo=FALSE, tidy=TRUE, tidy.opts = list(width.cutoff = 50), cache = TRUE >>=
+			kbl(reduced_feature[10:15, 1:5])
+		@
+		\label{tab:feature}
+	\end{table}
+
+
+	\begin{table}
+		\caption{included example metadata data.frame \Rcode{metaMatMetformin}}
+		<<showTableM, eval=TRUE, echo=FALSE, tidy=TRUE, tidy.opts = list(width.cutoff = 50), cache = TRUE >>=
+			kbl(metaMatMetformin[10:15, 1:5])
+		@
+		\label{tab:meta}
+	\end{table}
+
 		
 				<<runExample, eval=TRUE, echo=TRUE, tidy=TRUE, tidy.opts = list(width.cutoff = 50), cache = TRUE >>=
 		data(reduced_feature)
@@ -172,11 +192,12 @@ library(cowplot)
 		
 		example_output <- MetaDeconfound(featureMat = reduced_feature,
 		metaMat = metaMatMetformin,
-		nnodes = 4)
+		nnodes = 4, 
+		returnLong = TRUE)
 		
 		@
 		
-		\textbf{Random effects} can be included in the modeling process (as described in \textit{Fig~\ref{fig:flowChart}}) by supplying the \Rcode{randomVar} parameter \textit{(Fig.~\ref{fig:defaultHeatmap}, right)}. 
+		\textbf{Random effects} can be included in the modeling process (as described in \textit{Fig.~\ref{fig:flowChart}}) by supplying the \Rcode{randomVar} parameter \textit{(Fig.~\ref{fig:defaultHeatmap}, right)}. 
 		
 		
 				<<runExampleRand, eval=TRUE, echo=TRUE, tidy=TRUE, tidy.opts = list(width.cutoff = 50), cache = TRUE >>=
@@ -184,23 +205,31 @@ library(cowplot)
 		RandDataset_output <- MetaDeconfound(featureMat = reduced_feature,
 		metaMat = metaMatMetformin,
 		nnodes = 4,
-		randomVar = list("+ (1|Dataset)", c("Dataset"))
+		randomVar = c("Dataset"),
+		returnLong = TRUE
 		)
-		# randomVar = list("+ (1|Dataset) + (1|otherRandEffect)", 
-			# c("Dataset", "otherRandEffect")
 		@
 		
 			For a full list of input parameters please refer to the help page.
 			
 		\subsubsection{output}
 		
-		Output can be returned either as a list of wide format data.frames (default) or as a single long format data.frame. In both cases raw p-values (Ps), multiple testing corrected p-values (Qs), corresponding effect size (Ds), and confounding status (status) are reported for each possible combination of a feature to a meta-variable. 
+		Output can be returned either as a list of wide format data.frames (default) or as a single long format data.frame (\textit{Tab.~\ref{tab:out}}). In both cases raw p-values (Ps), multiple testing corrected p-values (Qs), corresponding effect size (Ds), and confounding status (status) are reported for each possible combination of a feature to a meta-variable. 
+		
+		\begin{table}
+			\caption{output of a \Rcode{MetaDeconfound()} run in long format}
+			<<showTableO, eval=TRUE, echo=FALSE, tidy=TRUE, tidy.opts = list(width.cutoff = 50), cache = TRUE >>=
+			kbl(example_output[1:5, 1:6])
+			@
+			\label{tab:out}
+		\end{table}
+		
 		
 	\subsection{\Rcode{BuildHeatmap()}}
 		
 		\subsubsection{input}
 				
-			\textbf{Minimal input} consists only of an output object from the main \Rcode{Metadeconfound()} function either in long or wide format. This will result in a heatmap similar to \textit{Fig.~\ref{fig:defaultHeatmap}}.
+			\textbf{Minimal input} consists only of an output object from the main \Rcode{Metadeconfound()} function either in long or wide format. This will result in a heatmap similar to .
 			
 				<<runHeatmap, eval=FALSE, echo=TRUE, tidy=TRUE, tidy.opts = list(width.cutoff = 50) >>=
 			left <- BuildHeatmap(example_output)

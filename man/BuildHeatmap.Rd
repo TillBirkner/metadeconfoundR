@@ -18,7 +18,9 @@ BuildHeatmap(
   d_col = c("blue", "white", "red"),
   keepMeta = NULL,
   keepFeature = NULL,
-  trusted = c("OK_sd", "OK_nc", "OK_d", "AD")
+  trusted = c("OK_sd", "OK_nc", "OK_d", "AD"),
+  tileBordCol = "black",
+  reOrder = "both"
 )
 }
 \arguments{
@@ -70,6 +72,10 @@ passing d_cutoff and q_cutoff}
 
 \item{trusted}{character vector of confounding status labels to be treated
 as trustworthy, not-confounded signal. default = c("OK_sd", "OK_nc", "OK_d", "AD")}
+
+\item{tileBordCol}{tile border color of  heatmap tiles, default: "black"}
+
+\item{reOrder}{reorder features and/or metadata? possible options: c("both", "feat", "meta", "none"), default: "both"}
 
 \item{keepMata}{character vector of metavariable names
 (corresponding to names in metaDeconfOutput), that should be shown in

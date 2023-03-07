@@ -14,6 +14,7 @@ License: GPL-2
 Encoding: UTF-8
 LazyData: true
 Imports: lmtest, foreach, doParallel, snow, doSNOW, stats, bigmemory, futile.logger, lme4, ggplot2, reshape2
+Depends: detectseparation
 RoxygenNote: 7.2.0
 VignetteBuilder: knitr
 Suggests: BiocStyle, knitr

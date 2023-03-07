@@ -87,7 +87,8 @@ CheckSufficientPower <- function(metaMat,
     variableType <- getVariableType (metaMat [, i], covariates [i])
 
     if (variableType == "binary" || variableType == "categorical") {
-
+      # how many samples have a value != the majority value
+        # if median(var) == 0: are there >robustCutoff samples with var == 1
       if (sum (as.numeric (as.factor(metaMat[, i])) !=
                median (as.numeric (as.factor(metaMat[, i])),
                        na.rm = TRUE),
