@@ -1,16 +1,21 @@
 Package: metadeconfoundR
 Type: Package
-Title: Check Multiple Covariates for Potenial Counfinding Effects
-Version: 0.2.8
-Author: Sofia Forslund, Ulrike Löber, Till Birkner
-Maintainer: Till Birkner <tillb@online.de>
-Description: Using non-parametric tests, naive associations between omics features and metadata are detected. In a second step, confounding effects between metadata associated to the same omics feature are detected.
+Title: Check Multiple Covariates for Potenial Confounding Effects
+Version: 0.3.0
+Author: Sofia Forslund, Till Birkner
+Maintainer: Till Birkner <metadeconf@till-birkner.de>
+Description: Using non-parametric tests, naive associations between omics 
+    features and metadata in cross-sectional data-sets are detected. In a second 
+    step, confounding effects between metadata associated to the same omics 
+    feature are detected and labeled using nested post-hoc model comparison 
+    tests. The generated output can be graphically summarized using the 
+    built-in plotting function.
 License: GPL-2
 Encoding: UTF-8
 LazyData: true
-OS_type: unix
-Imports: lmtest, foreach, doParallel, stats, bigmemory, futile.logger, lme4, ggplot2, reshape2
-RoxygenNote: 7.1.2
+Imports: lmtest, foreach, doParallel, snow, doSNOW, stats, bigmemory, futile.logger, lme4, ggplot2, reshape2
+Depends: detectseparation
+RoxygenNote: 7.2.3
 VignetteBuilder: knitr
 Suggests: BiocStyle, knitr
 biocViews: Software, Metagenomics, Microbiome, MultipleComparison, Metabolomics, Transcriptomics

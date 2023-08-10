@@ -17,6 +17,7 @@ NaiveAssociation <- function(featureMat,
                              typeContinuous, # new SKF20200221
                              logistic, # new SKF20201017
                              nnodes,
+                             rawCounts = rawCounts, # new TB20221129
                              maintenance,
                              adjustMethod,
                              verbosity) {
@@ -37,12 +38,36 @@ NaiveAssociation <- function(featureMat,
     return(list(Ps=Ps, Ds=Ds, Qs=Qs))
   }
 
+  if (nnodes < 1) {
+    nnodes <- 1
+  }
+
+  #new TB20221125
+  if (rawCounts == TRUE) {
+    # compute totReadCount per sample and append to metaMat
+    totReadCount <- as.data.frame(rowSums(featureMat, na.rm = T))
+    metaMat <- merge(metaMat, totReadCount, by = 0, sort = FALSE)
+    colnames(metaMat)[ncol(metaMat)] <- "totReadCount"
+    row.names(metaMat) <- metaMat$Row.names
+    metaMat$Row.names <- NULL
+    featureMat <- featureMat/metaMat$totReadCount
+  }
+
   isRobust <- isRobust[[1]]
 
   # load parralel processing environment
-  cl <- parallel::makeForkCluster(nnodes = nnodes, outfile = "")
-  # the parent process uses another core (nnodes - 1 might be good)
-  doParallel::registerDoParallel(cl)
+  if (.Platform$OS.type == "unix") {
+    # unix
+    cl <- parallel::makeForkCluster(nnodes = nnodes, outfile = "")
+    doParallel::registerDoParallel(cl)
+  } else {
+    # windows
+    cl <- snow::makeCluster(nnodes, type = "SOCK", outfile = "")
+    doSNOW::registerDoSNOW(cl)
+  }
+
+
+
   i <- 0
 
   ##
@@ -66,12 +91,38 @@ NaiveAssociation <- function(featureMat,
   }
   ##
   ##
+
+  getVariableType <- function (values, variable) {
+    if (is.numeric (values) && all (values %in% c (0, 1)) && ! (! is.null (typeContinuous) && variable %in% typeContinuous) && ! (! is.null (typeCategorical) && variable %in% typeCategorical)) {
+
+      return ("binary") # treat as binary
+
+    } # this fulfils criteria of binary (0, 1) and not in the special cases
+
+    else if ((is.numeric (values) || (! is.null (typeContinuous) && variable %in% typeContinuous)) && ! (! is.null (typeCategorical) && variable %in% typeCategorical)) {
+
+      return ("continuous") # treat as continuous
+
+    } # this fulfils criteria of not being restricted to 0, 1; still numeric, or guaranteed continuous (redundant?); and not categorical
+
+    else {
+
+      return ("categorical") # treat as categorical
+
+    } # default as categorical
+
+  }
+
   r = foreach::foreach(i= seq_along(features), .combine='rbind') %dopar% {
 
     somePs <- vector(length = noCovariates)
     someDs <- vector(length = noCovariates)
 
-    if ((var(featureMat[, i], na.rm = TRUE) == 0 ) ) {
+    if ((var(featureMat[, i], na.rm = TRUE) == 0 ||
+         length(na.exclude(featureMat[, i])) < 2) ) {
+      # if variance of a feature == 0 OR
+        # less than 2 elements of a feature are non-NA:
+        # set all associations for that feature to NA
       somePs[seq_along(covariates)] <- NA
       someDs[seq_along(covariates)] <- NA
 
@@ -133,27 +184,6 @@ NaiveAssociation <- function(featureMat,
               next
       }
 
-	getVariableType <- function (values, variable) {
-		if (is.numeric (values) && all (values %in% c (0, 1)) && ! (! is.null (typeContinuous) && variable %in% typeContinuous) && ! (! is.null (typeCategorical) && variable %in% typeCategorical)) {
-
-			return ("binary") # treat as binary
-
-		} # this fulfils criteria of binary (0, 1) and not in the special cases
-
-		else if ((is.numeric (values) || (! is.null (typeContinuous) && variable %in% typeContinuous)) && ! (! is.null (typeCategorical) && variable %in% typeCategorical)) {
-
-			return ("continuous") # treat as continuous
-
-		} # this fulfils criteria of not being restricted to 0, 1; still numeric, or guaranteed continuous (redundant?); and not categorical
-
-		else {
-
-			return ("categorical") # treat as categorical
-
-		} # default as categorical
-
-	}
-
 	variableType <- getVariableType (na.exclude(subMerge[[aCovariate]]), aCovariate)
 
   conVar <- TRUE
@@ -180,7 +210,22 @@ NaiveAssociation <- function(featureMat,
       lmVar <- eval (parse (text = as.character (formulaVar)))
 
       aP <- lmtest::lrtest (lmNull, lmVar)$'Pr(>Chisq)' [2]
-      aD <- lmVar$coef [2]
+      if (variableType == "categorical") {
+        aD <- Inf
+      } else if (variableType == "binary") {
+        aD <- stats::cor.test (subMerge [, aCovariate],
+                               subMerge [, "FeatureValue"],
+                               )$estimate
+      } else  if (variableType == "continuous") {
+        aD <- CliffsDelta(
+          as.vector (
+            na.exclude (
+              subMerge [subMerge [["FeatureValue"]] == 0, aCovariate])),
+          as.vector (
+            na.exclude (
+              subMerge [subMerge [["FeatureValue"]] == 1, aCovariate])))
+      }
+      #aD <- lmVar$coef [2]
 
     }
 
@@ -249,7 +294,13 @@ NaiveAssociation <- function(featureMat,
 
   } # for i (foreach)
 
-  parallel::stopCluster(cl)
+  # close parallel processing environment
+  if (.Platform$OS.type == "unix") {
+    parallel::stopCluster(cl) # unix
+  } else {
+    snow::stopCluster(cl) # windows
+  }
+
 
   flog.info(msg = paste("NaiveAssociation -- processed 100% of features."),
             name = "my.logger")

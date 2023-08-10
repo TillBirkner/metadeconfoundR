@@ -5,7 +5,7 @@
 #' @import detectseparation
 
 
-CheckReducibility <- function(featureMat,
+CheckReducibility_linear <- function(featureMat,
                               metaMat,
                               noFeatures,
                               noCovariates,
@@ -121,7 +121,7 @@ CheckReducibility <- function(featureMat,
   #         append = TRUE)
   # }
 
-  r = foreach::foreach(i = seq_along(features), .combine='rbind') %dopar% {
+  r = foreach::foreach(i = seq_along(features), .combine='rbind') %do% {
 
     if (collectMods) {
       collectedMods[[features[i]]] <- list()

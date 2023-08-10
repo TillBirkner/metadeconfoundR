@@ -18,7 +18,9 @@ BuildHeatmap(
   d_col = c("blue", "white", "red"),
   keepMeta = NULL,
   keepFeature = NULL,
-  trusted = c("OK_sd", "OK_nc", "OK_d", "AD")
+  trusted = c("OK_sd", "OK_nc", "OK_d", "AD"),
+  tileBordCol = "black",
+  reOrder = "both"
 )
 }
 \arguments{
@@ -63,6 +65,11 @@ present in resulting plot}
 \item{d_col}{set color range for effect size as c(minimum, middle, maximum),
 default c("red", "white", "blue")}
 
+\item{keepMeta}{character vector of metavariable names
+(corresponding to names in metaDeconfOutput), that should be shown in
+resulting plot, even when they have no associations
+passing d_cutoff and q_cutoff}
+
 \item{keepFeature}{character vector of metavariable names
 (corresponding to names in metaDeconfOutput), that should be shown in
 resulting plot, even when they have no associations
@@ -71,16 +78,15 @@ passing d_cutoff and q_cutoff}
 \item{trusted}{character vector of confounding status labels to be treated
 as trustworthy, not-confounded signal. default = c("OK_sd", "OK_nc", "OK_d", "AD")}
 
-\item{keepMata}{character vector of metavariable names
-(corresponding to names in metaDeconfOutput), that should be shown in
-resulting plot, even when they have no associations
-passing d_cutoff and q_cutoff}
+\item{tileBordCol}{tile border color of  heatmap tiles, default: "black"}
+
+\item{reOrder}{reorder features and/or metadata? possible options: c("both", "feat", "meta", "none"), default: "both"}
 }
 \value{
 ggplot2 object
 }
 \description{
-BuildHeatmap summarizes Metadecofound output in a heatmap or cuneiform plot
+BuildHeatmap summarizes \link[metadeconfoundR]{MetaDeconfound} output in a heatmap or cuneiform plot
 }
 \details{
 for more details and explanations please see the package vignette.
@@ -95,7 +101,7 @@ example_output <- MetaDeconfound(featureMat = reduced_feature,
 plotObject <- BuildHeatmap(example_output)
 print(plotObject)
 
-alternativePlot <- buildHeatmap(metadeconfoundR_output, coloring = 2, showConfounded = FALSE)
+alternativePlot <- BuildHeatmap(example_output, coloring = 2, showConfounded = FALSE)
 print(alternativePlot)
 }
 

@@ -19,12 +19,14 @@ BiocStyle::latex()
 
 \usepackage{booktabs}
 \usepackage{float}
+\usepackage[withpage, smaller]{acronym}
+\usepackage{caption}
 
 \newcommand{\metadeconfoundR}{\Biocpkg{metadeconfoundR}}
 
 \title{Introduction to \metadeconfoundR}
 \author{Till Birkner\footnote{\email{tillb@online.de}}, Sofia K. Forslund}
-\date{Edited: November 06, 2019; Compiled: \today}
+\date{Edited: September 14, 2021; Compiled: \today}
 
 \begin{document}
 
@@ -32,44 +34,100 @@ BiocStyle::latex()
 
 \tableofcontents
 
+% acronyms using the acronym package
+\section*{List of Abbreviations}
+
+%\begin{acronym}
+%	\acro{CRAN}[CRAN]{Comprehensive R Archive Network}
+%\end{acronym}
+%
+%\begin{acronym}
+%	\acro{IBD}[IBD]{inflammatory bowel disease}
+%\end{acronym}
+%
+%\begin{acronym}
+%	\acro{OTU}[OTU]{operational taxonomic unit}
+%\end{acronym}
+%
+\begin{acronym}
+	\acro{BMI}[BMI]{body mass index}
+\end{acronym}
+%
+%\begin{acronym}
+%	\acro{T2D}[T2D]{type-II-diabetes}
+%\end{acronym}
+%
+%\begin{acronym}
+%	\acro{CMD}[CMD]{cardiometabolic disease}
+%	\acroplural{CMD}[CMDs]{cardiometabolic diseases}
+%\end{acronym}
+%
+%\begin{acronym}
+%	\acro{HGP}[HGP]{Human Genome Project}
+%\end{acronym}
+
+\begin{acronym}
+	\acro{lrt}[lrt]{likelihood ratio test}
+	\acroplural{lrt}[lrts]{likelihood ratio tests}
+\end{acronym}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\packageVersion{\Sexpr{BiocStyle::pkg_ver("metadeconfoundR")}}
-When analyzing multi omics datasets, the search for features that could serve as biomarkers is an important aspect. Because these biomarkers might be used in clinical settings for disease diagnosis etc., it is extremely important to minimize false positives. One possible error source are confounding variables: The biomarker is not directly linked to the disease but influenced by a third (confounding) variable, that in turn is linked to the disease.
+	\packageVersion{\Sexpr{BiocStyle::pkg_ver("metadeconfoundR")}}
+	
+	\textcolor{red}{\begin{itemize}
+			\item add actual tables of input data for a more direct example (instead of just linking to included data set)
+			\item mention usage of ranked omics data (as differentiation towards other tools)
+	\end{itemize}}
+	
+	When analyzing multi omics datasets, the search for features that could serve as biomarkers is an important aspect. Because these biomarkers might be used in clinical settings for disease diagnosis etc., it is extremely important to minimize false positives. One possible error source are confounding variables: The biomarker is not directly linked to the disease but influenced by a third (confounding) variable, that in turn is linked to the disease.
+	
+	The R package \Rpackage{metadeconfoundR} was developed to address this issue. It first uses univariate statistics to find associations between omics features and disease status or metadata. Using nested linear model comparison post hoc testing, those associations are checked for confounding effects from other covariates/metadata and a status label is returned. The tool is able to handle large scale multi-omics datasets in a reasonable time, by parallel processing suitable for high-performance computing clusters. In addition, results can be summarized by a range of plotting functions.
 
-In this project work, the R package MultideconfoundR was developed to address this issue. It first uses univariate statistics to find associations between omics features and disease status or metadata. Using nested linear model comparison post hoc testing, those associations are checked for confounding effects from other covariates/metadata and a status label is returned. The tool is able to handle large datasets in a reasonable time, by parallel processing.
+	\subsection{\Rcode{Metadeconfound()}}
+ 
+		The main (\Rcode{metadeconfoundR::Metadeconfound()}) analysis is a two step process: 
 
+		First, significant associations between single omics features (like gut microbial OTUs) and metadata (like disease status, drug administration, BMI) are identified \textit{(Fig.~\ref{fig:statistics}, left)}. Based on the data type of the respective metadata, either \Rcode{wilcox.test()} (for binary), \Rcode{cor.test()} (for continuous numerical) or \Rcode{kruskal.test()} (for neither numerical nor binary) is used. All three tests are rank-based to minimize assumptions about data distribution.
 
-\Rpackage{metadeconfoundR} was developed to conduct confounder-aware biomarker analysis of large scale multi-omics datasets in parallel. This analysis is a two step process. 
-
-First, significant associations between single omics features (like gut microbial OTUs) and metadata (like drug administration) are identified (fig\ref{fig:statistics}, left). Based on the data type of the respective metadata, either \Rcode{wilcox.test()} (for binary), \Rcode{cor.test()} (for continuous numerical) or \Rcode{kruskal.test()} (for neither numerical nor binary) is used. All three tests are rank-based to minimize assumptions about data distribution.
-In addition to collecting p-values for all computed tests, effect size is measured if possible. In case of binary data, Cliff's Delta is computed by an algorithm based on the \Rcode{orddom::orddom()} function. For continuous data the ``estimate" component from \Rcode{cor.test()} is used. Since there is no effect size for categorical data with more than 2 levels, no value is reported here. It is recommended to introduce binary pseudo-variables for each level of the categorical metadata to circumvent this drawback.
+		In addition to collecting p-values for all computed tests, effect size is measured as Cliff's Delta and Spearman's Rho for binary and continuous data, respectively. Since there is no suitable effect size metric for categorical data with more than 2 levels, no value is reported here. It is recommended to introduce binary pseudo-variables for each level of the categorical metadata to partially circumvent this drawback.
     
 \begin{figure}[H]
-	\includegraphics[width=\linewidth]{Figures/statistics.png}
-	\caption{\bf Overview of main statistical approach used to determine confounding status.}
-	(left) Each omics feature (Y) is independently tested for association to any of the predictors/covariates (D/C); Used test depends on data type of covariate. 
-	(center) For each identified feature (Y1) $\leftrightarrow$ covariate (D/C) pair a set of linear models (either including an additional covariate or not) is fitted and a likelihood ratio is computed. 
-	(right) Based on likelihood ratio a status for the feature (Y1) $\leftrightarrow$ covariate (D/C) pair is reported. Figure kindly provided by Sofia Forslund.
+	%\captionsetup{width=.9\linewidth, justification=raggedright,singlelinecheck=false}
+	\includegraphics[width=\linewidth]{Figures/ED_Figure1_schematic_20201116.pdf}
+	\caption{\bf Overview of main statistical approach used to determine confounding status of \newline associations between omics features and the disease status.}
+	\textbf{(left)} Each omics feature (Y) is independently tested for association to any of the predictors/covariates (D/C); Used test depends on data type of covariate. 
+	\textbf{(center)} For each identified Y $\leftrightarrow$ D, sets of pairs of linear model \acp{lrt} are computed. Each set tests for confounding effects of an additional covariate (C) on the current Y $\leftrightarrow$ D pair.
+	\textbf{(right)} Based on significance of the \acp{lrt} a status for the current feature (Y) $\leftrightarrow$ disease status (D) pair is reported.
+	
+	In additiona to only determining the confounding status of any associations between omics features and the disease status, also confounding between the different covariates is determined in the same way.
 	\label{fig:statistics}
 \end{figure}
 
+
 \begin{figure}[H]
-	\includegraphics[width=\linewidth]{Figures/flowChartDecision.png}
-	\caption{\bf Status labeling process in more detail.}
-	For each feature $\leftrightarrow$ covariate combination these steps are done. A and B are the linear model likelihood ratios. Should there be more than one "other significant covariate" (C2), linear model likelihood ratio comparison has to be repeated for every single one of them. Whenever CONF is reached, the name of C2 is returned as label. Only when SD is reached for all C2, this will be returned as label.
-	(y = feature, D = current covariate, C2 = other significant covariates, NS = not significant, NC = no covariates (i.e. trivially deconfounded), CONF = confounded, LD = laxly deconfounded, SD = strictly deconfounded)
+	%\captionsetup{width=\linewidth}
+	\includegraphics[width=\linewidth]{Figures/flowChartDecision_mixed_CI.pdf}
+		\caption{\bf Status labeling process in more detail.}
+	For each possible feature $\leftrightarrow$ covariate combination these steps are done. A and B are the linear model likelihood ratios. Should there be more than one "other significant covariate" (C1), linear model likelihood ratio comparison has to be repeated for every single one of them. Whenever CONF is reached, the name of C1 is returned as label. Only when SD is reached for all C1, this will be returned as label.
+	(y = feature, D = current covariate, C1 = other significant covariates, NS = not significant, OK\_nc = no covariates (i.e. trivially deconfounded), C: \textellipsis = confounded by variables listed after "C:", AD = Ambiguously deconfounded, OK\_d = deconfounded, but doubtful since confidence interval for predictive difference in lrt A includes zero, OK\_sd = strictly deconfounded and confidence interval for predictive difference in lrt A does not include zero.)
+	
+	When random effect variables (like batch effects, cage, study center) are supplied via the \Rcode{randomVar} parameter, parts in dark red are added to the labeling process: In addition to the naive association tests, an \ac{lrt} is done to test whether the naive association can be reduced to the random effect. Later on, mixed effect models are used instead of linear models, enabling the inclusion of the random effect into A and B. 
+
 	\label{fig:flowChart}
 \end{figure}
 
-In the second step, all hits are checked for confounding effects (fig \ref{fig:statistics}, center and right) and a status is reported for each feature $\leftrightarrow$  metadata combination (fig \ref{fig:flowChart}). A ``hit" here is defined as a feature $\leftrightarrow$ metadata association with small enough fdr-corrected p-value and big enough  effect size. Thresholds for both parameters can be set via \Rcode{QCutoff} and \Rcode{DCutoff} when starting the analysis. Since confounding of signal can only happen with more than one different metadata associated to a certain feature, all features with only one significant metadata are trivially deconfounded and get status ``No Covariates (NC)". \\
-The actual confounder detection is done by a set of two likelihood ratio tests of nested linear models: For each feature with multiple covariates
+		In the second step, all hits are checked for confounding effects \textit{(Fig.~\ref{fig:statistics}, center and right)} and a status is reported for each feature $\leftrightarrow$  metadata combination \textit{(Fig.~\ref{fig:flowChart})}. A ``hit" here is defined as a feature $\leftrightarrow$ metadata association with small enough fdr-corrected p-value and big enough  effect size. Thresholds for both parameters can be set via \Rcode{QCutoff} and \Rcode{DCutoff} when starting the analysis. Since confounding of signal can only happen with more than one different metadata associated to a certain feature, all features with only one significant metadata are trivially deconfounded and get status ``No Covariates (OK\_nc)". \\
+%The actual confounder detection is done by a set of two likelihood ratio tests of nested linear models: For each feature with multiple covariates
+ 
+	\subsection{\Rcode{BuildHeatmap()}}
+	
+		In order to summarize and visualize the results of a deconfounding run, the \Rcode{BuildHeatmap()} function supplies a set of predefined but customizable plots. Due to the typically large number of features in multi-omics data-sets, these plots usually only show a subset of the data representing high significance and effect size associations. 
  
  
- %For now please direct questions and bug reports to Till Birkner, a detailed introduction to the package will be added at a later stage.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -77,33 +135,158 @@ The actual confounder detection is done by a set of two likelihood ratio tests o
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Install via tar.gz file: \Rcode{install.packages("metadeconfoundR\_0.1.1.tar.gz", repos = NULL)}
+%Install via tar.gz file: \Rcode{install.packages("metadeconfoundR\_0.1.1.tar.gz", repos = NULL)}
 
-<<example, eval=TRUE, echo=FALSE, results="asis">>=
-BiocStyle::latex()
+<<example, eval=FALSE, echo=TRUE, results="asis">>=
+library(devtools)
+install_github("TillBirkner/metadeconfoundR")
+library(metadeconfoundR)
 @
-%The \Rpackage{MultideconfoundR} package is available at bioconductor.org
-%and can be downloaded via \Rcode{BiocManager}:
-%<<BiocManager, eval=FALSE>>=
-%
-%if (!requireNamespace("BiocManager", quietly = TRUE))
-%    install.packages("BiocManager")
-%BiocManager::install("MultideconfoundR")
-%@
-%
-%Load \MultideconfoundR{}.
-%<<MultideconfoundR>>=
-%library(MultideconfoundR)
-%@
-%
+
+<<hide, eval=TRUE, echo=FALSE, results="asis">>=
+library(metadeconfoundR)
+library(ggplot2)
+library(cowplot)
+library(kableExtra)
+@
 
 
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Use cases}
+\section{Usage}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+	\subsection{\Rcode{Metadeconfound()}}
+		
+		\textbf{Minimal input} consists of two data.frames for feature data (\textit{Tab.~\ref{tab:feature}}) and metadata (\textit{Tab.~\ref{tab:meta}}), respectively. Both data.frames must have one row per sample (sample names as rownames) with matching order of sampleIDs and one feature/meta-variable per column. The first column of the metadata data.frame must be binary (i.e consist of only 0/1 entries.) Usually this is the control/case variable, but any other binary meta-variable will work as well. Ensure that colnames and rownames should not contain any problematic characters by e.g running them through \Rcode{make.names()}. See \textit{Fig.~\ref{fig:defaultHeatmap}, left} for summarizing heatmap of output.
+
+  
+	\begin{table}
+		\caption{included example feature data.frame \Rcode{reduced\_feature}}
+		<<showTableF, eval=TRUE, echo=FALSE, tidy=TRUE, tidy.opts = list(width.cutoff = 50), cache = TRUE >>=
+			kbl(reduced_feature[10:15, 1:5])
+		@
+		\label{tab:feature}
+	\end{table}
+
+
+	\begin{table}
+		\caption{included example metadata data.frame \Rcode{metaMatMetformin}}
+		<<showTableM, eval=TRUE, echo=FALSE, tidy=TRUE, tidy.opts = list(width.cutoff = 50), cache = TRUE >>=
+			kbl(metaMatMetformin[10:15, 1:5])
+		@
+		\label{tab:meta}
+	\end{table}
+
+		
+				<<runExample, eval=TRUE, echo=TRUE, tidy=TRUE, tidy.opts = list(width.cutoff = 50), cache = TRUE >>=
+		data(reduced_feature)
+		data(metaMatMetformin)
+		
+		# check correct ordering
+		all(rownames(metaMatMetformin) == rownames(reduced_feature))
+		all(order(rownames(metaMatMetformin)) == order(rownames(reduced_feature)))
+		
+		example_output <- MetaDeconfound(featureMat = reduced_feature,
+		metaMat = metaMatMetformin,
+		nnodes = 4, 
+		returnLong = TRUE)
+		
+		@
+		
+		\textbf{Random effects} can be included in the modeling process (as described in \textit{Fig.~\ref{fig:flowChart}}) by supplying the \Rcode{randomVar} parameter \textit{(Fig.~\ref{fig:defaultHeatmap}, right)}. 
+		
+		
+				<<runExampleRand, eval=TRUE, echo=TRUE, tidy=TRUE, tidy.opts = list(width.cutoff = 50), cache = TRUE >>=
+		
+		RandDataset_output <- MetaDeconfound(featureMat = reduced_feature,
+		metaMat = metaMatMetformin,
+		nnodes = 4,
+		randomVar = c("Dataset"),
+		returnLong = TRUE
+		)
+		@
+		
+			For a full list of input parameters please refer to the help page.
+			
+		\subsubsection{output}
+		
+		Output can be returned either as a list of wide format data.frames (default) or as a single long format data.frame (\textit{Tab.~\ref{tab:out}}). In both cases raw p-values (Ps), multiple testing corrected p-values (Qs), corresponding effect size (Ds), and confounding status (status) are reported for each possible combination of a feature to a meta-variable. 
+		
+		\begin{table}
+			\caption{output of a \Rcode{MetaDeconfound()} run in long format}
+			<<showTableO, eval=TRUE, echo=FALSE, tidy=TRUE, tidy.opts = list(width.cutoff = 50), cache = TRUE >>=
+			kbl(example_output[1:5, 1:6])
+			@
+			\label{tab:out}
+		\end{table}
+		
+		
+	\subsection{\Rcode{BuildHeatmap()}}
+		
+		\subsubsection{input}
+				
+			\textbf{Minimal input} consists only of an output object from the main \Rcode{Metadeconfound()} function either in long or wide format. This will result in a heatmap similar to .
+			
+				<<runHeatmap, eval=FALSE, echo=TRUE, tidy=TRUE, tidy.opts = list(width.cutoff = 50) >>=
+			left <- BuildHeatmap(example_output)
+			right <- BuildHeatmap(RandDataset_output)
+			plot_grid(left, right)
+			@
+			\begin{figure}[H]
+				<<runHeatmapHidden, eval=TRUE, echo=FALSE, tidy=TRUE, fig.width = 5.5, tidy.opts = list(width.cutoff = 50) >>=
+				left <- BuildHeatmap(example_output)
+				right <- BuildHeatmap(RandDataset_output)
+				plot_grid(left, right)
+				@
+				\caption{\bf default output of the \Rcode{BuildHeatmap()} function}
+				A heatmap is returned, showing associations between individual omics features (y-axis) and meta-variables (x-axis). Color indicates effect size (Cliff's Delta or Spearman's Rho for binary or continuous meta-variables, respectively). Significance of shown associations indicated by black asterisks according to FDR adjusted p-values of naive tests. Naively significant but confounded associations are instead indicated by gray circles. The plot is clustered on both axes and features as well as meta-variables without any associations passing effect size and significance cutoffs (default: \Rcode{q\_cutoff = 0.1}, \Rcode{d\_cutoff = 0.01}) are removed. left: \Rcode{example\_output} as input. right: \Rcode{RandDataset\_output} as input.
+				\label{fig:defaultHeatmap}
+			\end{figure}
+			
+			\newpage
+			
+			For both this default heatmap, as well as the alternative cuneiform plot (\Rcode{cuneiform = TRUE}), a range of customizations are available. In \textit{Fig.~\ref{fig:customCuneiform}} meta-variables not passing the effect size and significance are manually kept in the plot (\Rcode{keepMeta}), the shown range of effect sizes is set from $ -1 $ to $ +1 $. For a full list of options, again, refer to the help page.
+			
+			
+				<<runCun, eval=FALSE, echo=TRUE, tidy=TRUE, tidy.opts = list(width.cutoff = 40) >>=
+			BuildHeatmap(example_output, 
+			cuneiform = TRUE, 
+			keepMeta = colnames(example_output$status),
+			d_range = "full")
+			@
+			\begin{figure}[H]
+				<<runCunHidden, eval=TRUE, echo=FALSE, tidy=TRUE, fig.width = 3.8, fig.height = 6.5, tidy.opts = list(width.cutoff = 50) >>=
+				BuildHeatmap(example_output, cuneiform = TRUE, keepMeta = colnames(example_output$status), d_range = "full")
+				@
+				\caption{\bf alternative output of the \Rcode{BuildHeatmap()} function}
+				A cuneiform plot is returned, showing associations between individual omics features (y-axis) and meta-variables (x-axis) as triangles. Fill color and direction of triangles indicate effect size (Cliff's Delta or Spearman's Rho for binary or continuous meta-variables, respectively). Significance of shown associations indicated by triangle line color: Both confounded and not significant associations are gray, while only robust (i.e. significant and not confounded) associations are black. The plot is clustered on both axes and features as well as meta-variables without any associations passing effect size and significance cutoffs (default: \Rcode{q\_cutoff = 0.1}, \Rcode{d\_cutoff = 0.01}) are removed.
+				\label{fig:customCuneiform}
+			\end{figure}
+			
+			
+		\subsubsection{output}
+		
+			The \Rcode{BuildHeatmap()} function returns a ggplot2 object. This makes it possible to perform some easy alterations manually (\textit{Fig.~\ref{fig:postCustomCuneiform}})
+			
+			\begin{figure}[H]
+				<<runpostCustom, eval=TRUE, echo=TRUE, tidy=TRUE, fig.width = 1.9, fig.height = 5, tidy.opts = list(width.cutoff = 40) >>=
+				BuildHeatmap(example_output) + 
+				theme(legend.position = "none", 
+				axis.text.y = element_text(face = "italic"),
+				plot.title = element_blank(),
+				plot.subtitle = element_blank())
+				@
+				\caption{\bf Manual changes to the default \Rcode{BuildHeatmap()} ouptut}
+				removal of legend, title, subtitle and italicization of feature names through \Rcode{ggplot2::theme()} function.
+				\label{fig:postCustomCuneiform}
+			\end{figure}
+
+
+
 
 %<<chu_inf_run, cache = TRUE>>=
 %library(metadeconfoundR)
