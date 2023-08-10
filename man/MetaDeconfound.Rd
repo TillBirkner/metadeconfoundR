@@ -25,6 +25,7 @@ MetaDeconfound(
   doConfs = 0,
   doRanks = NA,
   randomVar = NA,
+  fixedVar = NA,
   robustCutoffRho = NULL,
   typeCategorical = NULL,
   typeContinuous = NULL,
@@ -99,7 +100,12 @@ transformed when building linear models in the doconfounding step}
 \item{randomVar}{optional vector of metavariable names to be treated as
 random effect variables. These variabels will not be tested for naive
 associations and will not be included as potential confounders,
-but will be added as random effects "+ (1|variable)" into ay models being built.}
+but will be added as random effects "+ (1|variable)" into any models being built.}
+
+\item{fixedVar}{optional vector of metavariable names to be treated as
+fixed effect variables. These variabels will not be tested for naive
+associations and will not be included as potential confounders,
+but will be added as fixed effects "+ variable" into any models being built.}
 
 \item{robustCutoffRho}{optional robustness cutoff for continuous variables}
 

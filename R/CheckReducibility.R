@@ -23,6 +23,7 @@ CheckReducibility <- function(featureMat,
                               doConfs,
                               doRanks,
                               randomVar,
+                              fixedVar, #new TB20230727
                               RVnames,
                               isRobust,
                               logistic, # new SKF20201017
@@ -88,6 +89,14 @@ CheckReducibility <- function(featureMat,
 
   if (!is.na(randomVar[[1]])) {
     randomVarLine <- paste0("+ (1|", randomVar, ")", collapse = ' ')
+    if (!is.na(fixedVar[[1]])) {
+      fixedVarLine <- paste0("+ ", fixedVar, collapse = ' ')
+      randomVarLine <- paste0(randomVarLine, " ", fixedVarLine, collapse = ' ')
+    }
+  }
+
+  if (is.na(randomVar[[1]]) & !is.na(fixedVar[[1]])) {
+    randomVarLine <- paste0("+ ", fixedVar, collapse = ' ')
   }
 
   # load parralel processing environment
@@ -153,11 +162,13 @@ CheckReducibility <- function(featureMat,
 
       ##
       ##
-      if(verbosity == "debug"){
-        write("returned whole NS line",
-              file = "lCovariatesIsZero.txt",
-              sep = "\t",
-              append = TRUE)
+      if (verbosity == "debug") {
+        write(
+          "returned whole NS line",
+          file = "lCovariatesIsZero.txt",
+          sep = "\t",
+          append = TRUE
+        )
       }
       ##
       ##
@@ -242,12 +253,18 @@ CheckReducibility <- function(featureMat,
         }
       }
 
-      if (!is.na(randomVar[[1]])) {
+      if (!(is.na(randomVar[[1]]) & !(aCovariate %in% fixedVar)) |
+          !(is.na(fixedVar[[1]]) & !(aCovariate %in% fixedVar))) {
+        # if either random or fixed Var is supplied and aCovariate != fixedVar, do a naive test
+          # whether association is reducible to these random/fixed Vars
 
-        # standard behaviour for continuous features
+        head <- "stats::lm (rank (FeatureValue) ~ "
+        tail <- paste0(", data = subMerge)", collapse = "")
 
-        head <- "lme4::lmer (rank (FeatureValue) ~ "
-        tail <- ", data = subMerge, REML = FALSE)"
+        if (!is.na(randomVar[[1]])) {
+          head <- "lme4::lmer (rank (FeatureValue) ~ "
+          tail <- ", data = subMerge, REML = FALSE)"
+        }
 
         if (logistic == TRUE) { # alternative behaviour for binary features
           head <- "lme4::glmer (FeatureValue ~ "
@@ -257,7 +274,7 @@ CheckReducibility <- function(featureMat,
                          collapse = "")
         }
         if (rawCounts == TRUE) { # alternative behavior for not rarefied abundances
-          modAlg <- "lme4::glmer (cbind(FeatureValue, totReadCount) ~ "
+          head <- "lme4::glmer (cbind(FeatureValue, totReadCount) ~ "
           tail <- paste0(", data = subMerge, family = \"binomial\", nAGQ = ",
                          nAGQ,
                          ")",
@@ -377,6 +394,10 @@ CheckReducibility <- function(featureMat,
             lastPart <- ", data = subsubMerge, family = \"binomial\")"
           }
 
+          if (!is.na(fixedVar[[1]])) { # prefix the lastPart with fixedEffect names
+            lastPart <- paste0(randomVarLine, lastPart, collapse = "")
+          }
+
           if (!is.na(randomVar[[1]])) { # switch to lmer and REML = FALSE when randomEffects are included
             modAlg <- "lme4::lmer (rank (FeatureValue) ~ "
             lastPart <- paste0(randomVarLine,
@@ -442,9 +463,9 @@ CheckReducibility <- function(featureMat,
           # beyond that of the other covariate
 
 
-          if (class(lmA) == "logical" ||
-              class(lmAnother)  == "logical" ||
-              class(lmBoth) == "logical" ) {
+          if (is(lmA, "logical") ||
+              is(lmAnother, "logical") ||
+              is(lmBoth, "logical") ) {
             # class is logical if lmX == NA
 
             if(verbosity == "debug"){
@@ -494,7 +515,7 @@ CheckReducibility <- function(featureMat,
           # additonal control of confidence intervals for the covariates within the linear models
           conf_aCovariate <- TRUE
           conf_anotherCovariate <- TRUE
-          if (doConfs >= 0 && class(lmBoth)!="logical") { # doConfs = 1 --> just logging
+          if (doConfs >= 0 && !is(lmBoth, "logical")) { # doConfs = 1 --> just logging
             print("computing Confs")
             if (is.numeric(subsubMerge$aCovariate) && is.numeric(subsubMerge$anotherCovariate)) { # categorical variables are excluded for easier processing
               confints <- confint(lmBoth)

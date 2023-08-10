@@ -32,7 +32,7 @@
 #' names used as column names in metaDeconfOutput. These human readable
 #' names will be displayed in the final plot. First column: machine-readable,
 #' second column: human-readable.
-#' @param keepMata character vector of metavariable names
+#' @param keepMeta character vector of metavariable names
 #' (corresponding to names in metaDeconfOutput), that should be shown in
 #' resulting plot, even when they have no associations
 #' passing d_cutoff and q_cutoff
@@ -56,7 +56,7 @@
 #'plotObject <- BuildHeatmap(example_output)
 #'print(plotObject)
 #'
-#'alternativePlot <- buildHeatmap(example_output, coloring = 2, showConfounded = FALSE)
+#'alternativePlot <- BuildHeatmap(example_output, coloring = 2, showConfounded = FALSE)
 #'print(alternativePlot)
 #'}
 #'

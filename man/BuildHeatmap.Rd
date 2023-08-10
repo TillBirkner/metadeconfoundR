@@ -65,6 +65,11 @@ present in resulting plot}
 \item{d_col}{set color range for effect size as c(minimum, middle, maximum),
 default c("red", "white", "blue")}
 
+\item{keepMeta}{character vector of metavariable names
+(corresponding to names in metaDeconfOutput), that should be shown in
+resulting plot, even when they have no associations
+passing d_cutoff and q_cutoff}
+
 \item{keepFeature}{character vector of metavariable names
 (corresponding to names in metaDeconfOutput), that should be shown in
 resulting plot, even when they have no associations
@@ -76,11 +81,6 @@ as trustworthy, not-confounded signal. default = c("OK_sd", "OK_nc", "OK_d", "AD
 \item{tileBordCol}{tile border color of  heatmap tiles, default: "black"}
 
 \item{reOrder}{reorder features and/or metadata? possible options: c("both", "feat", "meta", "none"), default: "both"}
-
-\item{keepMata}{character vector of metavariable names
-(corresponding to names in metaDeconfOutput), that should be shown in
-resulting plot, even when they have no associations
-passing d_cutoff and q_cutoff}
 }
 \value{
 ggplot2 object
@@ -101,7 +101,7 @@ example_output <- MetaDeconfound(featureMat = reduced_feature,
 plotObject <- BuildHeatmap(example_output)
 print(plotObject)
 
-alternativePlot <- buildHeatmap(example_output, coloring = 2, showConfounded = FALSE)
+alternativePlot <- BuildHeatmap(example_output, coloring = 2, showConfounded = FALSE)
 print(alternativePlot)
 }
 

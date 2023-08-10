@@ -47,7 +47,11 @@
 #' @param randomVar optional vector of metavariable names to be treated as
 #' random effect variables. These variabels will not be tested for naive
 #' associations and will not be included as potential confounders,
-#' but will be added as random effects "+ (1|variable)" into ay models being built.
+#' but will be added as random effects "+ (1|variable)" into any models being built.
+#' @param fixedVar optional vector of metavariable names to be treated as
+#' fixed effect variables. These variabels will not be tested for naive
+#' associations and will not be included as potential confounders,
+#' but will be added as fixed effects "+ variable" into any models being built.
 #' @param robustCutoffRho optional robustness cutoff for continuous variables
 #' @param typeCategorical optional character vector of metavariable names to
 #' always be treated as categorical
@@ -113,6 +117,7 @@ MetaDeconfound <- function(featureMat,
                            doConfs = 0,
                            doRanks = NA,
                            randomVar = NA,
+                           fixedVar = NA, # new TB20230727
 			   robustCutoffRho = NULL, # new SKF20200221
 			   typeCategorical = NULL, # new SKF20200221
 			   typeContinuous = NULL, # new SKF20200221
@@ -225,6 +230,7 @@ MetaDeconfound <- function(featureMat,
                   doConfs = doConfs,
                   doRanks = doRanks,
                   randomVar = randomVar,
+                  fixedVar = fixedVar, # new TB20230727
 		  robustCutoffRho = robustCutoffRho, # new SKF20200221
 		  typeCategorical = typeCategorical, # new SKF20200221
 		  typeContinuous = typeContinuous, # new SKF20200221
@@ -258,6 +264,7 @@ MetaDeconfound <- function(featureMat,
                             doConfs = 0,
                             doRanks = NA,
                             randomVar = NA,
+                            fixedVar = NA, # new TB20230727
                             maintenance = FALSE,
                             robustCutoffRho = NULL, # new SKF20200221
                             typeCategorical = NULL, # new SKF20200221
@@ -283,7 +290,7 @@ MetaDeconfound <- function(featureMat,
               name = "my.logger")
   }
 
-  if (class(randomVar) == "list") {
+  if (is(randomVar, "list")) {
     flog.error(msg = "randomVar does not need to be supplied as list anymore, please change to new syntax.",
               name = "my.logger")
   }
@@ -298,9 +305,6 @@ MetaDeconfound <- function(featureMat,
   covariates <- colnames (metaMat) # each covariate + the status category
   if (!is.na(randomVar[[1]])) { # list input parameter is split for further use within pipeline
     RVnames <- randomVar
-  # if (!is.na(randomVar[[1]])) { # list input parameter is split for further use within pipeline
-  #   RVnames <- randomVar[[2]]
-  #   randomVar<- randomVar[[1]]
 
 
     flog.info(msg = paste0("The following parameters will be added to all linear models as random effects: '", randomVar, "'"),
@@ -435,6 +439,8 @@ MetaDeconfound <- function(featureMat,
 
   if (collectMods == TRUE) {
     nnodes <- -1
+    flog.warn(msg = paste('collectMods == TRUE --> setting nnodes = -1'),
+              name = "my.logger")
   }
 if (nnodes < 1) {
   flog.warn(msg = paste('nnodes < 1 --> using linear mode!'),
@@ -450,13 +456,14 @@ if (nnodes < 1) {
                                           minQValues= minQValues,
                                           QCutoff = QCutoff,
                                           DCutoff = DCutoff,
-                                          nnodes = nnodes,
+                                          nnodes = 1,
                                           PHS_cutoff = PHS_cutoff,
                                           deconfT = deconfT,
                                           deconfF = deconfF,
                                           doConfs = doConfs,
                                           doRanks = doRanks,
                                           randomVar = randomVar,
+                                          fixedVar = fixedVar, # new TB20230727
                                           RVnames = RVnames,
                                           isRobust = isRobust,
                                           logistic = logistic, # new SKF20201017,
@@ -486,6 +493,7 @@ if (nnodes < 1) {
                                             doConfs = doConfs,
                                             doRanks = doRanks,
                                             randomVar = randomVar,
+                                            fixedVar = fixedVar, # new TB20230727
                                             RVnames = RVnames,
                                             isRobust = isRobust,
                                             logistic = logistic, # new SKF20201017,
