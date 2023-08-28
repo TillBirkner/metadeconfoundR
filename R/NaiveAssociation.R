@@ -310,11 +310,11 @@ NaiveAssociation <- function(featureMat,
     print(paste("NaiveAssociation -- ncol(parallelreturn):", ncol(r)))
   }
 
-  Ps <- r[, seq_len(ncol(r)/2)]
+  Ps <- r[, seq_len(ncol(r)/2), drop = F]
   rownames(Ps) <- features[seq_len(nrow(r))]
   colnames(Ps) <- covariates
 
-  Ds <- r[, -(seq_len(ncol(r)/2))]
+  Ds <- r[, -(seq_len(ncol(r)/2)), drop = F]
   rownames(Ds) <- features[seq_len(nrow(r))]
   colnames(Ds) <- covariates
 
