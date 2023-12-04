@@ -38,10 +38,18 @@ CliffsDelta <- function(x,
   # }
   #
   #
+<<<<<<< HEAD
   # for (i in 1:nx) {
   #   dom[i, ] <- -sign(y - x[i])
   # }
   # END 20231204 TB
+=======
+  # END 20231204 TB
+  for (i in 1:nx) {
+    dom[i, ] <- -sign(y - x[i])
+  }
+>>>>>>> 009ad80 (bugfix CliffsDelta)
+
 
   # computation of cliff's delta
   nxny <- length(dom)
