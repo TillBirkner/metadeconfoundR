@@ -516,7 +516,7 @@ CheckReducibility_linear <- function(featureMat,
           conf_aCovariate <- TRUE
           conf_anotherCovariate <- TRUE
           if (doConfs >= 0 && !is(lmBoth, "logical")) { # doConfs = 1 --> just logging
-            print("computing Confs")
+            #print("computing Confs")
             if (is.numeric(subsubMerge$aCovariate) && is.numeric(subsubMerge$anotherCovariate)) { # categorical variables are excluded for easier processing
               confints <- confint(lmBoth)
               conf_aCovariate <- !(sign(confints[1, 1]) == sign(confints[1, 2])) # signs are different, if confint is spanning 0

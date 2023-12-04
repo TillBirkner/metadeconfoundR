@@ -1,28 +1,47 @@
 #' @import bigmemory
 
 CliffsDelta <- function(x,
-                        y
+                        y,
+                        fileBackedCliff
                         ) {
 
   nx <- length(x)
   ny <- length(y)
 
-  # dom <- big.matrix(nrow = nx,
+  # dom <- bigmemory::big.matrix(nrow = nx,
   #                     ncol = ny,
-  #                     backingfile = "big_dom_test_backing.bin",
-  #                     backingpath = "/home/tbirkne/Desktop/",
-  #                     descriptorfile = "big_dom_test_backing.desc"
-  # )
-
-  dom <- bigmemory::big.matrix(nrow = nx,
-                      ncol = ny,
-                      backingfile = ""
-                      )
+  #                     backingfile = ""
+  #                     )
   #dominance matrix implemented as file-backed big.matrix,
     # that can be handled even if it is to big to be stored in memory
-  for (i in 1:nx) {
-    dom[i, ] <- -sign(y - x[i])
-  }
+
+  # 20231204 TB
+  backingfileCompl <- tempfile()
+  backingfileCompl <- path.expand(backingfileCompl)
+  splitTemp <- strsplit(backingfileCompl, "[\\/\\\\]")
+  backingfile <- splitTemp[[1]][length(splitTemp[[1]])]
+  dom <- bigmemory::big.matrix(nrow = nx,
+                               ncol = ny,
+                               backingfile = backingfile,
+                               descriptorfile = paste0(backingfile, ".desc", collapse = ""),
+                               backingpath = tempdir()
+  )
+  # dom <- c()
+  # if (fileBackedCliff == TRUE) {
+  #   dom <- bigmemory::big.matrix(nrow = nx,
+  #                       ncol = ny,
+  #                       backingfile = ""
+  #                       )
+  # } else {
+  #   dom <- matrix(nrow = nx,
+  #          ncol = ny)
+  # }
+  #
+  #
+  # for (i in 1:nx) {
+  #   dom[i, ] <- -sign(y - x[i])
+  # }
+  # END 20231204 TB
 
   # computation of cliff's delta
   nxny <- length(dom)
@@ -32,11 +51,10 @@ CliffsDelta <- function(x,
     preSumPSc[i] <- sum(dom[, i] < 0)
     preSumBiggers[i] <- sum(dom[, i] > 0)
   }
+  rm(dom)
+  unlink(paste0(backingfileCompl, "*", collapse = "")) # 20231204 TB
   PSc <- sum(preSumPSc)/nxny
   PSbigger <- sum(preSumBiggers)/nxny
   dc <- PSc - PSbigger
-  #system("rm /home/tbirkne/Desktop/big_dom_test_backing*")
-  gc()
   return(dc)
-
 }

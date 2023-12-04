@@ -18,6 +18,7 @@ NaiveAssociation <- function(featureMat,
                              logistic, # new SKF20201017
                              nnodes,
                              rawCounts = rawCounts, # new TB20221129
+                             fileBackedCliff, # new TB 20231204
                              maintenance,
                              adjustMethod,
                              verbosity) {
@@ -223,7 +224,7 @@ NaiveAssociation <- function(featureMat,
               subMerge [subMerge [["FeatureValue"]] == 0, aCovariate])),
           as.vector (
             na.exclude (
-              subMerge [subMerge [["FeatureValue"]] == 1, aCovariate])))
+              subMerge [subMerge [["FeatureValue"]] == 1, aCovariate])), fileBackedCliff)
       }
       #aD <- lmVar$coef [2]
 
@@ -252,7 +253,7 @@ NaiveAssociation <- function(featureMat,
             subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"])),
         as.vector (
           na.exclude (
-            subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"])))
+            subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"])), fileBackedCliff)
     }
 
     else if (variableType == "continuous" && conVar) {

@@ -274,7 +274,8 @@ MetaDeconfound <- function(featureMat,
                             returnLong = FALSE, # new TB20210409
                             collectMods = FALSE, # new TB20220208
                             verbosity = "silent",
-                            nAGQ = 1 # new TB20221201
+                            nAGQ = 1, # new TB20221201
+                            fileBackedCliff = TRUE # new TB20231204
                             ) {
 
   if (length(randomVar) > 1) {
@@ -385,7 +386,8 @@ MetaDeconfound <- function(featureMat,
       nnodes = nnodes,
       rawCounts = rawCounts,# new TB20221129
       maintenance = maintenance,
-      verbosity = verbosity
+      verbosity = verbosity,
+      fileBackedCliff = fileBackedCliff
     )
     # if (verbosity == "debug") {
     #   print(naiveAssociation$Ps[seq_len(3), seq_len(noCovariates)])
@@ -511,7 +513,7 @@ if (nnodes < 1) {
 
   if (verbosity == "debug") {
     print(utils::head(reducibilityStatus))
-    print("MultiDeconfound  --  All done!")
+    print("Metadeconfound()  --  All done!")
   }
 
   flog.info(msg = "MetadecondoundR run completed successfully!",
