@@ -1,3 +1,6 @@
+Version 0.3.1
+  - reduced side effects after interrupted metadeconfoundR runs (tmp file removal)
+
 Version 0.3.0
   - randomVar argument is now simplified: just supply character vector of metaMat variables to be treated as random effects (e.g. randomVar = c("var1", "var5"))
   - NEW fixedVar argument implemented: same usage as randomVar, but adds fixed effect terms to all models

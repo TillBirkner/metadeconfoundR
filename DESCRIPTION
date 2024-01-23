@@ -1,7 +1,7 @@
 Package: metadeconfoundR
 Type: Package
 Title: Check Multiple Covariates for Potenial Confounding Effects
-Version: 0.3.0
+Version: 0.3.1
 Author: Sofia Forslund, Till Birkner
 Maintainer: Till Birkner <metadeconf@till-birkner.de>
 Description: Using non-parametric tests, naive associations between omics 
