@@ -48,10 +48,16 @@
 #' random effect variables. These variabels will not be tested for naive
 #' associations and will not be included as potential confounders,
 #' but will be added as random effects "+ (1|variable)" into any models being built.
+#' Any associations reducible to the supplied random effect(s) will be labeled
+#'  as "NS". Note: Ps, Qs, Ds are computed independently and thereby not changed
+#'  through inclusion of random effects.
 #' @param fixedVar optional vector of metavariable names to be treated as
 #' fixed effect variables. These variabels will not be tested for naive
 #' associations and will not be included as potential confounders,
 #' but will be added as fixed effects "+ variable" into any models being built.
+#' Any associations reducible to the supplied fixed effect(s) will be labeled
+#' as "NS". Note: Ps, Qs, Ds are computed independently and thereby not changed
+#' through inclusion of fixed effects.
 #' @param robustCutoffRho optional robustness cutoff for continuous variables
 #' @param typeCategorical optional character vector of metavariable names to
 #' always be treated as categorical
@@ -170,6 +176,12 @@ MetaDeconfound <- function(featureMat,
     flog.error(msg = "featureMat and metaMat don't have same number of rows.",
                name = "my.logger")
     stop("featureMat and metaMat don't have same number of rows.")
+  }
+  if (any(order(rownames(metaMat)) != order(rownames(featureMat)))) {
+    flog.error(msg = "rownames of featureMat and metaMat don't have same order.",
+               name = "my.logger")
+    stop("Rownames of featureMat and metaMat don't have same order.
+         (order(rownames(metaMat)) != order(rownames(featureMat)))")
   }
   if (!is.null(deconfT) | !is.null(deconfF)) {
     if ((sum(deconfT %in% colnames(metaMat)) < length(deconfT)) |
@@ -314,7 +326,24 @@ MetaDeconfound <- function(featureMat,
               name = "my.logger")
     flog.warn(msg = paste0("the following random effect covariates will be excluded as potential donfounders: ", paste0(RVnames, collapse = ", ")),
               name = "my.logger")
+    flog.warn(msg = "naive associations reducible to these efects will get the status label 'NS', while output elements Ps, Qs, and Ds will be unchanged.",
+              name = "my.logger")
   }
+
+  if (!is.na(fixedVar[[1]])) {
+    RVnames <- na.omit(c(RVnames, fixedVar))
+
+
+    flog.info(msg = paste0("The following parameters will be added to all linear models as fixed effects: '", randomVar, "'"),
+              name = "my.logger")
+    flog.info(msg = paste(randomVar),
+              name = "my.logger")
+    flog.warn(msg = paste0("the following fixed effect covariates will be excluded as potential donfounders: ", paste0(RVnames, collapse = ", ")),
+              name = "my.logger")
+    flog.warn(msg = "naive associations reducible to these efects will get the status label 'NS', while output elements Ps, Qs, and Ds will be unchanged.",
+              name = "my.logger")
+  }
+
   noCovariates <- length (covariates)
 
   if (nnodes > 1) {
