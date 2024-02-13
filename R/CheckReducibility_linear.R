@@ -130,7 +130,7 @@ CheckReducibility_linear <- function(featureMat,
     statusLine <- vector(length = noCovariates, mode = "character")
     # find all covariates which on their end have effect on the feature
     # add all those that shall always be tested, and remove those that shall never be tested
-    lCovariates <- covariates[which(Qs[i, ] < 0.1)]
+    lCovariates <- covariates[which(Qs[i, ] < QCutoff)]
     lCovariates <- c(lCovariates, deconfT)
     lCovariates <- lCovariates[!(lCovariates %in% deconfF)]
     # remove names of random variables from this list
@@ -328,7 +328,7 @@ CheckReducibility_linear <- function(featureMat,
       confounders <- NULL
       if (length (lCovariates) > 0 &&
           (paste0 (lCovariates, collapse = "") != aCovariate ||
-           length (covariates[which(minQValues[i, ] < 0.1)]) > 1)) {
+           length (covariates[which(minQValues[i, ] < QCutoff)]) > 1)) {
 
         #status <- "STRICTLY DECONFOUNDED"
         status <- "OK_sd"
@@ -338,7 +338,7 @@ CheckReducibility_linear <- function(featureMat,
         # put new dataframe of qs in here
         otherCovariates <- lCovariates
         if (!is.null(minQValues[[1]])) {
-          otherCovariates <- unique(c(covariates[which(minQValues[i, ] < 0.1)], lCovariates))
+          otherCovariates <- unique(c(covariates[which(minQValues[i, ] < QCutoff)], lCovariates))
         }
         for (anotherCovariate in otherCovariates) {
 

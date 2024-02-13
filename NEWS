@@ -1,5 +1,6 @@
 Version 0.3.1
   - reduced side effects after interrupted metadeconfoundR runs (tmp file removal)
+  - bugfix: Qcutoff now correctly used to collect potential confounders from naive associations
 
 Version 0.3.0
   - randomVar argument is now simplified: just supply character vector of metaMat variables to be treated as random effects (e.g. randomVar = c("var1", "var5"))
