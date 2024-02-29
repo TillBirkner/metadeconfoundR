@@ -183,6 +183,23 @@ MetaDeconfound <- function(featureMat,
     stop("Rownames of featureMat and metaMat don't have same order.
          (order(rownames(metaMat)) != order(rownames(featureMat)))")
   }
+
+  # check proper naming of rows and columns
+  faultyColnamesMeta <- colnames(metaMat)[which(colnames(metaMat) != make.names(colnames(metaMat)))]
+  faultyColnamesFeat <- colnames(featureMat)[which(colnames(featureMat) != make.names(colnames(featureMat)))]
+  faultyRownamesMeta <-rownames(metaMat)[which(rownames(metaMat) != make.names(rownames(metaMat)))]
+  if (length(c(faultyColnamesMeta, faultyColnamesFeat, faultyRownamesMeta)) > 0) {
+    flog.warn(msg = "Unallowed characters detected in rownames and/or colnames of featureMat and/or metaMat!\n
+              metadeconfoundR will try to remove these characters using the make.names() function.",
+               name = "my.logger")
+    colnames(metaMat) <- make.names(colnames(metaMat), unique = T)
+    colnames(featureMat) <- make.names(colnames(featureMat), unique = T)
+    rownames(metaMat) <- make.names(rownames(metaMat), unique = T)
+    rownames(featureMat) <- make.names(rownames(featureMat), unique = T)
+
+  }
+
+
   if (!is.null(deconfT) | !is.null(deconfF)) {
     if ((sum(deconfT %in% colnames(metaMat)) < length(deconfT)) |
         (sum(deconfF %in% colnames(metaMat)) < length(deconfF))) {

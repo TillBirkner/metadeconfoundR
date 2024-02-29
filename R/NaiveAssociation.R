@@ -67,7 +67,15 @@ NaiveAssociation <- function(featureMat,
     doSNOW::registerDoSNOW(cl)
   }
 
-
+  # compute steps for progress log.info #TB20240229
+  # aim for no more than 100 steps
+  progressSteps <- round(noFeatures/100)
+  if (progressSteps == 0) {
+    progressSteps <- 1
+  }
+  if (noFeatures/progressSteps > 100) {
+    progressSteps <- progressSteps + 1
+  }
 
   i <- 0
 
@@ -283,7 +291,7 @@ NaiveAssociation <- function(featureMat,
     } # for j
 
 
-    if ((i %% 10) == 0) {
+    if ((i %% progressSteps) == 0) {#TB20240229
       progress <- paste0(round(x = ((i/length(features))*100),digits = 2), "%")
       flog.info(msg = paste("NaiveAssociation -- processed",
                             progress,
