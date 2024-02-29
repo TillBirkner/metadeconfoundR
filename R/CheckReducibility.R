@@ -99,6 +99,18 @@ CheckReducibility <- function(featureMat,
     randomVarLine <- paste0("+ ", fixedVar, collapse = ' ')
   }
 
+
+  # compute steps for progress log.info #TB20240229
+  # aim for no more than 100 steps
+  progressSteps <- round(noFeatures/100)
+  if (progressSteps == 0) {
+    progressSteps <- 1
+  }
+  if (noFeatures/progressSteps > 100) {
+    progressSteps <- progressSteps + 1
+  }
+
+
   # load parralel processing environment
   if (.Platform$OS.type == "unix") {
     # unix
@@ -601,7 +613,7 @@ CheckReducibility <- function(featureMat,
       statusLine[j] <- status
     }# inner nested for j loop
 
-    if ((i %% 10) == 0) {
+    if ((i %% progressSteps) == 0) {#TB20240229
       progress <- paste0(round(x = ((i/length(features))*100),
                                digits = 2), "%")
       flog.info(msg = paste("Deconfounding -- processed",
