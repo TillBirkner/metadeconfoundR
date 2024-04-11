@@ -3,7 +3,6 @@
 export(BuildHeatmap)
 export(ImportLongPrior)
 export(MetaDeconfound)
-import(bigmemory)
 import(detectseparation)
 import(foreach)
 import(futile.logger)
