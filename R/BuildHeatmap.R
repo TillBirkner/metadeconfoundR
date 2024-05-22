@@ -343,9 +343,11 @@ BuildHeatmap <- function(metaDeconfOutput,
 
   signifCol <- c("gray45", "black")
   signifMeaning <- c("confounded", "deconfounded")
-  if (all(effectSize$status)) {
+  legendShapes <- c(1,8)
+  if (all(effectSize$status)) { # if no confounded signals in the output
     signifCol <- c("black")
     signifMeaning <- c("deconfounded")
+    legendShapes <- c(8)
   }
 
   # include added name coluns into plots!!
@@ -423,7 +425,7 @@ BuildHeatmap <- function(metaDeconfOutput,
       scale_color_manual(name = "Confounding status",
                          values = signifCol,
                          labels = signifMeaning) +
-      guides(color = guide_legend(override.aes = list(shape = c(1,8)) ) ) +
+      guides(color = guide_legend(override.aes = list(shape = legendShapes) ) ) +
 
       # make it pretty
       theme_classic() +
