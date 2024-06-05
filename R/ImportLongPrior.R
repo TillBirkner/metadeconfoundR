@@ -66,7 +66,8 @@ ImportLongPrior <- function(longPrior,
   # if status column exists: filter out NS and NA and add artificial Qs if not
     # present
   else if(!is.null(longPrior$status)) {
-    longPrior <- subset(x = longPrior, (status != "NS") & !is.na(status))
+    #longPrior <- subset(x = longPrior, (status != "NS") & !is.na(status))
+    longPrior <- longPrior[(longPrior$status != "NS") & (!is.na(longPrior$status)), ]
     if (is.null(longPrior$Qs)) {
       longPrior$Qs <- -1
     }

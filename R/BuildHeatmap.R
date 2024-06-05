@@ -62,6 +62,8 @@
 #'
 #' @import ggplot2
 #' @importFrom reshape2 melt
+#' @importFrom methods is
+#' @importFrom rlang .data
 #' @export
 
 BuildHeatmap <- function(metaDeconfOutput,
@@ -99,7 +101,7 @@ BuildHeatmap <- function(metaDeconfOutput,
   allLables <- c ("OK_sd", "OK_nc", "OK_d", "AD", "NS")
   notTrusted <- allLables[!(allLables %in% trusted)]
 
-  if (class(metaDeconfOutput) == "list") {
+  if (is(metaDeconfOutput, "list")) {
     # melt dataframes for fdr-valules, effectsizes, and confounding status
     effectSize <- reshape2::melt(data = metaDeconfOutput$Ds,
                        varnames = c("feature", "metaVariable"),
@@ -283,7 +285,7 @@ BuildHeatmap <- function(metaDeconfOutput,
   effectSize$metaVariableNames <- effectSize$metaVariable
 
   if (!is.null(featureNames)) {
-    if (class(featureNames)[[1]] != "data.frame") {
+    if (!is(featureNames, "data.frame")) {
       warning('class(featureNames) was coerced to "data.frame"')
       featureNames <- as.data.frame(featureNames)
     }
@@ -300,7 +302,7 @@ BuildHeatmap <- function(metaDeconfOutput,
   }
 
   if (!is.null(metaVariableNames)) {
-    if (class(metaVariableNames)[[1]] != "data.frame") {
+    if (!is(metaVariableNames, "data.frame")) {
       warning('class(metaVariableNames) was coerced to "data.frame"')
       metaVariableNames <- as.data.frame(metaVariableNames)
     }
@@ -319,7 +321,7 @@ BuildHeatmap <- function(metaDeconfOutput,
 
   if (intermedData == TRUE) {
     if (!any(c("*", "**", "***") %in% unique(effectSize$stars))) {
-      waring("No unconfounded associations remain with the current cutoff values. ")
+      warning("No unconfounded associations remain with the current cutoff values. ")
     }
     return(effectSize)
   }
@@ -370,11 +372,11 @@ BuildHeatmap <- function(metaDeconfOutput,
       divShapesMeaning <- c(divShapesMeaning, "positive association")
     }
 
-    heatmapGGplot <- ggplot(effectSize, aes(x = metaVariableNames, y = featureNames)) +
+    heatmapGGplot <- ggplot(effectSize, aes(x = .data$metaVariableNames, y = .data$featureNames)) +
       # do cuneiform plot with coloring based on effectsizes
-      geom_point (aes (fill = Ds,
-                       shape = as.factor (sign (Ds)),
-                       color = status)) +
+      geom_point (aes (fill = .data$Ds,
+                       shape = as.factor (sign (.data$Ds)),
+                       color = .data$status)) +
       scale_shape_manual (name = "Direction",
                           values = divShapes,
                           labels = divShapesMeaning) +
@@ -409,20 +411,21 @@ BuildHeatmap <- function(metaDeconfOutput,
            y = "Omics features")
 
   } else {
-    heatmapGGplot <- ggplot(effectSize, aes(x = metaVariableNames, y = featureNames)) +
+    heatmapGGplot <- ggplot(effectSize, aes(x = .data$metaVariableNames, y = .data$featureNames)) +
       # do the heatmap tile coloring based on effect sizes
-      geom_tile(aes(fill = Ds), color = tileBordCol) +
-      scale_fill_gradient2(low = d_col[1],
+      geom_tile(aes(fill = .data$Ds), color = tileBordCol) +
+      scale_fill_gradient2(name = "effect size",
+                           low = d_col[1],
                            mid = d_col[2],
                            high = d_col[3],
                            midpoint = 0,
                            guide = guide_colorbar (raster = F),
                            limits = c(lowerLim,upperLim)) +
       # add significance stars/circles for deconfounded/confounded associations
-      geom_text(aes(label=stars, colour = status),
+      geom_text(aes(label= .data$stars, colour = .data$status),
                 size=2,
                 key_glyph = "point") +
-      scale_color_manual(name = "Confounding status",
+      scale_color_manual(name = "confounding status",
                          values = signifCol,
                          labels = signifMeaning) +
       guides(color = guide_legend(override.aes = list(shape = legendShapes) ) ) +
@@ -441,7 +444,7 @@ BuildHeatmap <- function(metaDeconfOutput,
             plot.title = element_text(hjust = 0),
             plot.subtitle=element_text(size=8)) +
       labs(title="Summarizing heatmap",
-           subtitle="FDR-values: < 0.001 = ***, < 0.01 = **, < 0.1 = * ",
+           subtitle="p.adjust-values: < 0.001 = ***, < 0.01 = **, < 0.1 = * ",
            x = "Metadata variables",
            y = "Omics features")
 

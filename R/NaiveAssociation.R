@@ -1,9 +1,7 @@
 #' @importFrom foreach %dopar%
-# @importFrom stats na.exclude
 #' @import stats
 #' @importFrom  lmtest lrtest
 #' @import futile.logger
-# @export NaiveAssociation
 
 NaiveAssociation <- function(featureMat,
                              samples,

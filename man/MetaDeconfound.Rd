@@ -15,6 +15,7 @@ MetaDeconfound(
   PHS_cutoff = 0.05,
   NA_imputation = "remove",
   logfile = NULL,
+  logLevel = "INFO",
   intermediateOutput = NULL,
   startStop = NA,
   QValues = NA,
@@ -66,7 +67,10 @@ data from analysis (default).
 "others": Impute NAs  using methods from packages MICE or AMELIA
 (not yet implemented)}
 
-\item{logfile}{name of optional logging file}
+\item{logfile}{name of optional logging file.}
+
+\item{logLevel}{logging verbosity, possible levels:
+TRACE, DEBUG, INFO, WARN, ERROR, FATAL, DEFAULT = INFO}
 
 \item{intermediateOutput}{name base for optional intermediate files
 (Ps, Qs and Ds from final output)}

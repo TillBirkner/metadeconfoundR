@@ -236,7 +236,8 @@ CheckReducibility_linear <- function(featureMat,
       subMerge$FeatureValue <- featureMat [,i]
 
       #remove NAs only in feature and acovariate column
-      subMerge <- subset (subMerge, ! is.na (FeatureValue))
+      #subMerge <- subset (subMerge, ! is.na (FeatureValue))
+      subMerge <- subMerge[!is.na(subMerge$FeatureValue), ]
       subMerge <- eval (parse (text = paste0 ("subset (subMerge, ! is.na (", aCovariate, "))")))
 
       # test for complete separation in model using only feature and covariate

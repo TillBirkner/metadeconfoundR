@@ -23,7 +23,9 @@
 #' data from analysis (default).
 #' "others": Impute NAs  using methods from packages MICE or AMELIA
 #' (not yet implemented)
-#' @param logfile name of optional logging file
+#' @param logfile name of optional logging file.
+#' @param logLevel logging verbosity, possible levels:
+#' TRACE, DEBUG, INFO, WARN, ERROR, FATAL, DEFAULT = INFO
 #' @param intermediateOutput name base for optional intermediate files
 #' (Ps, Qs and Ds from final output)
 #' @param startStop vector of optional strings controlling which
@@ -99,6 +101,7 @@
 #' @import futile.logger
 #' @importFrom utils write.table
 #' @importFrom reshape2 melt
+#' @importFrom methods is
 #' @export
 #'
 
@@ -113,6 +116,7 @@ MetaDeconfound <- function(featureMat,
                            PHS_cutoff = 0.05,
                            NA_imputation = "remove",
                            logfile = NULL,
+                           logLevel = "INFO", # new TB20240602
                            intermediateOutput = NULL,
                            startStop = NA,
                            QValues = NA,
@@ -133,12 +137,13 @@ MetaDeconfound <- function(featureMat,
 			   collectMods = FALSE, # new TB20220208
                            ...) {
 
-  # create file for progress log
-  flog.logger("my.logger", INFO, appender=appender.file(logfile))
-  flog.appender(appender.tee(logfile), name = 'my.logger')
+  flog.logger("my.logger", logLevel)
+  flog.threshold(logLevel, name='my.logger')
 
   if (is.null(logfile)) {
-    flog.threshold(FATAL, name = 'my.logger')
+    flog.appender(appender.console(), name = 'my.logger')
+  } else {
+    flog.appender(appender.file(logfile), name='my.logger')
   }
 
   ###
@@ -152,11 +157,14 @@ MetaDeconfound <- function(featureMat,
   }
 
   flog.info(msg = '###',
-            name = "my.logger")
+            name = "my.logger"
+            )
   flog.info(msg = '###',
-            name = "my.logger")
+            name = "my.logger"
+  )
   flog.info(msg = 'Deconfounding run started',
-            name = "my.logger")
+            name = "my.logger"
+            )
   if ("naiveStop" %in% startStop) {
     flog.warn(msg = 'Detected "naiveStop" in "startStop" paramter. Will only return naive associations.',
               name = "my.logger")
@@ -172,6 +180,12 @@ MetaDeconfound <- function(featureMat,
                name = "my.logger")
     stop('Error - Necessary argument "featureMat" missing.')
   }
+
+  if (is(featureMat, "tbl") | is(metaMat, "tbl")) {
+    flog.warn(msg = "Tibbles detected in input data frames. This might lead to unexpected behaviors. Please convert to standard data.frame class!",
+               name = "my.logger")
+  }
+
   if (nrow(metaMat) != nrow(featureMat)) {
     flog.error(msg = "featureMat and metaMat don't have same number of rows.",
                name = "my.logger")
@@ -249,6 +263,7 @@ MetaDeconfound <- function(featureMat,
                    DCutoff = DCutoff,
                    PHS_cutoff = PHS_cutoff,
                    logfile = logfile,
+                  logLevel = logfile, # new TB20240602
                    intermediateOutput = intermediateOutput,
                    startStop = startStop,
                   QValues = QValues,
@@ -283,6 +298,7 @@ MetaDeconfound <- function(featureMat,
                             PHS_cutoff = 0.05,
                             NA_imputation = "remove",
                             logfile = NULL,
+                            logLevel = "INFO", # new TB20240602
                             intermediateOutput = NULL,
                             startStop = NA,
                             QValues = NA,
@@ -316,7 +332,7 @@ MetaDeconfound <- function(featureMat,
   }
 
   if (collectMods == TRUE) {
-    flog.warn(msg = "collectMods was set to TRUE, model building step is run nnodes = 1.",
+    flog.warn(msg = "collectMods was set to TRUE, model building step is run with nnodes = 1.",
               name = "my.logger")
   }
 
