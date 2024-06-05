@@ -1,9 +1,7 @@
 #' @importFrom foreach %dopar%
-# @importFrom stats na.exclude
 #' @import stats
 #' @importFrom  lmtest lrtest
 #' @import futile.logger
-# @export NaiveAssociation
 
 NaiveAssociation <- function(featureMat,
                              samples,
@@ -18,6 +16,7 @@ NaiveAssociation <- function(featureMat,
                              logistic, # new SKF20201017
                              nnodes,
                              rawCounts = rawCounts, # new TB20221129
+                             fileBackedCliff, # new TB 20231204
                              maintenance,
                              adjustMethod,
                              verbosity) {
@@ -66,7 +65,15 @@ NaiveAssociation <- function(featureMat,
     doSNOW::registerDoSNOW(cl)
   }
 
-
+  # compute steps for progress log.info #TB20240229
+  # aim for no more than 100 steps
+  progressSteps <- round(noFeatures/100)
+  if (progressSteps == 0) {
+    progressSteps <- 1
+  }
+  if (noFeatures/progressSteps > 100) {
+    progressSteps <- progressSteps + 1
+  }
 
   i <- 0
 
@@ -223,7 +230,7 @@ NaiveAssociation <- function(featureMat,
               subMerge [subMerge [["FeatureValue"]] == 0, aCovariate])),
           as.vector (
             na.exclude (
-              subMerge [subMerge [["FeatureValue"]] == 1, aCovariate])))
+              subMerge [subMerge [["FeatureValue"]] == 1, aCovariate])), fileBackedCliff)
       }
       #aD <- lmVar$coef [2]
 
@@ -252,7 +259,7 @@ NaiveAssociation <- function(featureMat,
             subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"])),
         as.vector (
           na.exclude (
-            subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"])))
+            subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"])), fileBackedCliff)
     }
 
     else if (variableType == "continuous" && conVar) {
@@ -282,7 +289,7 @@ NaiveAssociation <- function(featureMat,
     } # for j
 
 
-    if ((i %% 10) == 0) {
+    if ((i %% progressSteps) == 0) {#TB20240229
       progress <- paste0(round(x = ((i/length(features))*100),digits = 2), "%")
       flog.info(msg = paste("NaiveAssociation -- processed",
                             progress,

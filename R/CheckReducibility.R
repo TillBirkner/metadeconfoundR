@@ -3,6 +3,7 @@
 #' @import lme4
 #' @import futile.logger
 #' @import detectseparation
+#' @importFrom methods is
 
 
 CheckReducibility <- function(featureMat,
@@ -99,6 +100,18 @@ CheckReducibility <- function(featureMat,
     randomVarLine <- paste0("+ ", fixedVar, collapse = ' ')
   }
 
+
+  # compute steps for progress log.info #TB20240229
+  # aim for no more than 100 steps
+  progressSteps <- round(noFeatures/100)
+  if (progressSteps == 0) {
+    progressSteps <- 1
+  }
+  if (noFeatures/progressSteps > 100) {
+    progressSteps <- progressSteps + 1
+  }
+
+
   # load parralel processing environment
   if (.Platform$OS.type == "unix") {
     # unix
@@ -130,7 +143,7 @@ CheckReducibility <- function(featureMat,
     statusLine <- vector(length = noCovariates, mode = "character")
     # find all covariates which on their end have effect on the feature
     # add all those that shall always be tested, and remove those that shall never be tested
-    lCovariates <- covariates[which(Qs[i, ] < 0.1)]
+    lCovariates <- covariates[which(Qs[i, ] < QCutoff)]
     lCovariates <- c(lCovariates, deconfT)
     lCovariates <- lCovariates[!(lCovariates %in% deconfF)]
     # remove names of random variables from this list
@@ -224,7 +237,8 @@ CheckReducibility <- function(featureMat,
       subMerge$FeatureValue <- featureMat [,i]
 
       #remove NAs only in feature and acovariate column
-      subMerge <- subset (subMerge, ! is.na (FeatureValue))
+      #subMerge <- subset (subMerge, ! is.na (FeatureValue))
+      subMerge <- subMerge[!is.na(subMerge$FeatureValue), ]
       subMerge <- eval (parse (text = paste0 ("subset (subMerge, ! is.na (", aCovariate, "))")))
 
       # test for complete separation in model using only feature and covariate
@@ -328,7 +342,7 @@ CheckReducibility <- function(featureMat,
       confounders <- NULL
       if (length (lCovariates) > 0 &&
           (paste0 (lCovariates, collapse = "") != aCovariate ||
-           length (covariates[which(minQValues[i, ] < 0.1)]) > 1)) {
+           length (covariates[which(minQValues[i, ] < QCutoff)]) > 1)) {
 
         #status <- "STRICTLY DECONFOUNDED"
         status <- "OK_sd"
@@ -338,7 +352,7 @@ CheckReducibility <- function(featureMat,
         # put new dataframe of qs in here
         otherCovariates <- lCovariates
         if (!is.null(minQValues[[1]])) {
-          otherCovariates <- unique(c(covariates[which(minQValues[i, ] < 0.1)], lCovariates))
+          otherCovariates <- unique(c(covariates[which(minQValues[i, ] < QCutoff)], lCovariates))
         }
         for (anotherCovariate in otherCovariates) {
 
@@ -516,7 +530,7 @@ CheckReducibility <- function(featureMat,
           conf_aCovariate <- TRUE
           conf_anotherCovariate <- TRUE
           if (doConfs >= 0 && !is(lmBoth, "logical")) { # doConfs = 1 --> just logging
-            print("computing Confs")
+            #print("computing Confs")
             if (is.numeric(subsubMerge$aCovariate) && is.numeric(subsubMerge$anotherCovariate)) { # categorical variables are excluded for easier processing
               confints <- confint(lmBoth)
               conf_aCovariate <- !(sign(confints[1, 1]) == sign(confints[1, 2])) # signs are different, if confint is spanning 0
@@ -601,7 +615,7 @@ CheckReducibility <- function(featureMat,
       statusLine[j] <- status
     }# inner nested for j loop
 
-    if ((i %% 10) == 0) {
+    if ((i %% progressSteps) == 0) {#TB20240229
       progress <- paste0(round(x = ((i/length(features))*100),
                                digits = 2), "%")
       flog.info(msg = paste("Deconfounding -- processed",

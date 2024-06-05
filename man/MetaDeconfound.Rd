@@ -15,6 +15,7 @@ MetaDeconfound(
   PHS_cutoff = 0.05,
   NA_imputation = "remove",
   logfile = NULL,
+  logLevel = "INFO",
   intermediateOutput = NULL,
   startStop = NA,
   QValues = NA,
@@ -66,7 +67,10 @@ data from analysis (default).
 "others": Impute NAs  using methods from packages MICE or AMELIA
 (not yet implemented)}
 
-\item{logfile}{name of optional logging file}
+\item{logfile}{name of optional logging file.}
+
+\item{logLevel}{logging verbosity, possible levels:
+TRACE, DEBUG, INFO, WARN, ERROR, FATAL, DEFAULT = INFO}
 
 \item{intermediateOutput}{name base for optional intermediate files
 (Ps, Qs and Ds from final output)}
@@ -100,12 +104,18 @@ transformed when building linear models in the doconfounding step}
 \item{randomVar}{optional vector of metavariable names to be treated as
 random effect variables. These variabels will not be tested for naive
 associations and will not be included as potential confounders,
-but will be added as random effects "+ (1|variable)" into any models being built.}
+but will be added as random effects "+ (1|variable)" into any models being built.
+Any associations reducible to the supplied random effect(s) will be labeled
+ as "NS". Note: Ps, Qs, Ds are computed independently and thereby not changed
+ through inclusion of random effects.}
 
 \item{fixedVar}{optional vector of metavariable names to be treated as
 fixed effect variables. These variabels will not be tested for naive
 associations and will not be included as potential confounders,
-but will be added as fixed effects "+ variable" into any models being built.}
+but will be added as fixed effects "+ variable" into any models being built.
+Any associations reducible to the supplied fixed effect(s) will be labeled
+as "NS". Note: Ps, Qs, Ds are computed independently and thereby not changed
+through inclusion of fixed effects.}
 
 \item{robustCutoffRho}{optional robustness cutoff for continuous variables}
 

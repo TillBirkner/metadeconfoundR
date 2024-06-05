@@ -23,7 +23,9 @@
 #' data from analysis (default).
 #' "others": Impute NAs  using methods from packages MICE or AMELIA
 #' (not yet implemented)
-#' @param logfile name of optional logging file
+#' @param logfile name of optional logging file.
+#' @param logLevel logging verbosity, possible levels:
+#' TRACE, DEBUG, INFO, WARN, ERROR, FATAL, DEFAULT = INFO
 #' @param intermediateOutput name base for optional intermediate files
 #' (Ps, Qs and Ds from final output)
 #' @param startStop vector of optional strings controlling which
@@ -48,10 +50,16 @@
 #' random effect variables. These variabels will not be tested for naive
 #' associations and will not be included as potential confounders,
 #' but will be added as random effects "+ (1|variable)" into any models being built.
+#' Any associations reducible to the supplied random effect(s) will be labeled
+#'  as "NS". Note: Ps, Qs, Ds are computed independently and thereby not changed
+#'  through inclusion of random effects.
 #' @param fixedVar optional vector of metavariable names to be treated as
 #' fixed effect variables. These variabels will not be tested for naive
 #' associations and will not be included as potential confounders,
 #' but will be added as fixed effects "+ variable" into any models being built.
+#' Any associations reducible to the supplied fixed effect(s) will be labeled
+#' as "NS". Note: Ps, Qs, Ds are computed independently and thereby not changed
+#' through inclusion of fixed effects.
 #' @param robustCutoffRho optional robustness cutoff for continuous variables
 #' @param typeCategorical optional character vector of metavariable names to
 #' always be treated as categorical
@@ -93,6 +101,7 @@
 #' @import futile.logger
 #' @importFrom utils write.table
 #' @importFrom reshape2 melt
+#' @importFrom methods is
 #' @export
 #'
 
@@ -107,6 +116,7 @@ MetaDeconfound <- function(featureMat,
                            PHS_cutoff = 0.05,
                            NA_imputation = "remove",
                            logfile = NULL,
+                           logLevel = "INFO", # new TB20240602
                            intermediateOutput = NULL,
                            startStop = NA,
                            QValues = NA,
@@ -127,12 +137,13 @@ MetaDeconfound <- function(featureMat,
 			   collectMods = FALSE, # new TB20220208
                            ...) {
 
-  # create file for progress log
-  flog.logger("my.logger", INFO, appender=appender.file(logfile))
-  flog.appender(appender.tee(logfile), name = 'my.logger')
+  flog.logger("my.logger", logLevel)
+  flog.threshold(logLevel, name='my.logger')
 
   if (is.null(logfile)) {
-    flog.threshold(FATAL, name = 'my.logger')
+    flog.appender(appender.console(), name = 'my.logger')
+  } else {
+    flog.appender(appender.file(logfile), name='my.logger')
   }
 
   ###
@@ -146,11 +157,14 @@ MetaDeconfound <- function(featureMat,
   }
 
   flog.info(msg = '###',
-            name = "my.logger")
+            name = "my.logger"
+            )
   flog.info(msg = '###',
-            name = "my.logger")
+            name = "my.logger"
+  )
   flog.info(msg = 'Deconfounding run started',
-            name = "my.logger")
+            name = "my.logger"
+            )
   if ("naiveStop" %in% startStop) {
     flog.warn(msg = 'Detected "naiveStop" in "startStop" paramter. Will only return naive associations.',
               name = "my.logger")
@@ -166,11 +180,40 @@ MetaDeconfound <- function(featureMat,
                name = "my.logger")
     stop('Error - Necessary argument "featureMat" missing.')
   }
+
+  if (is(featureMat, "tbl") | is(metaMat, "tbl")) {
+    flog.warn(msg = "Tibbles detected in input data frames. This might lead to unexpected behaviors. Please convert to standard data.frame class!",
+               name = "my.logger")
+  }
+
   if (nrow(metaMat) != nrow(featureMat)) {
     flog.error(msg = "featureMat and metaMat don't have same number of rows.",
                name = "my.logger")
     stop("featureMat and metaMat don't have same number of rows.")
   }
+  if (any(order(rownames(metaMat)) != order(rownames(featureMat)))) {
+    flog.error(msg = "rownames of featureMat and metaMat don't have same order.",
+               name = "my.logger")
+    stop("Rownames of featureMat and metaMat don't have same order.
+         (order(rownames(metaMat)) != order(rownames(featureMat)))")
+  }
+
+  # check proper naming of rows and columns
+  faultyColnamesMeta <- colnames(metaMat)[which(colnames(metaMat) != make.names(colnames(metaMat)))]
+  faultyColnamesFeat <- colnames(featureMat)[which(colnames(featureMat) != make.names(colnames(featureMat)))]
+  faultyRownamesMeta <-rownames(metaMat)[which(rownames(metaMat) != make.names(rownames(metaMat)))]
+  if (length(c(faultyColnamesMeta, faultyColnamesFeat, faultyRownamesMeta)) > 0) {
+    flog.warn(msg = "Unallowed characters detected in rownames and/or colnames of featureMat and/or metaMat!\n
+              metadeconfoundR will try to remove these characters using the make.names() function.",
+               name = "my.logger")
+    colnames(metaMat) <- make.names(colnames(metaMat), unique = T)
+    colnames(featureMat) <- make.names(colnames(featureMat), unique = T)
+    rownames(metaMat) <- make.names(rownames(metaMat), unique = T)
+    rownames(featureMat) <- make.names(rownames(featureMat), unique = T)
+
+  }
+
+
   if (!is.null(deconfT) | !is.null(deconfF)) {
     if ((sum(deconfT %in% colnames(metaMat)) < length(deconfT)) |
         (sum(deconfF %in% colnames(metaMat)) < length(deconfF))) {
@@ -220,6 +263,7 @@ MetaDeconfound <- function(featureMat,
                    DCutoff = DCutoff,
                    PHS_cutoff = PHS_cutoff,
                    logfile = logfile,
+                  logLevel = logfile, # new TB20240602
                    intermediateOutput = intermediateOutput,
                    startStop = startStop,
                   QValues = QValues,
@@ -254,6 +298,7 @@ MetaDeconfound <- function(featureMat,
                             PHS_cutoff = 0.05,
                             NA_imputation = "remove",
                             logfile = NULL,
+                            logLevel = "INFO", # new TB20240602
                             intermediateOutput = NULL,
                             startStop = NA,
                             QValues = NA,
@@ -274,7 +319,8 @@ MetaDeconfound <- function(featureMat,
                             returnLong = FALSE, # new TB20210409
                             collectMods = FALSE, # new TB20220208
                             verbosity = "silent",
-                            nAGQ = 1 # new TB20221201
+                            nAGQ = 1, # new TB20221201
+                            fileBackedCliff = TRUE # new TB20231204
                             ) {
 
   if (length(randomVar) > 1) {
@@ -286,7 +332,7 @@ MetaDeconfound <- function(featureMat,
   }
 
   if (collectMods == TRUE) {
-    flog.warn(msg = "collectMods was set to TRUE, model building step is run nnodes = 1.",
+    flog.warn(msg = "collectMods was set to TRUE, model building step is run with nnodes = 1.",
               name = "my.logger")
   }
 
@@ -313,7 +359,24 @@ MetaDeconfound <- function(featureMat,
               name = "my.logger")
     flog.warn(msg = paste0("the following random effect covariates will be excluded as potential donfounders: ", paste0(RVnames, collapse = ", ")),
               name = "my.logger")
+    flog.warn(msg = "naive associations reducible to these efects will get the status label 'NS', while output elements Ps, Qs, and Ds will be unchanged.",
+              name = "my.logger")
   }
+
+  if (!is.na(fixedVar[[1]])) {
+    RVnames <- na.omit(c(RVnames, fixedVar))
+
+
+    flog.info(msg = paste0("The following parameters will be added to all linear models as fixed effects: '", randomVar, "'"),
+              name = "my.logger")
+    flog.info(msg = paste(randomVar),
+              name = "my.logger")
+    flog.warn(msg = paste0("the following fixed effect covariates will be excluded as potential donfounders: ", paste0(RVnames, collapse = ", ")),
+              name = "my.logger")
+    flog.warn(msg = "naive associations reducible to these efects will get the status label 'NS', while output elements Ps, Qs, and Ds will be unchanged.",
+              name = "my.logger")
+  }
+
   noCovariates <- length (covariates)
 
   if (nnodes > 1) {
@@ -385,7 +448,8 @@ MetaDeconfound <- function(featureMat,
       nnodes = nnodes,
       rawCounts = rawCounts,# new TB20221129
       maintenance = maintenance,
-      verbosity = verbosity
+      verbosity = verbosity,
+      fileBackedCliff = fileBackedCliff
     )
     # if (verbosity == "debug") {
     #   print(naiveAssociation$Ps[seq_len(3), seq_len(noCovariates)])
@@ -511,7 +575,7 @@ if (nnodes < 1) {
 
   if (verbosity == "debug") {
     print(utils::head(reducibilityStatus))
-    print("MultiDeconfound  --  All done!")
+    print("Metadeconfound()  --  All done!")
   }
 
   flog.info(msg = "MetadecondoundR run completed successfully!",
