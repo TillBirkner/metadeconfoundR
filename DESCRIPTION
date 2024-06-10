@@ -17,5 +17,5 @@ Imports: lmtest, foreach, doParallel, snow, doSNOW, stats, futile.logger, lme4, 
 Depends: detectseparation
 VignetteBuilder: knitr
 RoxygenNote: 7.2.3
-Suggests: BiocStyle, knitr, gridExtra, kableExtra
+Suggests: pander, knitr, gridExtra, kableExtra
 biocViews: Software, Metagenomics, Microbiome, MultipleComparison, Metabolomics, Transcriptomics
