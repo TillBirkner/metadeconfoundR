@@ -2,7 +2,7 @@
 % Please edit documentation in R/MetaDeconfound.R
 \name{MetaDeconfound}
 \alias{MetaDeconfound}
-\title{Metadeconfound}
+\title{MetaDeconfound}
 \usage{
 MetaDeconfound(
   featureMat,
@@ -158,7 +158,7 @@ separated covariate names = confounded by listed covariates)\cr
 Can be plotted using \link[metadeconfoundR]{BuildHeatmap}.
 }
 \description{
-Metadeconfound checks all feature <-> covariate combinations for
+MetaDeconfound checks all feature <-> covariate combinations for
 counfounding effects of covariates on feature <-> effect correlation
 }
 \details{

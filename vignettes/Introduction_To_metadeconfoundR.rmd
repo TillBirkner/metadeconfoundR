@@ -1,0 +1,188 @@
+---
+title: "Introduction to metadeconfoundR"
+author: "Till Birkner, Sofia Kirke Forslund-Startceva"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    fig_caption: yes
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{Introduction to metadeconfoundR}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.align = "center"
+)
+```
+
+
+# Introduction
+
+When analyzing multi omics datasets, the search for features that could serve as biomarkers is an important aspect. Because these biomarkers might be used in clinical settings for disease diagnosis etc., it is extremely important to minimize false positives. One possible error source are confounding variables: The biomarker is not directly linked to the disease but influenced by a third (confounding) variable, that in turn is linked to the disease.
+
+The R package `metadeconfoundR` was developed to address this issue. It first uses univariate statistics to find associations between omics features and disease status or metadata. Using nested linear model comparison post hoc testing, those associations are checked for confounding effects from other covariates/metadata and a status label is returned. Instead of assuming The tool is able to handle large scale multi-omics datasets in a reasonable time, by parallel processing suitable for high-performance computing clusters. In addition, results can be summarized by a range of plotting functions.
+
+## MetaDeconfound()
+
+The main (`metadeconfoundR::MetaDeconfound()`) analysis is a two step process:
+
+```{r, echo=F, fig.cap = "Figure 1: metadeconfoundR pipeline overview.", out.width = "99%", dev = "png"}
+knitr::include_graphics("Figures/metadeconfoundROverview_20240605.png")
+```
+
+First, significant associations between single omics features (like gut microbial OTUs) and metadata (like disease status, drug administration, BMI) are identified. Based on the data type of the respective metadata, either `wilcox.test()` (for binary), `cor.test()` (for continuous numerical) or `kruskal.test()` (for neither numerical nor binary) is used. All three tests are rank-based to minimize assumptions about data distribution (Fig. 1, left). In addition to collecting p-values for all computed tests, effect size is measured as Cliff's Delta and Spearman's Rho for binary and continuous data, respectively. Since there is no suitable effect size metric for categorical data with more than 2 levels, no value is reported here. It is recommended to introduce binary pseudo-variables for each level of the categorical metadata to partially circumvent this drawback.
+
+In the second step, all hits are checked for confounding effects and a status is reported for each feature-metadata combination (Fig. 1, center and right; Fig2). A "hit" here is defined as a feature-metadata association with small enough fdr-corrected p-value and big enough  effect size reported from the first, naive part of the pipeline. Thresholds for both parameters can be set via `QCutoff` and `DCutoff` when starting the analysis. Since confounding of signal can only happen with more than one metadata variable associated to a certain feature, all features with only one significant metadata association are trivially deconfounded and get status "No Covariates (OK_nc)". 
+
+The actual confounder detection is done by performing a set of two likelihood ratio tests (LRTs) of nested linear models. For each possible combination of a feature and two of its associated metavariables, three models are fitted to the rank-tranformed feature:
+
+
+* lm(rank(feature) ~ covariate1 + covariate2),  the full model
+* lm(rank(feature) ~ covariate1), a model with only covariate1 as independent variable
+* lm(rank(feature) ~ covariate2), a model with only covariate2 as independent variable.
+
+LRTs reveal whether inclusion of covariate1 and/or covariate2 significantly improves the performance of the model. Random and/or fixed effects can be added to all models by the user. These additional effects will, however not be considered in the first naive association testing step of the pipeline.
+
+Importantly, `metadeconfoundR` will always **rank-transform the features** during analysis. 
+
+
+```{r, echo=F, fig.show='hold', fig.cap = "Figure 2: detailed status labelling decision tree.", out.width = "99%", out.height = "99%", dev = "png"}
+knitr::include_graphics("Figures/flowChartDecision_mixed_CI.png")
+```
+
+
+# Quick start
+
+```{r example, eval=FALSE, echo=TRUE, }
+# CRAN 
+install.packages("metadeconfoundR")
+# github
+devtools::install_github("TillBirkner/metadeconfoundR")
+library(metadeconfoundR)
+```
+
+```{r hide, eval=TRUE, echo=FALSE, results="asis", results='hide', message=FALSE}
+library(metadeconfoundR)
+library(ggplot2)
+library(gridExtra)
+library(kableExtra)
+```
+
+# Usage
+
+## MetaDeconfound()
+
+### Input
+
+Minimal input consists of two data.frames for feature data (_Tab. 1_) and metadata (_Tab. 2_), respectively. Both data.frames must have one row per sample (sample names as rownames) with matching order of sampleIDs and one feature/meta-variable per column. The first column of the metadata data.frame must be binary (i.e be numeric and consist of only 0/1 entries.) Usually this is the control/case variable, but any other binary meta-variable will work as well.
+
+
+```{r showTableF, eval=TRUE,  echo=FALSE}
+kbl(reduced_feature[10:15, 1:5], caption = "Table 1: feature input format example")
+```
+
+```{r showTableM, eval=TRUE, echo=FALSE}
+kbl(metaMatMetformin[10:15, 1:5], caption = "Table 2: metadata input format example")
+```
+
+`MetaDeconfound()` has built-in quality checks for formatting of the input data but it is best to check propper formatting beforehand.
+
+Ensure that colnames and rownames do not contain any problematic characters by e.g running them through `make.names()` and check for same order of rows in both input data.frames.
+
+
+```{r runExample, eval=TRUE, echo=TRUE, nobreak=TRUE}
+data(reduced_feature)
+		data(metaMatMetformin)
+
+		# check correct ordering
+		all(rownames(metaMatMetformin) == rownames(reduced_feature))
+		all(order(rownames(metaMatMetformin)) == order(rownames(reduced_feature)))
+
+		example_output <- MetaDeconfound(featureMat = reduced_feature,
+		metaMat = metaMatMetformin,
+		returnLong = TRUE,
+		logLevel = "ERROR"
+		)
+```
+
+
+**Random and/or fixed effects** can be included in the modeling process by supplying the `randomVar` and/or `fixedVar` parameter.
+
+
+```{r runExampleRand, eval=TRUE, echo=TRUE, nobreak=TRUE}
+RandDataset_output <- MetaDeconfound(featureMat = reduced_feature,
+		metaMat = metaMatMetformin,
+		randomVar = c("Dataset"),
+		returnLong = TRUE,
+		logLevel = "ERROR"
+		)
+```
+
+For a full list of input parameters please refer to the help page.
+
+### Output
+
+Output can be returned either as a list of wide format data.frames (default) or as a single long format data.frame (_Tab. 3_). In both cases raw p-values (Ps), multiple testing corrected p-values (Qs), corresponding effect size (Ds), and confounding status (status) are reported for each possible combination of a feature and a meta-variable.
+
+While Ps, Qs, and Ds are always solely based on the naive association testing, the status label reflects effects of included random/fixed effects. A naively significant feature, metadata association that is reducible to a random effect can, thus, have a Q-value < `QCutoff` and still be labeled as "NS" (not significant).
+
+```{r showTableO, eval=TRUE, echo=FALSE}
+kbl(example_output[1:5, 1:6], caption = "Table 3: example output of MetadDeconfound()")
+```
+
+## BuildHeatmap()
+
+Minimal input consists only of an output object from the main `MetaDeconfound()` function. This will return in a ggplot2 heatmap with effect size as tile color and black asterisks or grey circles indicating significant and not confounded or confounded associations based on corrected p-values. The plot is clustered on both axes and features as well as meta-variables without any associations passing effect size and significance cutoffs (default: `q_cutoff = 0.1`, `d_cutoff = 0.01`) are removed (_Fig. 3_). 
+
+```{r runHeatmap, echo=T, eval=FALSE}
+left <- BuildHeatmap(example_output)
+right <- BuildHeatmap(RandDataset_output)
+grid.arrange(left, right, ncol = 2)
+```
+
+```{r runHeatmapHidden, echo=F, fig.cap = "Figure 3: default output of the BuildHeatmap() function", fig.width = 5.5, fig.height=6 }
+left <- BuildHeatmap(example_output)
+right <- BuildHeatmap(RandDataset_output)
+grid.arrange(left, right, ncol = 2)
+```
+
+
+For both this default heatmap, as well as the alternative cuneiform plot (`cuneiform = TRUE`), a range of customizations are available. In _Fig. 4_ meta-variables not passing the effect size and significance are manually kept in the plot (`keepMeta`), the shown range of effect sizes is set from -1 to +1 (`d_range = "full"`). For a full list of options, again, refer to the help page.
+
+```{r runCun, echo=T, eval=FALSE}
+BuildHeatmap(example_output,
+	cuneiform = TRUE,
+	keepMeta = colnames(example_output$status),
+	d_range = "full")
+```
+
+```{r runCunHidden, echo=F, fig.cap = "Figure 4: alternative cuneiform output of the BuildHeatmap() function", fig.width = 3, fig.height=6 }
+BuildHeatmap(example_output, cuneiform = TRUE, keepMeta = colnames(example_output$status), d_range = "full")
+```
+
+The `BuildHeatmap()` function returns a ggplot2 object. This makes it possible to perform some easy alterations manually (_Fig. 5_).
+
+```{r runpostCustom, echo=F, fig.cap = "Figure 5: post-plotting ggplot2 alterations", fig.width = 1.9, fig.height=6 }
+BuildHeatmap(example_output) +
+  theme(
+    legend.position = "none",
+    axis.text.y = element_text(face = "italic"),
+    plot.title = element_blank(),
+    plot.subtitle = element_blank()
+  )
+```
+
+
+***
+
+# Session Info
+
+```{r sessionInfo, results="asis", echo=FALSE}
+pander::pander(sessionInfo())
+```
+

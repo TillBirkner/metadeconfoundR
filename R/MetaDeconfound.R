@@ -1,6 +1,6 @@
-#' Metadeconfound
+#' MetaDeconfound
 #'
-#' Metadeconfound checks all feature <-> covariate combinations for
+#' MetaDeconfound checks all feature <-> covariate combinations for
 #' counfounding effects of covariates on feature <-> effect correlation
 #'
 #' @param featureMat a data frame with row(sample ID)
