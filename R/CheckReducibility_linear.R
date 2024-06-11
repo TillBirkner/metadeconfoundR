@@ -1,5 +1,5 @@
 #' @import foreach
-#' @import  lmtest
+#' @import lmtest
 #' @import lme4
 #' @import futile.logger
 #' @import detectseparation
@@ -118,8 +118,8 @@ CheckReducibility_linear <- function(featureMat,
     doParallel::registerDoParallel(cl)
   } else {
     # windows
-    cl <- snow::makeCluster(nnodes, type = "SOCK", outfile = "")
-    doSNOW::registerDoSNOW(cl)
+    cl <- parallel::makeCluster(nnodes, type = "PSOCK", outfile = "")
+    doParallel::registerDoParallel(cl)
   }
   i <- 0
   isRobust <- isRobust[[2]]
@@ -635,12 +635,14 @@ CheckReducibility_linear <- function(featureMat,
 
   }# foreach loop
 
+  # # close parallel processing environment
+  # if (.Platform$OS.type == "unix") {
+  #   parallel::stopCluster(cl) # unix
+  # } else {
+  #   snow::stopCluster(cl) # windows
+  # }
   # close parallel processing environment
-  if (.Platform$OS.type == "unix") {
-    parallel::stopCluster(cl) # unix
-  } else {
-    snow::stopCluster(cl) # windows
-  }
+  parallel::stopCluster(cl)
 
   if(verbosity == "debug"){
     write("Everything done in checkReducibility!",

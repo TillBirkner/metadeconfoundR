@@ -1,4 +1,3 @@
-#' @importFrom foreach %dopar%
 #' @import futile.logger
 # @export CheckSufficientPower
 #
