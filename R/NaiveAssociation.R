@@ -61,8 +61,8 @@ NaiveAssociation <- function(featureMat,
     doParallel::registerDoParallel(cl)
   } else {
     # windows
-    cl <- snow::makeCluster(nnodes, type = "SOCK", outfile = "")
-    doSNOW::registerDoSNOW(cl)
+    cl <- parallel::makeCluster(nnodes, type = "PSOCK", outfile = "")
+    doParallel::registerDoParallel(cl)
   }
 
   # compute steps for progress log.info #TB20240229
@@ -301,12 +301,14 @@ NaiveAssociation <- function(featureMat,
 
   } # for i (foreach)
 
+  # # close parallel processing environment
+  # if (.Platform$OS.type == "unix") {
+  #   parallel::stopCluster(cl) # unix
+  # } else {
+  #   parallel::stopCluster(cl)
+  # }
   # close parallel processing environment
-  if (.Platform$OS.type == "unix") {
-    parallel::stopCluster(cl) # unix
-  } else {
-    snow::stopCluster(cl) # windows
-  }
+  parallel::stopCluster(cl)
 
 
   flog.info(msg = paste("NaiveAssociation -- processed 100% of features."),

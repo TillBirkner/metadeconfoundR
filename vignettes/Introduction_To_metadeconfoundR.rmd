@@ -97,30 +97,32 @@ Ensure that colnames and rownames do not contain any problematic characters by e
 
 ```{r runExample, eval=TRUE, echo=TRUE, nobreak=TRUE}
 data(reduced_feature)
-		data(metaMatMetformin)
+data(metaMatMetformin)
 
-		# check correct ordering
-		all(rownames(metaMatMetformin) == rownames(reduced_feature))
-		all(order(rownames(metaMatMetformin)) == order(rownames(reduced_feature)))
+# check correct ordering
+all(rownames(metaMatMetformin) == rownames(reduced_feature))
+all(order(rownames(metaMatMetformin)) == order(rownames(reduced_feature)))
 
-		example_output <- MetaDeconfound(featureMat = reduced_feature,
-		metaMat = metaMatMetformin,
-		returnLong = TRUE,
-		logLevel = "ERROR"
-		)
+example_output <- MetaDeconfound(
+  featureMat = reduced_feature,
+  metaMat = metaMatMetformin,
+  returnLong = TRUE,
+  logLevel = "ERROR"
+)
 ```
 
 
-**Random and/or fixed effects** can be included in the modeling process by supplying the `randomVar` and/or `fixedVar` parameter.
+**Random and/or fixed effects** can be included in the modeling process by supplying the `randomVar` and/or `fixedVar` parameter (_Fig. 3, right_).
 
 
 ```{r runExampleRand, eval=TRUE, echo=TRUE, nobreak=TRUE}
-RandDataset_output <- MetaDeconfound(featureMat = reduced_feature,
-		metaMat = metaMatMetformin,
-		randomVar = c("Dataset"),
-		returnLong = TRUE,
-		logLevel = "ERROR"
-		)
+RandDataset_output <- MetaDeconfound(
+  featureMat = reduced_feature,
+  metaMat = metaMatMetformin,
+  randomVar = c("Dataset"),
+  returnLong = TRUE,
+  logLevel = "ERROR"
+)
 ```
 
 For a full list of input parameters please refer to the help page.
@@ -146,23 +148,25 @@ grid.arrange(left, right, ncol = 2)
 ```
 
 ```{r runHeatmapHidden, echo=F, fig.cap = "Figure 3: default output of the BuildHeatmap() function", fig.width = 5.5, fig.height=6 }
-left <- BuildHeatmap(example_output)
-right <- BuildHeatmap(RandDataset_output)
+left <- BuildHeatmap(example_output) + labs(title = "example_output")
+right <- BuildHeatmap(RandDataset_output)  + labs(title = "RandDataset_output")
 grid.arrange(left, right, ncol = 2)
 ```
 
 
-For both this default heatmap, as well as the alternative cuneiform plot (`cuneiform = TRUE`), a range of customizations are available. In _Fig. 4_ meta-variables not passing the effect size and significance are manually kept in the plot (`keepMeta`), the shown range of effect sizes is set from -1 to +1 (`d_range = "full"`). For a full list of options, again, refer to the help page.
+For both this default heatmap, as well as the alternative cuneiform plot (`cuneiform = TRUE`), a range of customizations are available. In _Fig. 4_ meta-variables not passing the effect size and significance cutoffs are manually kept in the plot (`keepMeta`), and the shown range of effect sizes is set from -1 to +1 (`d_range = "full"`). For a full list of options, again, refer to the help page.
 
 ```{r runCun, echo=T, eval=FALSE}
-BuildHeatmap(example_output,
-	cuneiform = TRUE,
-	keepMeta = colnames(example_output$status),
-	d_range = "full")
+BuildHeatmap(
+  example_output,
+  cuneiform = TRUE,
+  keepMeta = colnames(metaMatMetformin),
+  d_range = "full"
+)
 ```
 
-```{r runCunHidden, echo=F, fig.cap = "Figure 4: alternative cuneiform output of the BuildHeatmap() function", fig.width = 3, fig.height=6 }
-BuildHeatmap(example_output, cuneiform = TRUE, keepMeta = colnames(example_output$status), d_range = "full")
+```{r runCunHidden, echo=F, fig.cap = "Figure 4: alternative cuneiform output of the BuildHeatmap() function", fig.width = 3.5, fig.height=6 }
+BuildHeatmap(example_output, cuneiform = TRUE, keepMeta = colnames(metaMatMetformin), d_range = "full")
 ```
 
 The `BuildHeatmap()` function returns a ggplot2 object. This makes it possible to perform some easy alterations manually (_Fig. 5_).
