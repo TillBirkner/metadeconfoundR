@@ -171,7 +171,7 @@ BuildHeatmap(example_output, cuneiform = TRUE, keepMeta = colnames(metaMatMetfor
 
 The `BuildHeatmap()` function returns a ggplot2 object. This makes it possible to perform some easy alterations manually (_Fig. 5_).
 
-```{r runpostCustom, echo=F, fig.cap = "Figure 5: post-plotting ggplot2 alterations", fig.width = 1.9, fig.height=6 }
+```{r runpostCustom, echo=T, fig.cap = "Figure 5: post-plotting ggplot2 alterations", fig.width = 1.9, fig.height=6 }
 BuildHeatmap(example_output) +
   theme(
     legend.position = "none",

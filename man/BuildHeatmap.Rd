@@ -96,13 +96,12 @@ data(reduced_feature)
 data(metaMatMetformin)
 \donttest{
 example_output <- MetaDeconfound(featureMat = reduced_feature,
-                                  metaMat = metaMatMetformin)
+                                  metaMat = metaMatMetformin,
+                                  logLevel = "ERROR")
 
 plotObject <- BuildHeatmap(example_output)
-print(plotObject)
 
 alternativePlot <- BuildHeatmap(example_output, coloring = 2, showConfounded = FALSE)
-print(alternativePlot)
 }
 
 }

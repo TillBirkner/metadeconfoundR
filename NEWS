@@ -1,3 +1,6 @@
+Version 1.0.0
+  - release to CRAN
+
 Version 0.3.1
   - reduced side effects after interrupted metadeconfoundR runs (tmp file removal)
   - bugfix: Qcutoff now correctly used to collect potential confounders from naive associations

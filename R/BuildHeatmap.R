@@ -51,13 +51,12 @@
 #'data(metaMatMetformin)
 #'\donttest{
 #'example_output <- MetaDeconfound(featureMat = reduced_feature,
-#'                                   metaMat = metaMatMetformin)
+#'                                   metaMat = metaMatMetformin,
+#'                                   logLevel = "ERROR")
 #'
 #'plotObject <- BuildHeatmap(example_output)
-#'print(plotObject)
 #'
 #'alternativePlot <- BuildHeatmap(example_output, coloring = 2, showConfounded = FALSE)
-#'print(alternativePlot)
 #'}
 #'
 #' @import ggplot2
@@ -121,7 +120,7 @@ BuildHeatmap <- function(metaDeconfOutput,
                    varnames = c("feature", "metaVariable"),
                    value.name = "status")
   } else if (ncol(metaDeconfOutput) == 9) {
-    print("treating input as 'intermedData = T' Buildheatmap output!!")
+    warning("treating input as 'intermedData = T' Buildheatmap output!!")
     fromIntermed <- TRUE
     effectSize <- metaDeconfOutput
 
@@ -325,10 +324,6 @@ BuildHeatmap <- function(metaDeconfOutput,
     }
     return(effectSize)
   }
-  if (fromIntermed) {
-    print("now plotting from IntermedData.")
-  }
-
 
   if (!any(c("*", "**", "***") %in% unique(effectSize$stars))) {
     stop("No unconfounded associations remain with the current cutoff values. Consider manually including categorical metaVariables into the Heatmap by listing them through the 'keepMeta' argument.")

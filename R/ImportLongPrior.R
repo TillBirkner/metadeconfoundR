@@ -37,7 +37,8 @@
 #'
 #'example_output <- MetaDeconfound(featureMat = reduced_feature,
 #'                                   metaMat = metaMatMetformin,
-#'                                   returnLong = TRUE)
+#'                                   returnLong = TRUE,
+#'                                   logLevel = "ERROR")
 #'
 #' minQValues <- ImportLongPrior(longPrior = example_output,
 #'                                 featureMat = reduced_feature,
@@ -45,7 +46,8 @@
 #'
 #'example_output2 <- MetaDeconfound(featureMat = reduced_feature,
 #'                                   metaMat = metaMatMetformin,
-#'                                   minQValues = minQValues)
+#'                                   minQValues = minQValues,
+#'                                   logLevel = "ERROR")
 #'}
 
 #' @import futile.logger
