@@ -1,10 +1,9 @@
-Based on feedback on submission of metadeconfoundR v1.0.0, the following changes were made in v1.0.1:
-  - removal of any print() statements, or rewrite into futile.logger statements, that can easily be suppressed
-  - removal of all statements writing to file by default
+Based on feedback on submission of metadeconfoundR v1.0.1, the following changes were made in v1.0.1:
+  - changed Title in DESCRIPTION to title case
+  - added reference for method described in the Description field of DESCRIPTION
   
-results from "devtools::check(args = c('--as-cran'), build_args = c('--resave-data'))"
-── R CMD check results ──────────────────────────── metadeconfoundR 1.0.1 ────
-Duration: 58.7s
+── R CMD check results ──────────────────────────── metadeconfoundR 1.0.2 ────
+Duration: 1m 12s
 
 0 errors ✔ | 0 warnings ✔ | 0 notes ✔
 

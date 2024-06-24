@@ -1,7 +1,7 @@
 Package: metadeconfoundR
 Type: Package
-Title: Covariate-sensitive analysis of cross-sectional high-dimensional data
-Version: 1.0.1
+Title: Covariate-Sensitive Analysis of Cross-Sectional High-Dimensional Data
+Version: 1.0.2
 Authors@R: c(person(given = "Till",
            family = "Birkner",
            role = c("aut", "cre"),
@@ -16,9 +16,10 @@ Maintainer: Till Birkner <metadeconf@till-birkner.de>
 Description: Using non-parametric tests, naive associations between omics 
     features and metadata in cross-sectional data-sets are detected. In a second 
     step, confounding effects between metadata associated to the same omics 
-    feature are detected and labeled using nested post-hoc model comparison 
-    tests. The generated output can be graphically summarized using the 
-    built-in plotting function.
+    feature are detected and labeled using nested post-hoc model comparison
+    tests, as first described in 
+    Forslund, Chakaroun, Zimmermann-Kogadeeva, et al. (2021) <doi:10.1038/s41586-021-04177-9>. 
+    The generated output can be graphically summarized using the built-in plotting function.
 License: GPL-2
 Encoding: UTF-8
 LazyData: true
