@@ -1,3 +1,12 @@
+Version 1.0.2
+  - CRAN release
+
+Version 1.0.1
+  - fixes for CRAN resubmission
+
+Version 1.0.0
+  - CRAN submission
+
 Version 0.3.1
   - reduced side effects after interrupted metadeconfoundR runs (tmp file removal)
   - bugfix: Qcutoff now correctly used to collect potential confounders from naive associations

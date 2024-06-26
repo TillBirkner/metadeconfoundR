@@ -1,21 +1,32 @@
 Package: metadeconfoundR
 Type: Package
-Title: Check Multiple Covariates for Potential Confounding Effects
-Version: 0.3.1
-Author: Sofia Kirke Forslund-Startceva, Till Birkner
+Title: Covariate-Sensitive Analysis of Cross-Sectional High-Dimensional Data
+Version: 1.0.2
+Authors@R: c(person(given = "Till",
+           family = "Birkner",
+           role = c("aut", "cre"),
+           email = "metadeconf@till-birkner.de",
+           comment = c(ORCID = "0000-0003-2656-2821")),
+           person(given = "Sofia Kirke",
+           family = "Forslund-Startceva",
+           role = "ctb",
+           email = "Sofia.Forslund@mdc-berlin.de",
+           comment = c(ORCID = "0000-0003-4285-6993")))
 Maintainer: Till Birkner <metadeconf@till-birkner.de>
 Description: Using non-parametric tests, naive associations between omics 
     features and metadata in cross-sectional data-sets are detected. In a second 
     step, confounding effects between metadata associated to the same omics 
-    feature are detected and labeled using nested post-hoc model comparison 
-    tests. The generated output can be graphically summarized using the 
-    built-in plotting function.
+    feature are detected and labeled using nested post-hoc model comparison
+    tests, as first described in 
+    Forslund, Chakaroun, Zimmermann-Kogadeeva, et al. (2021) <doi:10.1038/s41586-021-04177-9>. 
+    The generated output can be graphically summarized using the built-in plotting function.
 License: GPL-2
 Encoding: UTF-8
 LazyData: true
+URL: https://github.com/TillBirkner/metadeconfoundR
+BugReports: https://github.com/TillBirkner/metadeconfoundR/issues
 Imports: lmtest, foreach, parallel, doParallel, stats, futile.logger, lme4, ggplot2, reshape2, methods, rlang
 Depends: detectseparation
+Suggests: pander, knitr, gridExtra, kableExtra
 VignetteBuilder: knitr
 RoxygenNote: 7.3.1
-Suggests: pander, knitr, gridExtra, kableExtra
-biocViews: Software, Metagenomics, Microbiome, MultipleComparison, Metabolomics, Transcriptomics

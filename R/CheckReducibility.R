@@ -1,5 +1,5 @@
 #' @import foreach
-#' @import  lmtest
+#' @import lmtest
 #' @import lme4
 #' @import futile.logger
 #' @import detectseparation
@@ -39,29 +39,6 @@ CheckReducibility <- function(featureMat,
   if (collectMods) {
     collectedMods <- list()
   }
-  # safe_lm <- function(lmText) {
-  #   out <- tryCatch(
-  #     {
-  #       eval(parse(text = as.character(lmText)))
-  #     }, error = function(cond) {
-  #       print(cond)
-  #       return(NA)
-  #     }
-  #   )
-  #   return(out)
-  # }
-  #
-  # safe_lrtest <- function(lm1, lm2) {
-  #   out <- tryCatch(
-  #     {
-  #       lmtest::lrtest(lm1, lm2)$'Pr(>Chisq)' [2]
-  #     }, error = function(cond) {
-  #       print(cond)
-  #       return(NA)
-  #     }
-  #   )
-  #   return(out)
-  # }
 
   # removed tryCatch from safe functions
   safe_lm <- function(lmText) {
@@ -77,15 +54,11 @@ CheckReducibility <- function(featureMat,
   #new TB20220202
   if (rawCounts == TRUE) {
     # compute totReadCount per sample and append to metaMat
-    #print(head(featureMat))
     totReadCount <- as.data.frame(rowSums(featureMat, na.rm = T))
-    #print(head(totReadCount))
     metaMat <- merge(metaMat, totReadCount, by = 0, sort = FALSE)
-    #print(head(metaMat))
     colnames(metaMat)[ncol(metaMat)] <- "totReadCount"
     row.names(metaMat) <- metaMat$Row.names
     metaMat$Row.names <- NULL
-    #print(head(metaMat))
   }
 
   if (!is.na(randomVar[[1]])) {
@@ -126,14 +99,6 @@ CheckReducibility <- function(featureMat,
   isRobust <- isRobust[[2]]
   #isRobust[!isRobust] <- TRUE
 
-  # if(verbosity == "debug"){
-  #   write(paste(length(features),
-  #               length(covariates),
-  #               sep = "\t"),
-  #         file = "LRT_pValue.txt",
-  #         append = TRUE)
-  # }
-
   r = foreach::foreach(i = seq_along(features), .combine='rbind') %dopar% {
 
     if (collectMods) {
@@ -151,48 +116,31 @@ CheckReducibility <- function(featureMat,
       lCovariates <- lCovariates[!(lCovariates %in% RVnames)]
     }
 
-    if(verbosity == "debug"){
-      write(paste(length(features),
-                  length(covariates),
-                  length(lCovariates),
-                  sep = "\t"),
-            file = "LRT_pValue.txt",
-            append = TRUE)
-    }
-
-    if (verbosity == "debug") {
-      write(paste0(as.character(i),
-                   as.character(length(lCovariates)),
-                   lCovariates),
-            file = "lCovariatesIsZero.txt",
-            append = TRUE,
-            sep = "\t")
-    }
 
 
+    flog.debug(paste(
+      as.character(i),
+      length(features),
+      length(covariates),
+      length(lCovariates),
+      paste(lCovariates, collapse = ", "),
+      sep = "\t"
+      ),
+    name = "my.logger"
+    )
 
     if (length (lCovariates) == 0 ) {
 
-      ##
-      ##
-      if (verbosity == "debug") {
-        write(
-          "returned whole NS line",
-          file = "lCovariatesIsZero.txt",
-          sep = "\t",
-          append = TRUE
-        )
+      flog.debug("returned whole NS line", name = "my.logger")
+
+      if ((i %% progressSteps) == 0) {#TB20240229
+        progress <- paste0(round(x = ((i/length(features))*100),
+                                 digits = 2), "%")
+        flog.info(msg = paste("Deconfounding -- processed",
+                              progress,
+                              "of features."),
+                  name = "my.logger")
       }
-      ##
-      ##
-
-
-      progress <- paste0(round(x = ((i/length(features))*100),
-                               digits = 2), "%")
-      flog.info(msg = paste("Deconfounding -- processed",
-                            progress,
-                            "of features."),
-                name = "my.logger")
 
       statusLine[seq_along(covariates)] <- "NS"
 
@@ -200,16 +148,6 @@ CheckReducibility <- function(featureMat,
     }
 
     for (j in seq_along(covariates)) {
-      # if(verbosity == "debug"){
-      #   write(paste("106!",
-      #               i,
-      #               j,
-      #               sep = "\t"),
-      #         file = "LRT_pValue.txt",
-      #         append = TRUE)
-      #
-      # }
-
       aFeature <- as.character (features [i])
       aCovariate <- as.character (covariates [j])
 
@@ -237,13 +175,14 @@ CheckReducibility <- function(featureMat,
       subMerge$FeatureValue <- featureMat [,i]
 
       #remove NAs only in feature and acovariate column
-      #subMerge <- subset (subMerge, ! is.na (FeatureValue))
       subMerge <- subMerge[!is.na(subMerge$FeatureValue), ]
       subMerge <- eval (parse (text = paste0 ("subset (subMerge, ! is.na (", aCovariate, "))")))
 
       # test for complete separation in model using only feature and covariate
       if (logistic == T & !is.na(randomVar[[1]])) {
-        print("testin separation without pot conf")
+
+        flog.debug("testing separation without pot conf", name = "my.logger")
+
         #test for separation in model without random part
         glmmodeltext <-          paste0 ("stats::glm (FeatureValue ~ ",
                                          aCovariate,
@@ -295,11 +234,8 @@ CheckReducibility <- function(featureMat,
                          collapse = "")
         }
 
-        if(verbosity == "debug"){
-          write(paste("LRT_randOnly_for", aFeature, aCovariate,  sep = "\t"),
-                file = "LRT_pValue.txt",
-                append = TRUE)
-        }
+        flog.debug(paste("LRT_randOnly_for", aFeature, aCovariate, sep = "\t"),
+                   name = "my.logger")
 
         mixedmodel1Text <- paste0 (head,
                                    aCovariate,
@@ -319,11 +255,9 @@ CheckReducibility <- function(featureMat,
 
 
         aP_mixed <- safe_lrtest(mixedmodel1, mixedmodel2)
-        if(verbosity == "debug"){
-          write(paste("LRT_randOnly_for", aFeature, aCovariate, aP_mixed,  sep = "\t"),
-                file = "LRT_pValue.txt",
-                append = TRUE)
-        }
+
+        flog.debug(paste("LRT_randOnly_for", aFeature, aCovariate, aP_mixed, sep = "\t"),
+                   name = "my.logger")
 
         if (!is.na(aP_mixed) && aP_mixed >= PHS_cutoff) {
 
@@ -334,9 +268,7 @@ CheckReducibility <- function(featureMat,
       } # end randomVar
 
 
-
       # find all covariates which on their end have effect on the feature
-
       # test for each of these covariates the forward and reverse formula,
       #count if lax or strict status achieved
       confounders <- NULL
@@ -369,7 +301,7 @@ CheckReducibility <- function(featureMat,
           subsubMerge <- eval (parse (text = paste0 ("subset (subMerge, ! is.na (", anotherCovariate, "))")))
 
           if (logistic == T & !is.na(randomVar[[1]])) {
-            print("testin separation")
+            flog.debug("testing separation", name = "my.logger")
             #test for separation in model without random part
             glmmodeltext <-          paste0 ("glm (FeatureValue ~ ",
                                              aCovariate,
@@ -437,16 +369,15 @@ CheckReducibility <- function(featureMat,
             }
           }
 
-          if(verbosity == "debug"){
-            write(paste("LRTsFwdRvsFor",
-                        aFeature,
-                        aCovariate,
-                        anotherCovariate,
-                        "\n",
-                        sep = "\t"),
-                  file = "LRT_pValue.txt",
-                  append = TRUE)
-          }
+          flog.debug(
+            paste("LRTsFwdRvsFor",
+                  aFeature,
+                  aCovariate,
+                  anotherCovariate,
+                  sep = "\t"
+                  ),
+            name = "my.logger"
+            )
 
           # compute the three needed linear models
           lmBothText <- paste0 (modAlg,
@@ -482,49 +413,40 @@ CheckReducibility <- function(featureMat,
               is(lmBoth, "logical") ) {
             # class is logical if lmX == NA
 
-            if(verbosity == "debug"){
-              write(paste("LRTsFwdRvsFor",
-                          aFeature,
-                          aCovariate,
-                          anotherCovariate,
-                          "found faulty models!\n",
-                          lmAText,
-                          "\n",
-                          summary(lmA),
-                          "\n",
-                          lmAnotherText,
-                          "\n",
-                          summary(lmAnother),
-                          "\n",
-                          lmBothText,
-                          "\n",
-                          summary(lmBoth),
-                          "\n",
-                          sep = "\t"),
-                    file = "LRT_pValue.txt",
-                    append = TRUE)
 
-            }
+            flog.debug(
+              paste(
+                "LRTsFwdRvsFor",
+                aFeature,
+                aCovariate,
+                anotherCovariate,
+                "found faulty models!\n",
+                lmAText,
+                "\n",
+                summary(lmA),
+                "\n",
+                lmAnotherText,
+                "\n",
+                summary(lmAnother),
+                "\n",
+                lmBothText,
+                "\n",
+                summary(lmBoth),
+                "\n",
+                sep = "\t"
+              ),
+              name = "my.logger"
+            )
+
 
             #status <- paste0("AD_", anotherCovariate)
             status <- "AD"
-            print("This should never be executed!")
+            flog.debug("This should never be executed!", name = "my.logger")
             next
           }
 
-
-          # get_aP_forward <- purrr::possibly(lmtest::lrtest(lmBoth, lmAnother)$'Pr(>Chisq)' [2],
-          #                                 otherwise = NA)
-          #
-          # aP_forward <- get_aP_forward()
           aP_forward <- safe_lrtest(lmBoth, lmAnother)
-
-
-          # get_aP_reverse <- purrr::possibly(lmtest::lrtest(lmBoth, lmA)$'Pr(>Chisq)' [2],
-          #                                   otherwise = NA)
-          # aP_reverse <- get_aP_reverse()
           aP_reverse <- safe_lrtest(lmBoth, lmA)
-
 
           # additonal control of confidence intervals for the covariates within the linear models
           conf_aCovariate <- TRUE
@@ -586,24 +508,25 @@ CheckReducibility <- function(featureMat,
             status <- "AD"
           } # cannot be ruled out another feature explains this
 
-          if(verbosity == "debug"){
-            write(paste("LRTsFwdRvsFor",
-                        aFeature,
-                        aCovariate,
-                        anotherCovariate,
-                        aP_forward,
-                        aP_reverse,
-                        sep = "\t"),
-                  file = "LRT_pValue.txt",
-                  append = TRUE)
-          }
+          flog.debug(
+            paste(
+              "LRTsFwdRvsFor",
+              aFeature,
+              aCovariate,
+              anotherCovariate,
+              aP_forward,
+              aP_reverse,
+              sep = "\t"
+            ),
+            name = "my.logger"
+          )
         } #end "for (anotherCovariate in lCovariates) {"
 
 
       } else {
         #status <- "NO COVARIATES"
         status <- "OK_nc"# trivially unconfounded because no
-        #other features play a role
+                        #   other features play a role
       }
 
       # if confounders where detected, they will all be printed as a single string as status
@@ -623,28 +546,12 @@ CheckReducibility <- function(featureMat,
                             "of features."),
                 name = "my.logger")
     }
-
-    if(verbosity == "debug"){
-      write("one more line done!",
-            file = "LRT_pValue.txt",
-            append = TRUE)
-    }
-
+    flog.debug("one more line done!", name = "my.logger")
     statusLine
-
-
-
   }# foreach loop
 
-  # close parallel processing environment
-    parallel::stopCluster(cl)
-
-
-  if(verbosity == "debug"){
-    write("Everything done in checkReducibility!",
-          file = "LRT_pValue.txt",
-          append = TRUE)
-  }
+  parallel::stopCluster(cl) # close parallel processing environment
+  flog.debug("Everything done in checkReducibility!", name = "my.logger")
 
   flog.info(msg = paste("Deconfounding -- processed 100% of features."),
             name = "my.logger")

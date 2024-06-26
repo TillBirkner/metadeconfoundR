@@ -1,6 +1,4 @@
 #' @import futile.logger
-# @export CheckSufficientPower
-#
 
 
 CheckSufficientPower <- function(metaMat,
@@ -11,8 +9,6 @@ CheckSufficientPower <- function(metaMat,
                                  robustCutoffRho, # new SKF20200221
                                  typeCategorical, # new SKF20200221
                                  typeContinuous, # new SKF20200221
-                                 NA_imputation,
-                                 maintenance,
                                  verbosity,
                                  RVnames,
                                  startStop,
@@ -32,16 +28,13 @@ CheckSufficientPower <- function(metaMat,
     noControl <- length(metaMat[metaMat[,1] == 0, ])
   }
 
-  ##
-  ##
-  if (verbosity == "debug") {
-    print(paste("CheckSufficientPower -- covariates:", c(paste(covariates))))
-    print(paste("CheckSufficientPower -- noCovariates:", noCovariates))
-    #print(paste("CheckSufficientPower -- dim(conditionMat): ",
-    #            nrow(conditionMat)))
-  }
-  ##
-  ##
+  flog.debug(paste("CheckSufficientPower -- covariates: ",
+                   paste(covariates, collapse = ", ")),
+             name = "my.logger")
+  flog.debug(paste("CheckSufficientPower -- noCovariates:",
+                   noCovariates),
+             name = "my.logger")
+
 
   if (noCondition < robustCutoff | noControl < robustCutoff) {
     flog.error(msg = paste("Not enough(robustCutoff =", robustCutoff, ") samples in either case or controle group."),

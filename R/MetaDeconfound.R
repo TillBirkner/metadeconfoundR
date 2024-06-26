@@ -19,15 +19,9 @@
 #' @param DCutoff effect size cutoff
 #' (either cliff's delta or spearman correlation test estimate), DEFAULT = 0
 #' @param PHS_cutoff PostHoc Significance cutoff
-#' @param NA_imputation Missing data treatment. "remove": remove NA containing
-#' data from analysis (default).
-#' "others": Impute NAs  using methods from packages MICE or AMELIA
-#' (not yet implemented)
 #' @param logfile name of optional logging file.
 #' @param logLevel logging verbosity, possible levels:
 #' TRACE, DEBUG, INFO, WARN, ERROR, FATAL, DEFAULT = INFO
-#' @param intermediateOutput name base for optional intermediate files
-#' (Ps, Qs and Ds from final output)
 #' @param startStop vector of optional strings controlling which
 #' parts of the pipeline should be executed.
 #' ("naiveStop": only naive associations will be computed, no confounder analysis is done)
@@ -47,7 +41,7 @@
 #' @param doRanks optional vector of metavariable names, that should be rank
 #' transformed when building linear models in the doconfounding step
 #' @param randomVar optional vector of metavariable names to be treated as
-#' random effect variables. These variabels will not be tested for naive
+#' random effect variables. These variables will not be tested for naive
 #' associations and will not be included as potential confounders,
 #' but will be added as random effects "+ (1|variable)" into any models being built.
 #' Any associations reducible to the supplied random effect(s) will be labeled
@@ -96,10 +90,11 @@
 #'data(metaMatMetformin)
 #'\donttest{
 #'example_output <- MetaDeconfound(featureMat = reduced_feature,
-#'                                   metaMat = metaMatMetformin)}
+#'                                   metaMat = metaMatMetformin,
+#'                                   logLevel = "ERROR")
+#'}
 #'
 #' @import futile.logger
-#' @importFrom utils write.table
 #' @importFrom reshape2 melt
 #' @importFrom methods is
 #' @export
@@ -114,10 +109,8 @@ MetaDeconfound <- function(featureMat,
                            QCutoff = 0.1,
                            DCutoff = 0,
                            PHS_cutoff = 0.05,
-                           NA_imputation = "remove",
                            logfile = NULL,
                            logLevel = "INFO", # new TB20240602
-                           intermediateOutput = NULL,
                            startStop = NA,
                            QValues = NA,
                            DValues = NA,
@@ -264,7 +257,6 @@ MetaDeconfound <- function(featureMat,
                    PHS_cutoff = PHS_cutoff,
                    logfile = logfile,
                   logLevel = logfile, # new TB20240602
-                   intermediateOutput = intermediateOutput,
                    startStop = startStop,
                   QValues = QValues,
                   DValues = DValues,
@@ -283,7 +275,6 @@ MetaDeconfound <- function(featureMat,
 		  returnLong = returnLong, # new TB20210409
 		  collectMods = collectMods, # new TB20220208
                    ...
-                   #maintenance = maintenance,
                    #verbosity = verbosity
                    )
 }
@@ -296,10 +287,8 @@ MetaDeconfound <- function(featureMat,
                             QCutoff = 0.1,
                             DCutoff = 0,
                             PHS_cutoff = 0.05,
-                            NA_imputation = "remove",
                             logfile = NULL,
                             logLevel = "INFO", # new TB20240602
-                            intermediateOutput = NULL,
                             startStop = NA,
                             QValues = NA,
                             DValues = NA,
@@ -310,7 +299,6 @@ MetaDeconfound <- function(featureMat,
                             doRanks = NA,
                             randomVar = NA,
                             fixedVar = NA, # new TB20230727
-                            maintenance = FALSE,
                             robustCutoffRho = NULL, # new SKF20200221
                             typeCategorical = NULL, # new SKF20200221
                             typeContinuous = NULL, # new SKF20200221
@@ -319,8 +307,7 @@ MetaDeconfound <- function(featureMat,
                             returnLong = FALSE, # new TB20210409
                             collectMods = FALSE, # new TB20220208
                             verbosity = "silent",
-                            nAGQ = 1, # new TB20221201
-                            fileBackedCliff = TRUE # new TB20231204
+                            nAGQ = 1 # new TB20221201
                             ) {
 
   if (length(randomVar) > 1) {
@@ -379,18 +366,9 @@ MetaDeconfound <- function(featureMat,
 
   noCovariates <- length (covariates)
 
-  if (nnodes > 1) {
-    nnodes <- nnodes - 1
-  }
-
-  if (NA_imputation != "remove") {
-    #impute using mice function
-    #featureMat <- mice(featuremat)
-    #metaMat <- mice(metaMat)
-    # implementation pending
-  }
-
-
+  # if (nnodes > 1) {
+  #   nnodes <- nnodes - 1
+  # }
 
 
   flog.info(msg = paste0("Checking robustness of data for covariates"),
@@ -404,32 +382,27 @@ MetaDeconfound <- function(featureMat,
                                    robustCutoffRho = robustCutoffRho, # new SKF20200221
                                    typeCategorical = typeCategorical, # new SKF20200221
                                    typeContinuous = typeContinuous, # new SKF20200221
-                                   NA_imputation = NA_imputation,
-                                   maintenance = maintenance,
                                    verbosity = verbosity,
                                    RVnames = RVnames,
                                    startStop = startStop,
                                    deconfF = deconfF) # new TB20220704
 
-  if (verbosity == "debug") {
-    print("CheckSufficientPower -- (dim(isRobust[[2]]):")
-    print(dim(isRobust[[2]]))
-  }
+  flog.debug(msg = paste(
+    "CheckSufficientPower -- (dim(isRobust[[2]]):",
+    paste(dim(isRobust[[2]]), collapse = ", "),
+    name = "my.logger"
+  ))
 
-  if (!all(isRobust[[1]])
-      #|| !all(isRobust[[2]])
-      ) {
+  if (!all(isRobust[[1]])) {
     flog.info(msg = paste0((length(isRobust[[1]]) - sum(isRobust[[1]])), " covariates where marked as too sparse and won't be considered in further analysis due to lack of sufficient data: ",
                            sub(pattern = ", ", replacement = "", x = paste0(", ", names(isRobust[[1]][isRobust[[1]] == 0]), collapse = ""))),
               name = "my.logger")
-    #flog.info(msg = paste0(sum(is.na(isRobust[[2]])), " covariate combinations where marked as too sparse and won't be considered as potential confunders of each other in the deconfounding step."),
-    #          name = "my.logger")
   }
 
 
 
   if (is.na(QValues[[1]]) | is.na(DValues[[1]])) {
-    flog.info(msg = paste0("Computation of naive associations started."),
+    flog.info(msg = "Computation of naive associations started.",
               name = "my.logger")
 
     naiveAssociation <- NaiveAssociation(
@@ -447,37 +420,8 @@ MetaDeconfound <- function(featureMat,
       adjustMethod = adjustMethod,
       nnodes = nnodes,
       rawCounts = rawCounts,# new TB20221129
-      maintenance = maintenance,
-      verbosity = verbosity,
-      fileBackedCliff = fileBackedCliff
+      verbosity = verbosity
     )
-    # if (verbosity == "debug") {
-    #   print(naiveAssociation$Ps[seq_len(3), seq_len(noCovariates)])
-    #   print(naiveAssociation$Qs[seq_len(3), seq_len(noCovariates)])
-    #   print(naiveAssociation$Ds[seq_len(3), seq_len(noCovariates)])
-    #   print("now computing confounding status")
-    # }
-
-    if (!is.null(intermediateOutput)) {
-      write.table(x = naiveAssociation$Ps,
-                  file = paste0(intermediateOutput, "_Ps.csv"),
-                  sep = "\t",
-                  col.names=NA)
-      write.table(x = naiveAssociation$Qs,
-                  file = paste0(intermediateOutput, "_Qs.csv"),
-                  sep = "\t",
-                  col.names=NA)
-      write.table(x = naiveAssociation$Ds,
-                  file = paste0(intermediateOutput, "_Ds.csv"),
-                  sep = "\t",
-                  col.names=NA)
-
-      flog.info(msg = paste('Naive Associations written to', intermediateOutput, "and returned as list within R."),
-                name = "my.logger")
-
-      flog.info(msg = 'Done!',
-                name = "my.logger")
-    }
 
     if ("naiveStop" %in% startStop) {
       flog.warn(msg = paste('Process stopped before computing confounding status because "startStop" parameter contained "naiveStop". '),
@@ -506,8 +450,8 @@ MetaDeconfound <- function(featureMat,
     flog.warn(msg = paste('collectMods == TRUE --> setting nnodes = -1'),
               name = "my.logger")
   }
-if (nnodes < 1) {
-  flog.warn(msg = paste('nnodes < 1 --> using linear mode!'),
+if (nnodes < 2) {
+  flog.debug(msg = 'Using linear mode!',
             name = "my.logger")
   reducibilityStatus <- CheckReducibility_linear(featureMat = featureMat,
                                           metaMat = metaMat,
@@ -571,11 +515,6 @@ if (nnodes < 1) {
   if (collectMods) {
     collectedMods <- reducibilityStatus[[2]]
     reducibilityStatus <-reducibilityStatus[[1]]
-  }
-
-  if (verbosity == "debug") {
-    print(utils::head(reducibilityStatus))
-    print("Metadeconfound()  --  All done!")
   }
 
   flog.info(msg = "MetadecondoundR run completed successfully!",

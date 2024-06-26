@@ -15,27 +15,10 @@ NaiveAssociation <- function(featureMat,
                              typeContinuous, # new SKF20200221
                              logistic, # new SKF20201017
                              nnodes,
-                             rawCounts = rawCounts, # new TB20221129
-                             fileBackedCliff, # new TB 20231204
-                             maintenance,
+                             rawCounts, # new TB20221129
                              adjustMethod,
                              verbosity) {
 
-
-  if (maintenance == TRUE) {
-    try(Qs <- utils::read.table(
-      "~/Dropbox/UNI/Forslund_project/schizo/output_provided/FDR.r",
-      header = TRUE,
-      sep = "\t",
-      row.names = 1))
-    try(Ds <- utils::read.table(
-      "~/Dropbox/UNI/Forslund_project/schizo/output_provided/D.r",
-      header = TRUE,
-      sep = "\t",
-      row.names = 1))
-    Ps <- "dummy"
-    return(list(Ps=Ps, Ds=Ds, Qs=Qs))
-  }
 
   if (nnodes < 1) {
     nnodes <- 1
@@ -76,48 +59,38 @@ NaiveAssociation <- function(featureMat,
   }
 
   i <- 0
+  flog.debug(
+    paste(
+      "counter",
+      "aCovariate",
+      "aFeature",
+      "noCovariates" ,
+      "isRobust[aCovariate]",
+      sep = "\t"
+    ),
+    name = "my.logger"
+  )
 
-  ##
-  ##
-  if (verbosity== "debug") {
-    cat("NaiveAssociation -- \n\tnoSamples: ",
-        length(samples),
-        "\n\tnoFeatures: ",
-        noFeatures,
-        "\n\tnoCovariates: ",
-        noCovariates)
-    write(paste
-        ("counter",
-          "aCovariate",
-          "aFeature",
-          "noCovariates" ,
-          "isRobust[aCovariate]",
-          sep = "\t" ),
-        file="progress.txt",
-        append = FALSE)
-  }
-  ##
   ##
 
   getVariableType <- function (values, variable) {
-    if (is.numeric (values) && all (values %in% c (0, 1)) && ! (! is.null (typeContinuous) && variable %in% typeContinuous) && ! (! is.null (typeCategorical) && variable %in% typeCategorical)) {
-
+    if (is.numeric (values) &&
+        all (values %in% c (0, 1)) &&
+        !(!is.null (typeContinuous) &&
+          variable %in% typeContinuous) &&
+        !(!is.null (typeCategorical) && variable %in% typeCategorical)) {
       return ("binary") # treat as binary
-
     } # this fulfils criteria of binary (0, 1) and not in the special cases
-
-    else if ((is.numeric (values) || (! is.null (typeContinuous) && variable %in% typeContinuous)) && ! (! is.null (typeCategorical) && variable %in% typeCategorical)) {
-
+    else if ((is.numeric (values) ||
+              (!is.null (typeContinuous) &&
+               variable %in% typeContinuous)) &&
+             !(!is.null (typeCategorical) && variable %in% typeCategorical)) {
       return ("continuous") # treat as continuous
-
-    } # this fulfils criteria of not being restricted to 0, 1; still numeric, or guaranteed continuous (redundant?); and not categorical
-
+    } # this fulfils criteria of not being restricted to 0, 1; still numeric,
+        # or guaranteed continuous (redundant?); and not categorical
     else {
-
       return ("categorical") # treat as categorical
-
     } # default as categorical
-
   }
 
   r = foreach::foreach(i= seq_along(features), .combine='rbind') %dopar% {
@@ -133,7 +106,8 @@ NaiveAssociation <- function(featureMat,
       somePs[seq_along(covariates)] <- NA
       someDs[seq_along(covariates)] <- NA
 
-      if ((i %% 10) == 0) {
+
+      if ((i %% progressSteps) == 0) {#TB20240229
         progress <- paste0(round(x = ((i/length(features))*100),
                                  digits = 2), "%")
         flog.info(msg = paste("NaiveAssociation -- processed",
@@ -153,42 +127,27 @@ NaiveAssociation <- function(featureMat,
       aFeature <- as.character (features [i])
       aCovariate <- as.character (covariates [j])
 
-      ##
-      ##
-      if (verbosity == "debug") {
-        if (j>1) {
-          write(paste
-                (i,
-                  aCovariate,
-                  aFeature,
-                  noCovariates ,
-                  isRobust[aCovariate],
-                  sep = "\t" ),
-                file="progress.txt",
-                append = TRUE)
-        }
-      }
-      ##
-      ##
+      flog.debug(
+        paste(
+          i,
+          aCovariate,
+          aFeature,
+          noCovariates ,
+          isRobust[aCovariate],
+          sep = "\t"),
+        name = "my.logger")
 
       aD <- NA_real_
       aP <- NA_real_
 
       if (!is.na(isRobust[j]) && !isRobust[j]) {
-              somePs[j] <- aP
-              someDs[j] <- aD
+        somePs[j] <- aP
+        someDs[j] <- aD
 
-              ##
-              ##
-              if (verbosity == "debug") {
-                write(paste0("skipped ", aCovariate),
-                      file="progress.txt",
-                      append = TRUE)
-              }
-              ##
-              ##
 
-              next
+        flog.debug(paste0("skipped ", aCovariate), name = "my.logger")
+
+        next
       }
 
 	variableType <- getVariableType (na.exclude(subMerge[[aCovariate]]), aCovariate)
@@ -230,7 +189,7 @@ NaiveAssociation <- function(featureMat,
               subMerge [subMerge [["FeatureValue"]] == 0, aCovariate])),
           as.vector (
             na.exclude (
-              subMerge [subMerge [["FeatureValue"]] == 1, aCovariate])), fileBackedCliff)
+              subMerge [subMerge [["FeatureValue"]] == 1, aCovariate])))
       }
       #aD <- lmVar$coef [2]
 
@@ -259,7 +218,7 @@ NaiveAssociation <- function(featureMat,
             subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"])),
         as.vector (
           na.exclude (
-            subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"])), fileBackedCliff)
+            subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"])))
     }
 
     else if (variableType == "continuous" && conVar) {
@@ -313,11 +272,8 @@ NaiveAssociation <- function(featureMat,
 
   flog.info(msg = paste("NaiveAssociation -- processed 100% of features."),
             name = "my.logger")
-
-
-  if (verbosity == "debug") {
-    print(paste("NaiveAssociation -- ncol(parallelreturn):", ncol(r)))
-  }
+  flog.debug(paste("NaiveAssociation -- ncol(parallelreturn):", ncol(r)),
+             name = "my.logger")
 
   Ps <- r[, seq_len(ncol(r)/2), drop = F]
   rownames(Ps) <- features[seq_len(nrow(r))]
