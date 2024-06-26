@@ -39,7 +39,7 @@ First, significant associations between single omics features (like gut microbia
 
 In the second step, all hits are checked for confounding effects and a status is reported for each feature-metadata combination (Fig. 1, center and right; Fig2). A "hit" here is defined as a feature-metadata association with small enough fdr-corrected p-value and big enough  effect size reported from the first, naive part of the pipeline. Thresholds for both parameters can be set via `QCutoff` and `DCutoff` when starting the analysis. Since confounding of signal can only happen with more than one metadata variable associated to a certain feature, all features with only one significant metadata association are trivially deconfounded and get status "No Covariates (OK_nc)". 
 
-The actual confounder detection is done by performing a set of two likelihood ratio tests (LRTs) of nested linear models. For each possible combination of a feature and two of its associated metavariables, three models are fitted to the rank-tranformed feature:
+The actual confounder detection is done by performing a set of two likelihood ratio tests (LRTs) of nested linear models. For each possible combination of a feature and two of its associated metavariables, three models are fitted to the rank-transformed feature:
 
 
 * lm(rank(feature) ~ covariate1 + covariate2),  the full model

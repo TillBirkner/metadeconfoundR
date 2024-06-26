@@ -78,7 +78,7 @@ grid.arrange(left, right, ncol = 2)
 ## ----runCunHidden, echo=F, fig.cap = "Figure 4: alternative cuneiform output of the BuildHeatmap() function", fig.width = 3.5, fig.height=6----
 BuildHeatmap(example_output, cuneiform = TRUE, keepMeta = colnames(metaMatMetformin), d_range = "full")
 
-## ----runpostCustom, echo=F, fig.cap = "Figure 5: post-plotting ggplot2 alterations", fig.width = 1.9, fig.height=6----
+## ----runpostCustom, echo=T, fig.cap = "Figure 5: post-plotting ggplot2 alterations", fig.width = 1.9, fig.height=6----
 BuildHeatmap(example_output) +
   theme(
     legend.position = "none",

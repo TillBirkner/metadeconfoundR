@@ -41,7 +41,7 @@
 #' @param doRanks optional vector of metavariable names, that should be rank
 #' transformed when building linear models in the doconfounding step
 #' @param randomVar optional vector of metavariable names to be treated as
-#' random effect variables. These variabels will not be tested for naive
+#' random effect variables. These variables will not be tested for naive
 #' associations and will not be included as potential confounders,
 #' but will be added as random effects "+ (1|variable)" into any models being built.
 #' Any associations reducible to the supplied random effect(s) will be labeled
