@@ -354,9 +354,9 @@ MetaDeconfound <- function(featureMat,
     RVnames <- na.omit(c(RVnames, fixedVar))
 
 
-    flog.info(msg = paste0("The following parameters will be added to all linear models as fixed effects: '", randomVar, "'"),
+    flog.info(msg = paste0("The following parameters will be added to all linear models as fixed effects: '", fixedVar, "'"),
               name = "my.logger")
-    flog.info(msg = paste(randomVar),
+    flog.info(msg = paste(fixedVar),
               name = "my.logger")
     flog.warn(msg = paste0("the following fixed effect covariates will be excluded as potential donfounders: ", paste0(RVnames, collapse = ", ")),
               name = "my.logger")
