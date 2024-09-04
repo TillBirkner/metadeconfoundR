@@ -44,6 +44,7 @@
 #' as trustworthy, not-confounded signal. default = c("OK_sd", "OK_nc", "OK_d", "AD")
 #' @param tileBordCol tile border color of  heatmap tiles, default: "black"
 #' @param reOrder reorder features and/or metadata? possible options: c("both", "feat", "meta", "none"), default: "both"
+#' @param plotPartial choose which effect site should be plotted. options: c("Ds", "partial", "partialRel"), default: "marginal"
 #' @return ggplot2 object
 #' @details for more details and explanations please see the package vignette.
 #' @examples
@@ -80,7 +81,8 @@ BuildHeatmap <- function(metaDeconfOutput,
                          keepFeature = NULL,
                          trusted = c("OK_sd", "OK_nc", "OK_d", "AD"),
                          tileBordCol = "black",
-                         reOrder = "both"
+                         reOrder = "both",
+                         plotPartial = "Ds" # 20240905 TB
                          ) {
 
 
@@ -126,6 +128,14 @@ BuildHeatmap <- function(metaDeconfOutput,
 
   } else {
     effectSize <- metaDeconfOutput[, c("feature", "metaVariable", "Ds")]
+
+    if (plotPartial == "partial") {
+      effectSize$Ds <- metaDeconfOutput$partial
+      keepMeta <- unique(c(keepMeta, "maxRsq")) # always show total explainable Rsq if applicable
+    } else if (plotPartial == "partialRel") {
+      effectSize$Ds <- metaDeconfOutput$partialRel
+    }
+
     fdr <- metaDeconfOutput[, c("feature", "metaVariable", "Qs")]
     status <- metaDeconfOutput[, c("feature", "metaVariable", "status")]
 
@@ -266,6 +276,12 @@ BuildHeatmap <- function(metaDeconfOutput,
     effectSize$metaVariable <-
       factor(as.factor(effectSize$metaVariable),
              levels = levels(as.factor(effectSize$metaVariable)) [ord2])
+  }
+
+  if (plotPartial == "partial") {
+    effectSize$metaVariable <- factor(effectSize$metaVariable, levels = c(setdiff(
+      levels(effectSize$metaVariable), "maxRsq"
+    ), "maxRsq"))
   }
 
 
