@@ -1,5 +1,16 @@
 Version 1.0.3
-
+  - implementation of new funtion GetPartialEfSizes()
+    - adds partial R-squared as additional effect size metric
+    - new output column "partial": additional variance of a feature explained by
+      adding a metavariable to a linear (mixed effects) model containing all
+      other metavariables associated to the feature
+    - new output column "partialRel": proportion of explainable variance of a feature tracable to a metavariable
+      (e.g. partialRel = 0.5 --> metavariable x can explain 50% of all explainable variance of fature y -- all other metavariables significantly associated to feature y can explain the remaining 50% of overall explainable variance of fature y)
+  - BuildHeatmap()
+    - added "plotPartial" argument to choose between
+      - "marginal": plotting naive/marginal effect sizes based on CLiff's Delta/Spearman's Rho
+      - "partial": plotting signed partial R-squared, including an additional column showing the total explainable variance per feature
+      - "partialRel": plotting proportion of explainable variance of a feature tracable to a metavariable
 Version 1.0.2
   - CRAN release
 
