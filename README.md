@@ -10,8 +10,11 @@ metadeconfoundR is also able to incorporate prior knowledge about confounding ef
 
 ```
 # in R
+# from CRAN:
+install.packages("metadeconfoundR")
+# developmental version from GitHub:
 library(devtools)
-install_github("TillBirkner/metadeconfoundR")
+install_github("TillBirkner/metadeconfoundR@develop")
 ```
 ## Documentation
 
