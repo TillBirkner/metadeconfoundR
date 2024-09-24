@@ -27,6 +27,12 @@ URL: https://github.com/TillBirkner/metadeconfoundR
 BugReports: https://github.com/TillBirkner/metadeconfoundR/issues
 Imports: lmtest, foreach, parallel, doParallel, stats, futile.logger, lme4, ggplot2, reshape2, methods, rlang
 Depends: detectseparation
-Suggests: pander, knitr, gridExtra, kableExtra
+Suggests: 
+    pander,
+    knitr,
+    gridExtra,
+    kableExtra,
+    testthat (>= 3.0.0)
 VignetteBuilder: knitr
 RoxygenNote: 7.3.1
+Config/testthat/edition: 3

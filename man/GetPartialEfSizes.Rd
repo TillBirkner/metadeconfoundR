@@ -4,7 +4,14 @@
 \alias{GetPartialEfSizes}
 \title{GetPartialEfSizes}
 \usage{
-GetPartialEfSizes(featureMat, metaMat, metaDeconfOutput, doRanks = NA)
+GetPartialEfSizes(
+  featureMat,
+  metaMat,
+  metaDeconfOutput,
+  doRanks = NA,
+  randomVar = NA,
+  fixedVar = NA
+)
 }
 \arguments{
 \item{featureMat}{a data frame with row(sample ID)

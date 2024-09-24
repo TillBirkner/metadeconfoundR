@@ -11,6 +11,7 @@ Version 1.0.3
       - "marginal": plotting naive/marginal effect sizes based on CLiff's Delta/Spearman's Rho
       - "partial": plotting signed partial R-squared, including an additional column showing the total explainable variance per feature
       - "partialRel": plotting proportion of explainable variance of a feature tracable to a metavariable
+
 Version 1.0.2
   - CRAN release
 
