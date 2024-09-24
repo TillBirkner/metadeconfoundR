@@ -23,3 +23,5 @@ See [vignette](https://htmlpreview.github.io/?https://github.com/TillBirkner/met
 ## Bugs/issues
 
 Please submit bugs and problems as an issue (A template with necessary contents of issues is supplied.)
+
+Please delete this line later.
