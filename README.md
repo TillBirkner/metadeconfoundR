@@ -19,3 +19,7 @@ install_github("TillBirkner/metadeconfoundR@develop")
 ## Documentation
 
 See [vignette](https://htmlpreview.github.io/?https://github.com/TillBirkner/metadeconfoundR/blob/main/vignettes/Introduction_To_metadeconfoundR.html) for example code and explanations.
+
+## Bugs/issues
+
+Please submit bugs and problems as an issue (A template with necessary contents of issues is supplied.)
