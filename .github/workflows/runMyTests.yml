@@ -25,10 +25,20 @@ jobs:
         with:
           r-version: ${{ matrix.r }}
 
+      - name: Cache R packages
+        uses: actions/cache@v3
+        with:
+          path: ${{ runner.os }}-r-library
+          key: ${{ runner.os }}-r-${{ hashFiles('DESCRIPTION') }}
+          restore-keys: |
+            ${{ runner.os }}-r-
+
       - name: Install dependencies
         run: |
-          Rscript -e 'install.packages("remotes")'
+          Rscript -e 'install.packages(c("remotes", "devtools"))'
           Rscript -e 'remotes::install_deps(dependencies = TRUE)'
+        env:
+          R_LIBS_USER: ${{ runner.os }}-r-library
 
       - name: Run tests
         run: |
