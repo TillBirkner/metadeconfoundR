@@ -1,6 +1,12 @@
 name: R My Package Tests
 
 on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to run tests on'
+        required: false
+        default: 'main'
   push:
     branches:
       - main
