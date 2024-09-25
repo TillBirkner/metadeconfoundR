@@ -63,7 +63,7 @@ data(metaMatMetformin)
 example_output <- MetaDeconfound(featureMat = reduced_feature,
                                   metaMat = metaMatMetformin,
                                   logLevel = "ERROR",
-                                  returnLong = T)
+                                  returnLong = TRUE)
 #
 ex_out_partial <- GetPartialEfSizes(featureMat = reduced_feature,
                                       metaMat = metaMatMetformin,
