@@ -36,4 +36,7 @@ jobs:
         run: |
           Rscript -e 'devtools::test()'
       - name: Run code coverage
-        run: Rscript -e 'covr::codecov()'
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: Rscript -e 'covr::codecov(quiet = FALSE, clean = FALSE, install_path = file.path(normalizePath(Sys.getenv("RUNNER_TEMP"), winslash = "/"), "package"))'
+
