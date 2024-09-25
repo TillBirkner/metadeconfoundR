@@ -6,13 +6,13 @@ on:
       branch:
         description: 'Branch to run tests on'
         required: false
-        default: 'main'
+        default: 'develop'
   push:
     branches:
-      - main
+      - develop
   pull_request:
     branches:
-      - main
+      - develop
 
 jobs:
   R-CMD-check:
