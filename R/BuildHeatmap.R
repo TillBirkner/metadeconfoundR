@@ -395,7 +395,7 @@ BuildHeatmap <- function(metaDeconfOutput,
                            mid = d_col[2],
                            high = d_col[3],
                            midpoint = 0,
-                           guide = guide_colorbar (raster = F),
+                           guide = guide_colorbar (display = "gradient"),
                            limits = c(lowerLim,upperLim)) +
       # the shape lines color indicate confounding status
       scale_color_manual(name = "Confounding status",
@@ -430,7 +430,7 @@ BuildHeatmap <- function(metaDeconfOutput,
                            mid = d_col[2],
                            high = d_col[3],
                            midpoint = 0,
-                           guide = guide_colorbar (raster = F),
+                           guide = guide_colorbar (display = "gradient"),
                            limits = c(lowerLim,upperLim)) +
       # add significance stars/circles for deconfounded/confounded associations
       geom_text(aes(label= .data$stars, colour = .data$status),
