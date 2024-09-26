@@ -130,13 +130,13 @@ MetaDeconfound <- function(featureMat,
 			   collectMods = FALSE, # new TB20220208
                            ...) {
 
-  flog.logger("my.logger", logLevel)
-  flog.threshold(logLevel, name='my.logger')
+  futile.logger::flog.logger("my.logger", logLevel)
+  futile.logger::flog.threshold(logLevel, name='my.logger')
 
   if (is.null(logfile)) {
-    flog.appender(appender.console(), name = 'my.logger')
+    futile.logger::flog.appender(appender.console(), name = 'my.logger')
   } else {
-    flog.appender(appender.file(logfile), name='my.logger')
+    futile.logger::flog.appender(appender.file(logfile), name='my.logger')
   }
 
   ###
@@ -149,43 +149,43 @@ MetaDeconfound <- function(featureMat,
     stop('Error - "doConfs" parameeter is set to > 0 but "logfile" is not specified. Can not log warnings for confidence intervalls spanning 0.')
   }
 
-  flog.info(msg = '###',
+  futile.logger::flog.info(msg = '###',
             name = "my.logger"
             )
-  flog.info(msg = '###',
+  futile.logger::flog.info(msg = '###',
             name = "my.logger"
   )
-  flog.info(msg = 'Deconfounding run started',
+  futile.logger::flog.info(msg = 'Deconfounding run started',
             name = "my.logger"
             )
   if ("naiveStop" %in% startStop) {
-    flog.warn(msg = 'Detected "naiveStop" in "startStop" paramter. Will only return naive associations.',
+    futile.logger::flog.warn(msg = 'Detected "naiveStop" in "startStop" paramter. Will only return naive associations.',
               name = "my.logger")
   }
 
   if (missing(metaMat)) {
-    flog.error(msg = 'Necessary argument "metaMat" missing.',
+    futile.logger::flog.error(msg = 'Necessary argument "metaMat" missing.',
                name = "my.logger")
     stop('Error - Necessary argument "metaMat" missing.')
   }
   if (missing(featureMat)) {
-    flog.error(msg = 'Necessary argument "featureMat" missing.',
+    futile.logger::flog.error(msg = 'Necessary argument "featureMat" missing.',
                name = "my.logger")
     stop('Error - Necessary argument "featureMat" missing.')
   }
 
   if (is(featureMat, "tbl") | is(metaMat, "tbl")) {
-    flog.warn(msg = "Tibbles detected in input data frames. This might lead to unexpected behaviors. Please convert to standard data.frame class!",
+    futile.logger::flog.warn(msg = "Tibbles detected in input data frames. This might lead to unexpected behaviors. Please convert to standard data.frame class!",
                name = "my.logger")
   }
 
   if (nrow(metaMat) != nrow(featureMat)) {
-    flog.error(msg = "featureMat and metaMat don't have same number of rows.",
+    futile.logger::flog.error(msg = "featureMat and metaMat don't have same number of rows.",
                name = "my.logger")
     stop("featureMat and metaMat don't have same number of rows.")
   }
   if (any(order(rownames(metaMat)) != order(rownames(featureMat)))) {
-    flog.error(msg = "rownames of featureMat and metaMat don't have same order.",
+    futile.logger::flog.error(msg = "rownames of featureMat and metaMat don't have same order.",
                name = "my.logger")
     stop("Rownames of featureMat and metaMat don't have same order.
          (order(rownames(metaMat)) != order(rownames(featureMat)))")
@@ -196,7 +196,7 @@ MetaDeconfound <- function(featureMat,
   faultyColnamesFeat <- colnames(featureMat)[which(colnames(featureMat) != make.names(colnames(featureMat)))]
   faultyRownamesMeta <-rownames(metaMat)[which(rownames(metaMat) != make.names(rownames(metaMat)))]
   if (length(c(faultyColnamesMeta, faultyColnamesFeat, faultyRownamesMeta)) > 0) {
-    flog.warn(msg = "Unallowed characters detected in rownames and/or colnames of featureMat and/or metaMat!\n
+    futile.logger::flog.warn(msg = "Unallowed characters detected in rownames and/or colnames of featureMat and/or metaMat!\n
               metadeconfoundR will try to remove these characters using the make.names() function.",
                name = "my.logger")
     colnames(metaMat) <- make.names(colnames(metaMat), unique = T)
@@ -210,26 +210,26 @@ MetaDeconfound <- function(featureMat,
   if (!is.null(deconfT) | !is.null(deconfF)) {
     if ((sum(deconfT %in% colnames(metaMat)) < length(deconfT)) |
         (sum(deconfF %in% colnames(metaMat)) < length(deconfF))) {
-      flog.error(msg = "Elements of deconfT/deconfF are not present in colnames of metaMat.",
+      futile.logger::flog.error(msg = "Elements of deconfT/deconfF are not present in colnames of metaMat.",
                  name = "my.logger")
-      flog.info(msg = "Check identical spelling of variable
+      futile.logger::flog.info(msg = "Check identical spelling of variable
                       names in deconfT/deconfF and metaMat",
                 name = "my.logger")
       stop("Elements of deconfT/deconfF are not present in colnames of metaMat.")
     } else if (sum(deconfT %in% deconfF) > 0) {
-      flog.error(msg = "Some elements of deconfT and deconfF seem to be identical.",
+      futile.logger::flog.error(msg = "Some elements of deconfT and deconfF seem to be identical.",
                  name = "my.logger")
       stop("Some elements of deconfT and deconfF seem to be identical.")
     }
   }
 
   if (is.null(QValues)) {
-    flog.error(msg = "QValues argument is supplied but seems to be empty (NULL).",
+    futile.logger::flog.error(msg = "QValues argument is supplied but seems to be empty (NULL).",
                name = "my.logger")
     stop("QValues argument is supplied but seems to be empty (NULL).")
   }
   if (is.null(DValues)) {
-    flog.error(msg = "DValues argument is supplied but seems to be empty (NULL).",
+    futile.logger::flog.error(msg = "DValues argument is supplied but seems to be empty (NULL).",
                name = "my.logger")
     stop("DValues argument is supplied but seems to be empty (NULL).")
   }
@@ -237,11 +237,11 @@ MetaDeconfound <- function(featureMat,
 
   if (rawCounts == TRUE) {
     if (logistic == TRUE) {
-      flog.error(msg = "rawCounts and logistic can not be bth set tu TRUE!",
+      futile.logger::flog.error(msg = "rawCounts and logistic can not be bth set tu TRUE!",
                  name = "my.logger")
       stop("rawCounts and logistic can not be bth set tu TRUE!")
     }
-    flog.warn(msg = 'Raw count mode is anabled!For computation of naive associations only, raw counts are being normalized by dividing each sample by its total count! ',
+    futile.logger::flog.warn(msg = 'Raw count mode is anabled!For computation of naive associations only, raw counts are being normalized by dividing each sample by its total count! ',
               name = "my.logger")
   }
 
@@ -313,18 +313,18 @@ MetaDeconfound <- function(featureMat,
   if (length(randomVar) > 1) {
     if (nAGQ > 1) {
       nAGQ <- 1
-      flog.warn(msg = "nAGQ was set to 1. Can not be > 1 if more than one random variable is added to a glmer.",
+      futile.logger::flog.warn(msg = "nAGQ was set to 1. Can not be > 1 if more than one random variable is added to a glmer.",
                 name = "my.logger")
     }
   }
 
   if (collectMods == TRUE) {
-    flog.warn(msg = "collectMods was set to TRUE, model building step is run with nnodes = 1.",
+    futile.logger::flog.warn(msg = "collectMods was set to TRUE, model building step is run with nnodes = 1.",
               name = "my.logger")
   }
 
   if (is(randomVar, "list")) {
-    flog.error(msg = "randomVar does not need to be supplied as list anymore, please change to new syntax.",
+    futile.logger::flog.error(msg = "randomVar does not need to be supplied as list anymore, please change to new syntax.",
               name = "my.logger")
   }
 
@@ -340,13 +340,13 @@ MetaDeconfound <- function(featureMat,
     RVnames <- randomVar
 
 
-    flog.info(msg = paste0("The following parameters will be added to all linear models as random effects: '", randomVar, "'"),
+    futile.logger::flog.info(msg = paste0("The following parameters will be added to all linear models as random effects: '", randomVar, "'"),
               name = "my.logger")
-    flog.info(msg = paste(randomVar),
+    futile.logger::flog.info(msg = paste(randomVar),
               name = "my.logger")
-    flog.warn(msg = paste0("the following random effect covariates will be excluded as potential donfounders: ", paste0(RVnames, collapse = ", ")),
+    futile.logger::flog.warn(msg = paste0("the following random effect covariates will be excluded as potential donfounders: ", paste0(RVnames, collapse = ", ")),
               name = "my.logger")
-    flog.warn(msg = "naive associations reducible to these efects will get the status label 'NS', while output elements Ps, Qs, and Ds will be unchanged.",
+    futile.logger::flog.warn(msg = "naive associations reducible to these efects will get the status label 'NS', while output elements Ps, Qs, and Ds will be unchanged.",
               name = "my.logger")
   }
 
@@ -354,13 +354,13 @@ MetaDeconfound <- function(featureMat,
     RVnames <- na.omit(c(RVnames, fixedVar))
 
 
-    flog.info(msg = paste0("The following parameters will be added to all linear models as fixed effects: '", fixedVar, "'"),
+    futile.logger::flog.info(msg = paste0("The following parameters will be added to all linear models as fixed effects: '", fixedVar, "'"),
               name = "my.logger")
-    flog.info(msg = paste(fixedVar),
+    futile.logger::flog.info(msg = paste(fixedVar),
               name = "my.logger")
-    flog.warn(msg = paste0("the following fixed effect covariates will be excluded as potential donfounders: ", paste0(RVnames, collapse = ", ")),
+    futile.logger::flog.warn(msg = paste0("the following fixed effect covariates will be excluded as potential donfounders: ", paste0(RVnames, collapse = ", ")),
               name = "my.logger")
-    flog.warn(msg = "naive associations reducible to these efects will get the status label 'NS', while output elements Ps, Qs, and Ds will be unchanged.",
+    futile.logger::flog.warn(msg = "naive associations reducible to these efects will get the status label 'NS', while output elements Ps, Qs, and Ds will be unchanged.",
               name = "my.logger")
   }
 
@@ -371,7 +371,7 @@ MetaDeconfound <- function(featureMat,
   # }
 
 
-  flog.info(msg = paste0("Checking robustness of data for covariates"),
+  futile.logger::flog.info(msg = paste0("Checking robustness of data for covariates"),
             name = "my.logger")
 
   isRobust <- CheckSufficientPower(metaMat = metaMat,
@@ -387,14 +387,14 @@ MetaDeconfound <- function(featureMat,
                                    startStop = startStop,
                                    deconfF = deconfF) # new TB20220704
 
-  flog.debug(msg = paste(
+  futile.logger::flog.debug(msg = paste(
     "CheckSufficientPower -- (dim(isRobust[[2]]):",
     paste(dim(isRobust[[2]]), collapse = ", "),
     name = "my.logger"
   ))
 
   if (!all(isRobust[[1]])) {
-    flog.info(msg = paste0((length(isRobust[[1]]) - sum(isRobust[[1]])), " covariates where marked as too sparse and won't be considered in further analysis due to lack of sufficient data: ",
+    futile.logger::flog.info(msg = paste0((length(isRobust[[1]]) - sum(isRobust[[1]])), " covariates where marked as too sparse and won't be considered in further analysis due to lack of sufficient data: ",
                            sub(pattern = ", ", replacement = "", x = paste0(", ", names(isRobust[[1]][isRobust[[1]] == 0]), collapse = ""))),
               name = "my.logger")
   }
@@ -402,7 +402,7 @@ MetaDeconfound <- function(featureMat,
 
 
   if (is.na(QValues[[1]]) | is.na(DValues[[1]])) {
-    flog.info(msg = "Computation of naive associations started.",
+    futile.logger::flog.info(msg = "Computation of naive associations started.",
               name = "my.logger")
 
     naiveAssociation <- NaiveAssociation(
@@ -424,7 +424,7 @@ MetaDeconfound <- function(featureMat,
     )
 
     if ("naiveStop" %in% startStop) {
-      flog.warn(msg = paste('Process stopped before computing confounding status because "startStop" parameter contained "naiveStop". '),
+      futile.logger::flog.warn(msg = paste('Process stopped before computing confounding status because "startStop" parameter contained "naiveStop". '),
                 name = "my.logger")
 
       if (!returnLong) {
@@ -441,17 +441,17 @@ MetaDeconfound <- function(featureMat,
     }
   } else { # if precomputed Qs and Ds are supplied as arguments
     naiveAssociation <- list(Qs = QValues, Ds = DValues)
-    flog.warn(msg = paste('Confonding status is computed based on Q-values and effect sizes supplied via "QValue" and "DValue" parameters. '),
+    futile.logger::flog.warn(msg = paste('Confonding status is computed based on Q-values and effect sizes supplied via "QValue" and "DValue" parameters. '),
               name = "my.logger")
   }
 
   if (collectMods == TRUE) {
     nnodes <- -1
-    flog.warn(msg = paste('collectMods == TRUE --> setting nnodes = -1'),
+    futile.logger::flog.warn(msg = paste('collectMods == TRUE --> setting nnodes = -1'),
               name = "my.logger")
   }
 if (nnodes < 2) {
-  flog.debug(msg = 'Using linear mode!',
+  futile.logger::flog.debug(msg = 'Using linear mode!',
             name = "my.logger")
   reducibilityStatus <- CheckReducibility_linear(featureMat = featureMat,
                                           metaMat = metaMat,
@@ -517,7 +517,7 @@ if (nnodes < 2) {
     reducibilityStatus <-reducibilityStatus[[1]]
   }
 
-  flog.info(msg = "MetadecondoundR run completed successfully!",
+  futile.logger::flog.info(msg = "MetadecondoundR run completed successfully!",
             name = "my.logger")
 
   if (!returnLong) {
@@ -540,7 +540,7 @@ if (nnodes < 2) {
   if (collectMods) {
     long_out <- list(stdOutput = long_out,
                      collectedMods = collectedMods)
-    flog.warn(msg = 'Collected models are part ouf output. Only use output[["stdOutput"]] as BuildHeatmap input!',
+    futile.logger::flog.warn(msg = 'Collected models are part ouf output. Only use output[["stdOutput"]] as BuildHeatmap input!',
               name = "my.logger")
   }
   return(long_out)

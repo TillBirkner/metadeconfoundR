@@ -59,7 +59,7 @@ NaiveAssociation <- function(featureMat,
   }
 
   i <- 0
-  flog.debug(
+  futile.logger::fdebug(
     paste(
       "counter",
       "aCovariate",
@@ -110,7 +110,7 @@ NaiveAssociation <- function(featureMat,
       if ((i %% progressSteps) == 0) {#TB20240229
         progress <- paste0(round(x = ((i/length(features))*100),
                                  digits = 2), "%")
-        flog.info(msg = paste("NaiveAssociation -- processed",
+        futile.logger::finfo(msg = paste("NaiveAssociation -- processed",
                               progress,
                               "of features."),
                   name = "my.logger")
@@ -127,7 +127,7 @@ NaiveAssociation <- function(featureMat,
       aFeature <- as.character (features [i])
       aCovariate <- as.character (covariates [j])
 
-      flog.debug(
+      futile.logger::fdebug(
         paste(
           i,
           aCovariate,
@@ -145,7 +145,7 @@ NaiveAssociation <- function(featureMat,
         someDs[j] <- aD
 
 
-        flog.debug(paste0("skipped ", aCovariate), name = "my.logger")
+        futile.logger::fdebug(paste0("skipped ", aCovariate), name = "my.logger")
 
         next
       }
@@ -250,7 +250,7 @@ NaiveAssociation <- function(featureMat,
 
     if ((i %% progressSteps) == 0) {#TB20240229
       progress <- paste0(round(x = ((i/length(features))*100),digits = 2), "%")
-      flog.info(msg = paste("NaiveAssociation -- processed",
+      futile.logger::finfo(msg = paste("NaiveAssociation -- processed",
                             progress,
                             "of features."),
                 name = "my.logger")
@@ -270,9 +270,9 @@ NaiveAssociation <- function(featureMat,
   parallel::stopCluster(cl)
 
 
-  flog.info(msg = paste("NaiveAssociation -- processed 100% of features."),
+  futile.logger::finfo(msg = paste("NaiveAssociation -- processed 100% of features."),
             name = "my.logger")
-  flog.debug(paste("NaiveAssociation -- ncol(parallelreturn):", ncol(r)),
+  futile.logger::fdebug(paste("NaiveAssociation -- ncol(parallelreturn):", ncol(r)),
              name = "my.logger")
 
   Ps <- r[, seq_len(ncol(r)/2), drop = F]
