@@ -1,7 +1,7 @@
 # metadeconfoundR
 
 <!-- badges: start -->
-[![codecov](https://app.codecov.io/github/TillBirkner/metadeconfoundR/graph/badge.svg?token=GGLNXAB5B2)](https://app.codecov.io/github/TillBirkner/metadeconfoundR)
+[![codecov](https://codecov.io/github/TillBirkner/metadeconfoundR/branch/develop/graph/badge.svg?token=GGLNXAB5B2)](https://app.codecov.io/github/TillBirkner/metadeconfoundR)
 <!-- badges: end -->
 
 metadeconfoundR was developed to perform a confounder-aware biomarker search of cross-sectional multi-omics medical datasets. 
