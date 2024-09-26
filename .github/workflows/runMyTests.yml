@@ -41,10 +41,12 @@ jobs:
         run: |
           print(getwd())
           print(ls())
-          covr::report()
+          print(Sys.getenv("R_LIBS_USER"))
           covr::codecov(
             quiet = FALSE,
-            clean = FALSE
+            clean = FALSE,
+            path = Sys.getenv("R_LIBS_USER"),
+            install_path = getwd()
           )
         shell: Rscript {0}
 
