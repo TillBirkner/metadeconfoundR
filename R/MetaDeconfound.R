@@ -453,35 +453,37 @@ MetaDeconfound <- function(featureMat,
 if (nnodes < 2) {
   futile.logger::flog.debug(msg = 'Using linear mode!',
             name = "my.logger")
-  reducibilityStatus <- CheckReducibility_linear(featureMat = featureMat,
-                                          metaMat = metaMat,
-                                          noFeatures = noFeatures,
-                                          noCovariates = noCovariates,
-                                          features = features,
-                                          covariates = covariates,
-                                          Qs = naiveAssociation$Qs,
-                                          Ds = naiveAssociation$Ds,
-                                          minQValues= minQValues,
-                                          QCutoff = QCutoff,
-                                          DCutoff = DCutoff,
-                                          nnodes = 1,
-                                          PHS_cutoff = PHS_cutoff,
-                                          deconfT = deconfT,
-                                          deconfF = deconfF,
-                                          doConfs = doConfs,
-                                          doRanks = doRanks,
-                                          randomVar = randomVar,
-                                          fixedVar = fixedVar, # new TB20230727
-                                          RVnames = RVnames,
-                                          isRobust = isRobust,
-                                          logistic = logistic, # new SKF20201017,
-                                          rawCounts = rawCounts, # new TB20220202
-                                          verbosity = verbosity,
-                                          nAGQ = nAGQ, # new TB 20221201
-                                          collectMods = collectMods, # new TB20220208
-  )
-
-  } else {
+  nnodes <- 1
+  }
+  # reducibilityStatus <- CheckReducibility_linear(featureMat = featureMat,
+  #                                         metaMat = metaMat,
+  #                                         noFeatures = noFeatures,
+  #                                         noCovariates = noCovariates,
+  #                                         features = features,
+  #                                         covariates = covariates,
+  #                                         Qs = naiveAssociation$Qs,
+  #                                         Ds = naiveAssociation$Ds,
+  #                                         minQValues= minQValues,
+  #                                         QCutoff = QCutoff,
+  #                                         DCutoff = DCutoff,
+  #                                         nnodes = 1,
+  #                                         PHS_cutoff = PHS_cutoff,
+  #                                         deconfT = deconfT,
+  #                                         deconfF = deconfF,
+  #                                         doConfs = doConfs,
+  #                                         doRanks = doRanks,
+  #                                         randomVar = randomVar,
+  #                                         fixedVar = fixedVar, # new TB20230727
+  #                                         RVnames = RVnames,
+  #                                         isRobust = isRobust,
+  #                                         logistic = logistic, # new SKF20201017,
+  #                                         rawCounts = rawCounts, # new TB20220202
+  #                                         verbosity = verbosity,
+  #                                         nAGQ = nAGQ, # new TB 20221201
+  #                                         collectMods = collectMods, # new TB20220208
+  # )
+  #
+  # } else {
 
     reducibilityStatus <- CheckReducibility(featureMat = featureMat,
                                             metaMat = metaMat,
@@ -510,7 +512,7 @@ if (nnodes < 2) {
                                             nAGQ = nAGQ, # new TB 20221201
                                             collectMods = collectMods, # new TB20220208
                                             )
-  }
+  #}
 
   if (collectMods) {
     collectedMods <- reducibilityStatus[[2]]

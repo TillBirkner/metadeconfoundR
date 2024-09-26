@@ -189,7 +189,7 @@ NaiveAssociation <- function(featureMat,
                                subMerge [, "FeatureValue"],
                                )$estimate
       } else  if (variableType == "continuous") {
-        aD <- CliffsDelta(
+        aD <- metadeconfoundR::CliffsDelta(
           as.vector (
             na.exclude (
               subMerge [subMerge [["FeatureValue"]] == 0, aCovariate])),
@@ -218,7 +218,7 @@ NaiveAssociation <- function(featureMat,
           subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"],
           subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"])$p.value
 
-      aD <- CliffsDelta(
+      aD <- metadeconfoundR::CliffsDelta(
         as.vector (
           na.exclude (
             subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"])),
