@@ -39,6 +39,8 @@ jobs:
         env:
             CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         run: |
+          print(getwd())
+          print(ls())
           covr::report()
           covr::codecov(
             quiet = FALSE,
