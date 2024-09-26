@@ -48,10 +48,12 @@ NaiveAssociation <- function(featureMat,
     # unix
     cl <- parallel::makeForkCluster(nnodes = nnodes, outfile = "")
     doParallel::registerDoParallel(cl)
+    exportList <- list()
   } else {
     # windows
     cl <- parallel::makeCluster(nnodes, type = "PSOCK", outfile = "")
     doParallel::registerDoParallel(cl)
+    exportList <- list()
   }
 
   # compute steps for progress log.info #TB20240229
@@ -99,7 +101,7 @@ NaiveAssociation <- function(featureMat,
     } # default as categorical
   }
 
-  r = foreach::foreach(i= seq_along(features), .combine='rbind') %toggleDoPar% {
+  r = foreach::foreach(i= seq_along(features), .combine='rbind', .export = "") %toggleDoPar% {
 
     somePs <- vector(length = noCovariates)
     someDs <- vector(length = noCovariates)
@@ -189,7 +191,7 @@ NaiveAssociation <- function(featureMat,
                                subMerge [, "FeatureValue"],
                                )$estimate
       } else  if (variableType == "continuous") {
-        aD <- metadeconfoundR::CliffsDelta(
+        aD <- CliffsDelta(
           as.vector (
             na.exclude (
               subMerge [subMerge [["FeatureValue"]] == 0, aCovariate])),
@@ -214,11 +216,11 @@ NaiveAssociation <- function(featureMat,
     else if (variableType == "binary" && conVar) {
       # MWU test if binary and 	# SKF20200221
 
-      aP <- stats::wilcox.test (
+      aP <- suppressWarnings(stats::wilcox.test (
           subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"],
-          subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"])$p.value
+          subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"]))$p.value
 
-      aD <- metadeconfoundR::CliffsDelta(
+      aD <- CliffsDelta(
         as.vector (
           na.exclude (
             subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"])),
