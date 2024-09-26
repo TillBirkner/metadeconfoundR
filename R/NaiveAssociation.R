@@ -24,6 +24,12 @@ NaiveAssociation <- function(featureMat,
     nnodes <- 1
   }
 
+  #new TB20240926
+  `%toggleDoPar%` <- `%do%`
+  if (nnodes != 1) {
+    `%toggleDoPar%` <- `%dopar%`
+  }
+
   #new TB20221125
   if (rawCounts == TRUE) {
     # compute totReadCount per sample and append to metaMat
@@ -93,7 +99,7 @@ NaiveAssociation <- function(featureMat,
     } # default as categorical
   }
 
-  r = foreach::foreach(i= seq_along(features), .combine='rbind') %dopar% {
+  r = foreach::foreach(i= seq_along(features), .combine='rbind') %toggleDoPar% {
 
     somePs <- vector(length = noCovariates)
     someDs <- vector(length = noCovariates)

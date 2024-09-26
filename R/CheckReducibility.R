@@ -85,6 +85,12 @@ CheckReducibility <- function(featureMat,
   }
 
 
+  #new TB20240926
+  `%toggleDoPar%` <- `%do%`
+  if (nnodes != 1) {
+    `%toggleDoPar%` <- `%dopar%`
+  }
+
   # load parralel processing environment
   if (.Platform$OS.type == "unix") {
     # unix
@@ -99,7 +105,7 @@ CheckReducibility <- function(featureMat,
   isRobust <- isRobust[[2]]
   #isRobust[!isRobust] <- TRUE
 
-  r = foreach::foreach(i = seq_along(features), .combine='rbind') %dopar% {
+  r = foreach::foreach(i = seq_along(features), .combine='rbind') %toggleDoPar% {
 
     if (collectMods) {
       collectedMods[[features[i]]] <- list()
