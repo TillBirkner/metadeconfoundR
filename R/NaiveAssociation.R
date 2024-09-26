@@ -232,12 +232,17 @@ NaiveAssociation <- function(featureMat,
     else if (variableType == "continuous" && conVar) {
       # spearman test if continuous and numerical 	# SKF20200221
 
-      aP <- stats::cor.test (subMerge [, aCovariate],
-                             subMerge [, "FeatureValue"],
-                             method = "spearman")$p.value
-      aD <- stats::cor.test (subMerge [, aCovariate],
-                             subMerge [, "FeatureValue"],
-                             method = "spearman")$estimate
+      corTestObj <- suppressWarnings(stats::cor.test (subMerge [, aCovariate],
+                                                      subMerge [, "FeatureValue"],
+                                                      method = "spearman"))
+      aP <- corTestObj$p.value
+      aD <- corTestObj$estimate
+      # aP <- stats::cor.test (subMerge [, aCovariate],
+      #                        subMerge [, "FeatureValue"],
+      #                        method = "spearman")$p.value
+      # aD <- stats::cor.test (subMerge [, aCovariate],
+      #                        subMerge [, "FeatureValue"],
+      #                        method = "spearman")$estimate
     }
 
     else if (variableType == "categorical" && conVar) {  # now never happens, probably 	# SKF20200221
