@@ -37,6 +37,7 @@ jobs:
           Rscript -e 'devtools::test()'
       - name: Test coverage
         env:
+            COVR_FIX_PARALLEL_MCEXIT: "TRUE"
             CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         run: |
           print(getwd())
