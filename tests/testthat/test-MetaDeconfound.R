@@ -40,7 +40,7 @@ test_that("standard options parallel", {
                            metaMat = metaMat,
                            logLevel = "ERROR",
                            returnLong = T,
-                           nnodes = 4
+                           nnodes = 2
   )
 
   result$feature <- as.character(result$feature)
