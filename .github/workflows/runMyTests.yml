@@ -41,12 +41,11 @@ jobs:
         run: |
           print(getwd())
           print(ls())
-          print(Sys.getenv("R_LIBS_USER"))
+          print(file.path(normalizePath(Sys.getenv("RUNNER_TEMP"), winslash = "/"), "package"))
           covr::codecov(
             quiet = FALSE,
             clean = FALSE,
-            path = Sys.getenv("R_LIBS_USER"),
-            install_path = getwd()
+            install_path = file.path(normalizePath(Sys.getenv("RUNNER_TEMP"), winslash = "/"), "package")
           )
         shell: Rscript {0}
 
