@@ -46,12 +46,13 @@ jobs:
           print(ls())
           print(file.path(normalizePath(Sys.getenv("RUNNER_TEMP"), winslash = "/"), "package"))
           # covr::report()
-          # covr::codecov(
-          #   quiet = FALSE,
-          #   clean = FALSE,
-          #   install_path = file.path(normalizePath(Sys.getenv("RUNNER_TEMP"), winslash = "/"), "package")
-          # )
+          covr::codecov(
+            quiet = FALSE,
+            clean = FALSE,
+            install_path = file.path(normalizePath(Sys.getenv("RUNNER_TEMP"), winslash = "/"), "package")
+          )
         shell: Rscript {0}
+        continue-on-error: true
 
       # - name: Upload test results
       #   if: failure()
