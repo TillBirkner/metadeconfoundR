@@ -103,6 +103,7 @@ NaiveAssociation <- function(featureMat,
 
   r = foreach::foreach(i= seq_along(features), .combine='rbind') %toggleDoPar% {
 
+    install.packages("metadeconfoundR")
     library(metadeconfoundR)
 
     somePs <- vector(length = noCovariates)
