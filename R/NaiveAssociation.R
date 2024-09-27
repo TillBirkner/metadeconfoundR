@@ -101,7 +101,7 @@ NaiveAssociation <- function(featureMat,
     } # default as categorical
   }
 
-  r = foreach::foreach(i= seq_along(features), .combine='rbind') %toggleDoPar% {
+  r = foreach::foreach(i= seq_along(features), .combine='rbind', .packages = "metadeconfoundR") %toggleDoPar% {
 
     somePs <- vector(length = noCovariates)
     someDs <- vector(length = noCovariates)
