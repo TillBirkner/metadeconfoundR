@@ -35,7 +35,6 @@ jobs:
             any::rcmdcheck
       - name: Run tests
         run: |
-          Rscript -e 'devtools::install_github("TillBirkner/metadeconfoundR@develop")'
           Rscript -e 'devtools::test()'
       - name: Test coverage
         env:
