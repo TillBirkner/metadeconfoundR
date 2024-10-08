@@ -1,6 +1,7 @@
 # metadeconfoundR
 
 <!-- badges: start -->
+![CRAN/METACRAN License](https://img.shields.io/cran/l/metadeconfoundR)
 [![codecov](https://codecov.io/github/TillBirkner/metadeconfoundR/branch/develop/graph/badge.svg?token=GGLNXAB5B2)](https://app.codecov.io/github/TillBirkner/metadeconfoundR)
 <!-- badges: end -->
 
