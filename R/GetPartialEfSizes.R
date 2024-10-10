@@ -10,7 +10,7 @@
 #' column(meta data such as age,BMI and all possible confounders)
 #' names listing metadata for all samples. first column should be case status
 #' with case=1 and control=0. All binary variables need to be in 0/1 syntax!
-#' @param metaDeconfOutput output of the MetaDeconfound output created for the
+#' @param metaDeconfOutput long format output of the MetaDeconfound output created for the
 #' supplied featureMat and metaMat
 #' @param doRanks optional vector of metavariable names, that should be rank
 #' transformed when building linear models in the doconfounding step
@@ -57,8 +57,10 @@ GetPartialEfSizes <- function(featureMat,
                               randomVar = NA,
                               fixedVar = NA) {
   output <- metaDeconfOutput
+  # add new columns to the metadeconfoundR output
   output$partial <- NA
   output$partialRel <- NA
+  output$partialNorm <- NA
   output$metaVariable <- as.character(output$metaVariable)
   for (multiFeat in unique(output$feature)) {
     subTemp <- output[((output$feature == multiFeat) & (!is.na(output$status) & output$status != "NS")), ]
@@ -110,16 +112,20 @@ GetPartialEfSizes <- function(featureMat,
       }
       partialRsq <- fullRsq - reducedRsq
       relPartialRsq <- partialRsq/fullRsq
+      normPartialRsq <- partialRsq/(partialRsq + 1 - fullRsq) # 1- fullRSQ == residual R2
       if (!is.na(subTemp$Ds) & (subTemp$Ds < 0)) {
         # negative effect size
         partialRsq <- partialRsq * (-1)
         relPartialRsq <- relPartialRsq * (-1)
+        normPartialRsq <- normPartialRsq * (-1)
       }
       output[((output$feature == multiFeat) &
                 (output$metaVariable == subTemp$metaVariable)), "partial"] <- partialRsq
       output[((output$feature == multiFeat) &
                 (output$metaVariable == subTemp$metaVariable)), "partialRel"] <- relPartialRsq
-      output <- rbind(output, c(multiFeat, "maxRsq", 0.5, 0.5, Inf, "NS", fullRsq, 1))
+      output[((output$feature == multiFeat) &
+                (output$metaVariable == subTemp$metaVariable)), "partialNorm"] <- normPartialRsq
+      output <- rbind(output, c(multiFeat, "maxRsq", 0.5, 0.5, Inf, "NS", fullRsq, 1, fullRsq))
       output$feature <- as.factor(output$feature)
       output$metaVariable <- as.factor(output$metaVariable)
       output$Ps <- as.numeric(output$Ps)
@@ -127,6 +133,7 @@ GetPartialEfSizes <- function(featureMat,
       output$Ds <- as.numeric(output$Ds)
       output$partial <- as.numeric(output$partial)
       output$partialRel <- as.numeric(output$partialRel)
+      output$partialNorm <- as.numeric(output$partialNorm)
       next
     }
     # iteratively remove one of the individually significant metavariables from the model
@@ -150,17 +157,33 @@ GetPartialEfSizes <- function(featureMat,
 
       partialRsq <- fullRsq - reducedRsq
       relPartialRsq <- partialRsq/fullRsq
+      normPartialRsq <- partialRsq/(partialRsq + 1 - fullRsq) # 1- fullRSQ == residual R2
       if (!is.na(subTemp[subTemp$metaVariable == metaVar, "Ds"]) &
           subTemp[subTemp$metaVariable == metaVar, "Ds"] < 0) {
         # negative effect size
         partialRsq <- partialRsq * (-1)
         relPartialRsq <- relPartialRsq * (-1)
-
+        normPartialRsq <- normPartialRsq * (-1)
       }
-      output[((output$feature == multiFeat) & (output$metaVariable == metaVar)), "partial"] <- partialRsq
-      output[((output$feature == multiFeat) & (output$metaVariable == metaVar)), "partialRel"] <- relPartialRsq
+      output[((output$feature == multiFeat) &
+                (output$metaVariable == metaVar)), "partial"] <- partialRsq
+      output[((output$feature == multiFeat) &
+                (output$metaVariable == metaVar)), "partialRel"] <- relPartialRsq
+      output[((output$feature == multiFeat) &
+                (output$metaVariable == metaVar)), "partialNorm"] <- normPartialRsq
     }
-    output <- rbind(output, c(multiFeat, "maxRsq", 0.5, 0.5, Inf, "NS", fullRsq, 1))
+    output <- rbind(output,      # add one row per feature, giving R2 of the full model
+                    c(multiFeat,
+                      "maxRsq",
+                      0.5,
+                      0.5,
+                      Inf,
+                      "NS",
+                      fullRsq,
+                      1,
+                      fullRsq
+                      )
+                    )
     output$feature <- as.factor(output$feature)
     output$metaVariable <- as.factor(output$metaVariable)
     output$Ps <- as.numeric(output$Ps)
@@ -168,6 +191,7 @@ GetPartialEfSizes <- function(featureMat,
     output$Ds <- as.numeric(output$Ds)
     output$partial <- as.numeric(output$partial)
     output$partialRel <- as.numeric(output$partialRel)
+    output$partialNorm <- as.numeric(output$partialNorm)
   }
   return(output)
 }

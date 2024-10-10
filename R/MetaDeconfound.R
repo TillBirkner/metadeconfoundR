@@ -64,10 +64,8 @@
 #' @param rawCounts optional logical parameter; DEFAULT = FALSE;
 #' Set TRUE to treat supplied features as not normalized/rarefied counts;
 #' metadeconfoundR will compute total read count per sample and include this
-#' information in the modelling steps. WARNING: naive associations computed in
-#' first part of metadeconfoundR are reliant on normalized/rarefied data.
-#' Please split your analysis up into 2 parts as shown in the documentation
-#' when using this mode..
+#' information in the modelling steps. WARNING: naive associations in
+#' first part of metadeconfoundR are computed on TSS-transformed version of input data.
 #' @param returnLong DEFAULT = FALSE; Set TRUE to get output in one long
 #' format data.frame instead of list of four wide format data.frames
 #' @param collectMods DEFAULT = FALSE; Set TRUE to collect all model objects
@@ -223,29 +221,28 @@ MetaDeconfound <- function(featureMat,
     }
   }
 
-  if (is.null(QValues)) {
-    futile.logger::flog.error(msg = "QValues argument is supplied but seems to be empty (NULL).",
+  if (is.null(QValues) || is.null(DValues)) {
+    futile.logger::flog.error(msg = "QValues and/or DValues argument is supplied but seems to be empty (NULL).",
                name = "my.logger")
-    stop("QValues argument is supplied but seems to be empty (NULL).")
-  }
-  if (is.null(DValues)) {
-    futile.logger::flog.error(msg = "DValues argument is supplied but seems to be empty (NULL).",
-               name = "my.logger")
-    stop("DValues argument is supplied but seems to be empty (NULL).")
+    stop("QValues and/or DValues argument is supplied but seems to be empty (NULL).")
   }
 
 
   if (rawCounts == TRUE) {
     if (logistic == TRUE) {
-      futile.logger::flog.error(msg = "rawCounts and logistic can not be bth set tu TRUE!",
+      futile.logger::flog.error(msg = "rawCounts and logistic can not be both set to TRUE!",
                  name = "my.logger")
-      stop("rawCounts and logistic can not be bth set tu TRUE!")
+      stop("rawCounts and logistic can not be both set to TRUE!")
     }
     futile.logger::flog.warn(msg = 'Raw count mode is anabled!For computation of naive associations only, raw counts are being normalized by dividing each sample by its total count! ',
               name = "my.logger")
   }
 
-
+  if (is(randomVar, "list")) {
+    futile.logger::flog.error(msg = "randomVar does not need to be supplied as list anymore, please change to new syntax.",
+                              name = "my.logger")
+    stop("randomVar does not need to be supplied as list anymore, please change to new syntax.")
+  }
 
   .MetaDeconfound(featureMat = featureMat,
                    metaMat = metaMat,
@@ -310,6 +307,12 @@ MetaDeconfound <- function(featureMat,
                             nAGQ = 1 # new TB20221201
                             ) {
 
+  if (nnodes < 2) {
+    futile.logger::flog.info(msg = 'Computing in serial mode. Set nnodes > 1 do to switch to faster parallel processing.',
+                              name = "my.logger")
+    nnodes <- 1
+  }
+
   if (length(randomVar) > 1) {
     if (nAGQ > 1) {
       nAGQ <- 1
@@ -320,11 +323,6 @@ MetaDeconfound <- function(featureMat,
 
   if (collectMods == TRUE) {
     futile.logger::flog.warn(msg = "collectMods was set to TRUE, model building step is run with nnodes = 1.",
-              name = "my.logger")
-  }
-
-  if (is(randomVar, "list")) {
-    futile.logger::flog.error(msg = "randomVar does not need to be supplied as list anymore, please change to new syntax.",
               name = "my.logger")
   }
 
@@ -366,11 +364,6 @@ MetaDeconfound <- function(featureMat,
 
   noCovariates <- length (covariates)
 
-  # if (nnodes > 1) {
-  #   nnodes <- nnodes - 1
-  # }
-
-
   futile.logger::flog.info(msg = paste0("Checking robustness of data for covariates"),
             name = "my.logger")
 
@@ -402,6 +395,7 @@ MetaDeconfound <- function(featureMat,
 
 
   if (is.na(QValues[[1]]) | is.na(DValues[[1]])) {
+    # if no external Qs and Ds are supplied, compute them!
     futile.logger::flog.info(msg = "Computation of naive associations started.",
               name = "my.logger")
 
@@ -440,50 +434,19 @@ MetaDeconfound <- function(featureMat,
       return(long_out)
     }
   } else { # if precomputed Qs and Ds are supplied as arguments
-    naiveAssociation <- list(Qs = QValues, Ds = DValues)
+    naiveAssociation <- list(Ps = QValues, Qs = QValues, Ds = DValues)
+    futile.logger::flog.warn(msg = paste("Naive p-values are NOT computed, but simply are a copy of the supplied adjusted p-values (QValues)."),
+                             name = "my.logger")
     futile.logger::flog.warn(msg = paste('Confonding status is computed based on Q-values and effect sizes supplied via "QValue" and "DValue" parameters. '),
               name = "my.logger")
   }
 
   if (collectMods == TRUE) {
-    nnodes <- -1
-    futile.logger::flog.warn(msg = paste('collectMods == TRUE --> setting nnodes = -1'),
+    nnodes <- 1
+    futile.logger::flog.warn(msg = paste('collectMods == TRUE --> setting nnodes = 1 for model building phase.'),
               name = "my.logger")
   }
-if (nnodes < 2) {
-  futile.logger::flog.debug(msg = 'Using linear mode!',
-            name = "my.logger")
-  nnodes <- 1
-  }
-  # reducibilityStatus <- CheckReducibility_linear(featureMat = featureMat,
-  #                                         metaMat = metaMat,
-  #                                         noFeatures = noFeatures,
-  #                                         noCovariates = noCovariates,
-  #                                         features = features,
-  #                                         covariates = covariates,
-  #                                         Qs = naiveAssociation$Qs,
-  #                                         Ds = naiveAssociation$Ds,
-  #                                         minQValues= minQValues,
-  #                                         QCutoff = QCutoff,
-  #                                         DCutoff = DCutoff,
-  #                                         nnodes = 1,
-  #                                         PHS_cutoff = PHS_cutoff,
-  #                                         deconfT = deconfT,
-  #                                         deconfF = deconfF,
-  #                                         doConfs = doConfs,
-  #                                         doRanks = doRanks,
-  #                                         randomVar = randomVar,
-  #                                         fixedVar = fixedVar, # new TB20230727
-  #                                         RVnames = RVnames,
-  #                                         isRobust = isRobust,
-  #                                         logistic = logistic, # new SKF20201017,
-  #                                         rawCounts = rawCounts, # new TB20220202
-  #                                         verbosity = verbosity,
-  #                                         nAGQ = nAGQ, # new TB 20221201
-  #                                         collectMods = collectMods, # new TB20220208
-  # )
-  #
-  # } else {
+
 
     reducibilityStatus <- CheckReducibility(featureMat = featureMat,
                                             metaMat = metaMat,

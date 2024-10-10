@@ -23,7 +23,7 @@ column(meta data such as age,BMI and all possible confounders)
 names listing metadata for all samples. first column should be case status
 with case=1 and control=0. All binary variables need to be in 0/1 syntax!}
 
-\item{metaDeconfOutput}{output of the MetaDeconfound output created for the
+\item{metaDeconfOutput}{long format output of the MetaDeconfound output created for the
 supplied featureMat and metaMat}
 
 \item{doRanks}{optional vector of metavariable names, that should be rank

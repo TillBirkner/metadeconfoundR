@@ -44,7 +44,7 @@
 #' as trustworthy, not-confounded signal. default = c("OK_sd", "OK_nc", "OK_d", "AD")
 #' @param tileBordCol tile border color of  heatmap tiles, default: "black"
 #' @param reOrder reorder features and/or metadata? possible options: c("both", "feat", "meta", "none"), default: "both"
-#' @param plotPartial choose which effect site should be plotted. options: c("Ds", "partial", "partialRel"), default: "marginal"
+#' @param plotPartial choose which effect site should be plotted. options: c("Ds", "partial", "partialRel, partialNorm"), default: "Ds"
 #' @return ggplot2 object
 #' @details for more details and explanations please see the package vignette.
 #' @examples
@@ -121,7 +121,7 @@ BuildHeatmap <- function(metaDeconfOutput,
     status <- reshape2::melt(data = metaDeconfOutput$status,
                    varnames = c("feature", "metaVariable"),
                    value.name = "status")
-  } else if (ncol(metaDeconfOutput) == 9) {
+  } else if ((sum(c("stars", "insignificant", "featureNames") %in% colnames(metaDeconfOutput))) == 3) {
     warning("treating input as 'intermedData = T' Buildheatmap output!!")
     fromIntermed <- TRUE
     effectSize <- metaDeconfOutput
@@ -134,6 +134,8 @@ BuildHeatmap <- function(metaDeconfOutput,
       keepMeta <- unique(c(keepMeta, "maxRsq")) # always show total explainable Rsq if applicable
     } else if (plotPartial == "partialRel") {
       effectSize$Ds <- metaDeconfOutput$partialRel
+    } else if (plotPartial == "partialNorm") {
+      effectSize$Ds <- metaDeconfOutput$partialNorm
     }
 
     fdr <- metaDeconfOutput[, c("feature", "metaVariable", "Qs")]
@@ -279,6 +281,7 @@ BuildHeatmap <- function(metaDeconfOutput,
   }
 
   if (plotPartial == "partial") {
+    # put the additional "maxRsq" column in last position always
     effectSize$metaVariable <- factor(effectSize$metaVariable, levels = c(setdiff(
       levels(effectSize$metaVariable), "maxRsq"
     ), "maxRsq"))
@@ -363,7 +366,7 @@ BuildHeatmap <- function(metaDeconfOutput,
     legendShapes <- c(8)
   }
 
-  # include added name coluns into plots!!
+  # include added name colums into plots!!
   if (cuneiform) {
 
     # put together needed shapes and their meaning

@@ -83,7 +83,7 @@ as trustworthy, not-confounded signal. default = c("OK_sd", "OK_nc", "OK_d", "AD
 
 \item{reOrder}{reorder features and/or metadata? possible options: c("both", "feat", "meta", "none"), default: "both"}
 
-\item{plotPartial}{choose which effect site should be plotted. options: c("Ds", "partial", "partialRel"), default: "marginal"}
+\item{plotPartial}{choose which effect site should be plotted. options: c("Ds", "partial", "partialRel, partialNorm"), default: "Ds"}
 }
 \value{
 ggplot2 object

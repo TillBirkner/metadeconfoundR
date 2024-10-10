@@ -19,11 +19,6 @@ NaiveAssociation <- function(featureMat,
                              adjustMethod,
                              verbosity) {
 
-
-  if (nnodes < 1) {
-    nnodes <- 1
-  }
-
   #new TB20240926
   `%toggleDoPar%` <- `%do%`
   if (nnodes != 1) {
@@ -245,15 +240,15 @@ NaiveAssociation <- function(featureMat,
       #                        method = "spearman")$estimate
     }
 
-    else if (variableType == "categorical" && conVar) {  # now never happens, probably 	# SKF20200221
-#      else if (con2 && !con5) {  # kruskal-wallis test if
-                                  # not binary AND not numerical
-      aP <- stats::kruskal.test (
-        g = as.factor(subMerge [[aCovariate]]),
-        x = subMerge [["FeatureValue"]])$p.value
-
-      aD <- Inf
-    }
+#     else if (variableType == "categorical" && conVar) {  # now never happens, probably 	# SKF20200221
+# #      else if (con2 && !con5) {  # kruskal-wallis test if
+#                                   # not binary AND not numerical
+#       aP <- stats::kruskal.test (
+#         g = as.factor(subMerge [[aCovariate]]),
+#         x = subMerge [["FeatureValue"]])$p.value
+#
+#       aD <- Inf
+#     }
 
       somePs[j] <- aP
       someDs[j] <- aD
