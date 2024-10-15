@@ -13,7 +13,7 @@ metadeconfoundR is also able to incorporate prior knowledge about confounding ef
 
 ## Instalation
 
-```
+```R
 # in R
 # from CRAN:
 install.packages("metadeconfoundR")
