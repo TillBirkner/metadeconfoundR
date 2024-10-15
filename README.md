@@ -1,8 +1,10 @@
 # metadeconfoundR
 
 <!-- badges: start -->
-![CRAN/METACRAN License](https://img.shields.io/cran/l/metadeconfoundR)
+[![CRAN status](https://www.r-pkg.org/badges/version/metadeconfoundR)](https://CRAN.R-project.org/package=metadeconfoundR)
+[![R-CMD-check](https://github.com/TillBirkner/metadeconfoundR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/TillBirkner/metadeconfoundR/actions/workflows/R-CMD-check.yaml)
 [![codecov](https://codecov.io/github/TillBirkner/metadeconfoundR/branch/develop/graph/badge.svg?token=GGLNXAB5B2)](https://app.codecov.io/github/TillBirkner/metadeconfoundR)
+![CRAN/METACRAN License](https://img.shields.io/cran/l/metadeconfoundR)
 <!-- badges: end -->
 
 metadeconfoundR was developed to perform a confounder-aware biomarker search of cross-sectional multi-omics medical datasets. 
