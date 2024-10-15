@@ -121,10 +121,8 @@ Set TRUE to treat supplied features as binary instead of continuous}
 \item{rawCounts}{optional logical parameter; DEFAULT = FALSE;
 Set TRUE to treat supplied features as not normalized/rarefied counts;
 metadeconfoundR will compute total read count per sample and include this
-information in the modelling steps. WARNING: naive associations computed in
-first part of metadeconfoundR are reliant on normalized/rarefied data.
-Please split your analysis up into 2 parts as shown in the documentation
-when using this mode..}
+information in the modelling steps. WARNING: naive associations in
+first part of metadeconfoundR are computed on TSS-transformed version of input data.}
 
 \item{returnLong}{DEFAULT = FALSE; Set TRUE to get output in one long
 format data.frame instead of list of four wide format data.frames}

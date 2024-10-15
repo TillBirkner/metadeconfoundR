@@ -101,7 +101,7 @@ test_that("standard options parallel", {
   # Call the function
   result <- MetaDeconfound(featureMat = feature,
                            metaMat = metaMat,
-                           logLevel = "ERROR",
+                           logLevel = "INFO",
                            returnLong = T,
                            nnodes = 2
   )
@@ -124,7 +124,7 @@ test_that("random and fixed effects", {
 
   result <- MetaDeconfound(featureMat = feature,
                            metaMat = metaMat,
-                           logLevel = "ERROR",
+                           logLevel = "INFO",
                            returnLong = T,
                            randomVar = c("Dataset")
   )
@@ -139,7 +139,7 @@ test_that("random and fixed effects", {
   expected_output_fix <- readRDS("2024_10_10_example_output_fix.rds")
   resultFix <- MetaDeconfound(featureMat = feature,
                               metaMat = metaMat,
-                              logLevel = "ERROR",
+                              logLevel = "INFO",
                               returnLong = T,
                               fixedVar = c("continuous_dummy")
   )
@@ -147,13 +147,14 @@ test_that("random and fixed effects", {
   resultFix$metaVariable <- as.character(resultFix$metaVariable)
   expected_output_fix$feature <- as.character(expected_output_fix$feature)
   expected_output_fix$metaVariable <- as.character(expected_output_fix$metaVariable)
+  expect_equal(dim(resultFix), dim(expected_output_fix))
   expect_equal(resultFix, expected_output_fix)
 
   # saveRDS(resultFixRand, "tests/testthat/2024_10_10_example_output_fixRand.rds")
   expected_output_fix_rand <- readRDS("2024_10_10_example_output_fixRand.rds")
   resultFixRand <- MetaDeconfound(featureMat = feature,
                               metaMat = metaMat,
-                              logLevel = "ERROR",
+                              logLevel = "INFO",
                               returnLong = T,
                               fixedVar = c("continuous_dummy"),
                               randomVar = c("Dataset")
