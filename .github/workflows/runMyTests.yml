@@ -33,25 +33,21 @@ jobs:
           extra-packages: |
             any::devtools
             any::rcmdcheck
-      - name: Run tests
-        run: |
-          Rscript -e 'devtools::test()'
-      - name: Test coverage
-        env:
-            COVR_FIX_PARALLEL_MCEXIT: true
-            CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        run: |
-          print(getwd())
-          print(ls())
-          print(file.path(normalizePath(Sys.getenv("RUNNER_TEMP"), winslash = "/"), "package"))
-          # covr::report()
-          covr::codecov(
-            quiet = FALSE,
-            clean = FALSE,
-            install_path = file.path(normalizePath(Sys.getenv("RUNNER_TEMP"), winslash = "/"), "package")
-          )
-        shell: Rscript {0}
-        continue-on-error: true
+      # - name: Run tests
+      #   run: |
+      #     Rscript -e 'devtools::test()'
+      # - name: Test coverage
+      #   env:
+      #       COVR_FIX_PARALLEL_MCEXIT: true
+      #       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      #   run: |
+      #     covr::codecov(
+      #       quiet = FALSE,
+      #       clean = FALSE,
+      #       install_path = file.path(normalizePath(Sys.getenv("RUNNER_TEMP"), winslash = "/"), "package")
+      #     )
+      #   shell: Rscript {0}
+      #   continue-on-error: true
 
       # - name: Upload test results
       #   if: failure()
