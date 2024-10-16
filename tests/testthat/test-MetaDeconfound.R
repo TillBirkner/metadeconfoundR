@@ -212,21 +212,24 @@ test_that("raw Counts mode", {
   metaMat <- metaMatMetformin
   # using metadeconfound output created 2024 10 10
   # saveRDS(result_rawCounts, "tests/testthat/2024_10_10_example_output_rawCounts.rds")
-  expected_output_rawCounts <- readRDS("2024_10_10_example_output_rawCounts.rds")
+  #expected_output_rawCounts <- readRDS("2024_10_10_example_output_rawCounts.rds")
+  #saveRDS(result_rawCountsRand, "tests/testthat/2024_10_16_example_output_rawCountsRand.rds")
+  expected_output_rawCountsRand <- readRDS("2024_10_16_example_output_rawCountsRand.rds")
 
-  result_rawCounts <- MetaDeconfound(featureMat = feature,
+  result_rawCountsRand <- MetaDeconfound(featureMat = feature,
                            metaMat = metaMat,
                            logLevel = "INFO",
                            returnLong = T,
-                           rawCounts = T
+                           rawCounts = T,
+                           randomVar = "Dataset"
   )
 
-  result_rawCounts$feature <- as.character(result_rawCounts$feature)
-  result_rawCounts$metaVariable <- as.character(result_rawCounts$metaVariable)
-  expected_output_rawCounts$feature <- as.character(expected_output_rawCounts$feature)
-  expected_output_rawCounts$metaVariable <- as.character(expected_output_rawCounts$metaVariable)
+  result_rawCountsRand$feature <- as.character(result_rawCountsRand$feature)
+  result_rawCountsRand$metaVariable <- as.character(result_rawCountsRand$metaVariable)
+  expected_output_rawCountsRand$feature <- as.character(expected_output_rawCountsRand$feature)
+  expected_output_rawCountsRand$metaVariable <- as.character(expected_output_rawCountsRand$metaVariable)
 
-  expect_equal(result_rawCounts, expected_output_rawCounts)
+  expect_equal(result_rawCountsRand, expected_output_rawCountsRand)
 })
 
 
