@@ -52,5 +52,5 @@ test_that('with randomVar = "Dataset"', {
 
 
   # Verify that the result matches the expected output
-  testthat::expect_equal(result, expected_output)
+  testthat::expect_equal(result, expected_output, tolerance = testthat_tolerance())
 })
