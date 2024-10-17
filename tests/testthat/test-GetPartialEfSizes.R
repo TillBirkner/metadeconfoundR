@@ -28,22 +28,23 @@ test_that("standard options", {
   testthat::expect_equal(result, expected_output)
 })
 
-test_that('with randomVar = "Dataset"', {
+test_that('with randomVar and fixedVar', {
   # read in input and expected output
   feature <- reduced_feature
   metaMat <- metaMatMetformin
-  #saveRDS(ex_out_partialRand, "tests/testthat/2024_10_10_example_output_partialRand.rds")
-  expected_output <- readRDS("2024_10_10_example_output_partialRand.rds")
+  #saveRDS(result, "tests/testthat/2024_10_17_example_output_partialFixRand.rds")
+  expected_output <- readRDS("2024_10_17_example_output_partialFixRand.rds")
   #expected_output$feature <- as.factor(expected_output$feature)
   #expected_output$metaVariable <- as.factor(expected_output$metaVariable)
 
   # Call the function
-  resultA <- readRDS("2024_10_09_example_output_rand.rds")
+  resultA <- readRDS("2024_10_10_example_output_fixRand.rds")
 
   result <- GetPartialEfSizes(featureMat = feature,
                               metaMat = metaMat,
                               metaDeconfOutput = resultA,
-                              randomVar = "Dataset")
+                              randomVar = "Dataset",
+                              fixedVar = "continuous_dummy")
 
   result$feature <- as.character(result$feature)
   result$metaVariable <- as.character(result$metaVariable)

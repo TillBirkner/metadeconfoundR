@@ -419,33 +419,29 @@ CheckReducibility <- function(featureMat,
               is(lmBoth, "logical") ) {
             # class is logical if lmX == NA
 
-
-            flog.debug(
-              paste(
-                "LRTsFwdRvsFor",
-                aFeature,
-                aCovariate,
-                anotherCovariate,
-                "found faulty models!\n",
-                lmAText,
-                "\n",
-                summary(lmA),
-                "\n",
-                lmAnotherText,
-                "\n",
-                summary(lmAnother),
-                "\n",
-                lmBothText,
-                "\n",
-                summary(lmBoth),
-                "\n",
-                sep = "\t"
-              ),
-              name = "my.logger"
-            )
-
-
-            #status <- paste0("AD_", anotherCovariate)
+            # flog.debug(
+            #   paste(
+            #     "LRTsFwdRvsFor",
+            #     aFeature,
+            #     aCovariate,
+            #     anotherCovariate,
+            #     "found faulty models!\n",
+            #     lmAText,
+            #     "\n",
+            #     summary(lmA),
+            #     "\n",
+            #     lmAnotherText,
+            #     "\n",
+            #     summary(lmAnother),
+            #     "\n",
+            #     lmBothText,
+            #     "\n",
+            #     summary(lmBoth),
+            #     "\n",
+            #     sep = "\t"
+            #   ),
+            #   name = "my.logger"
+            # )
             status <- "AD"
             flog.debug("This should never be executed!", name = "my.logger")
             next
@@ -457,42 +453,66 @@ CheckReducibility <- function(featureMat,
           # additonal control of confidence intervals for the covariates within the linear models
           conf_aCovariate <- TRUE
           conf_anotherCovariate <- TRUE
-          if (doConfs >= 0 && !is(lmBoth, "logical")) { # doConfs = 1 --> just logging
-            #print("computing Confs")
-            if (is.numeric(subsubMerge$aCovariate) && is.numeric(subsubMerge$anotherCovariate)) { # categorical variables are excluded for easier processing
-              confints <- confint(lmBoth)
-              conf_aCovariate <- !(sign(confints[1, 1]) == sign(confints[1, 2])) # signs are different, if confint is spanning 0
-              conf_anotherCovariate  <- !(sign(confints[2, 1]) == sign(confints[2, 2]))
+          if (doConfs >= 0 && #          doConfs = 1 --> just logging
+              !is(lmBoth, "logical") && #  the full model is working
+              !is.na (aP_forward) && #     the lrts worked
+              !is.na (aP_reverse) &&
+              (aP_reverse < PHS_cutoff || # at least one of the lrts is significant
+               aP_forward < PHS_cutoff) &&
+              is.numeric(subsubMerge[, aCovariate]) && # the covariates are numeric
+              is.numeric(subsubMerge[, anotherCovariate])
+              ) {
+            # if (is.numeric(subsubMerge[, aCovariate]) && is.numeric(subsubMerge[, anotherCovariate])) { # categorical variables are excluded for easier processing
+            confints <- confint(lmBoth, parm = c(aCovariate, anotherCovariate), method = "Wald")
+            conf_aCovariate <- !(sign(confints[aCovariate, 1]) == sign(confints[aCovariate, 2])) # signs are different, if confint is spanning 0
+            conf_anotherCovariate  <- !(sign(confints[anotherCovariate, 1]) == sign(confints[anotherCovariate, 2]))
 
-              if (! is.na (aP_forward) && (aP_forward < PHS_cutoff) && conf_aCovariate) { # if forward test is significant, but aCovariate confint spans 0
-                flog.warn(msg = paste('lrt: ',
-                                      features[i],
-                                      aCovariate,
-                                      anotherCovariate,
-                                      '-- forward linear model is < PHS_cutoff, but confidence intervall for',
-                                      aCovariate, 'is spanning 0.'),
-                          name = "my.logger")
-                if (doConfs > 1) { # if doConfs ==2 make lrt non-significant
-                  aP_forward <- 1
-                }
-                status <- "OK_d"
+            if ((aP_forward < PHS_cutoff) &&
+                conf_aCovariate) {
+              # if forward test is significant, but aCovariate confint spans 0
+              flog.warn(
+                msg = paste(
+                  'lrt: ',
+                  features[i],
+                  aCovariate,
+                  anotherCovariate,
+                  '-- forward linear model is < PHS_cutoff, but confidence intervall for',
+                  aCovariate,
+                  'is spanning 0.'
+                ),
+                name = "my.logger"
+              )
+              if (doConfs > 1) {
+                # if doConfs ==2 make lrt non-significant
+                aP_forward <- 1
               }
-
-              if (! is.na (aP_forward) && (aP_reverse < PHS_cutoff) && conf_anotherCovariate) { # if reverse test is significant, but anotherCovariate confint spans 0
-                flog.warn(msg = paste('lrt: ',
-                                      features[i],
-                                      aCovariate,
-                                      anotherCovariate,
-                                      '-- reverse linear model is < PHS_cutoff, but confidence intervall for',
-                                      anotherCovariate, 'is spanning 0.'),
-                          name = "my.logger")
-                if (doConfs > 1) { # if doConfs ==2 make lrt non-significant
-                  aP_reverse <- 1
-                }
-              }
-
+              status <- "OK_d"
             }
-          }
+
+            #if (! is.na (aP_forward) && (aP_reverse < PHS_cutoff) && conf_anotherCovariate) { # if reverse test is significant, but anotherCovariate confint spans 0
+            if ((aP_reverse < PHS_cutoff) &&
+                conf_anotherCovariate) {
+              # if reverse test is significant, but anotherCovariate confint spans 0
+              flog.warn(
+                msg = paste(
+                  'lrt: ',
+                  features[i],
+                  aCovariate,
+                  anotherCovariate,
+                  '-- reverse linear model is < PHS_cutoff, but confidence intervall for',
+                  anotherCovariate,
+                  'is spanning 0.'
+                ),
+                name = "my.logger"
+              )
+              if (doConfs > 1) {
+                # if doConfs ==2 make lrt non-significant
+                aP_reverse <- 1
+              }
+            }
+
+            # }
+          } # if doConfs
 
           if (! is.na (aP_forward) &&
               ! is.na (aP_reverse) &&

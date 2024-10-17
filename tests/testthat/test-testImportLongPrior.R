@@ -6,7 +6,7 @@ test_that("standard options", {
   feature <- reduced_feature
   metaMat <- metaMatMetformin
 
-  example_output <- read.table("example_output.tsv", header = T, sep = "\t")
+  example_output <- read.table("2024_10_17_example_output.tsv", header = T, sep = "\t")
 
   minQValues <- ImportLongPrior(longPrior = example_output,
                                 featureMat = feature,

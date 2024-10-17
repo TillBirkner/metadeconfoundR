@@ -43,12 +43,10 @@ NaiveAssociation <- function(featureMat,
     # unix
     cl <- parallel::makeForkCluster(nnodes = nnodes, outfile = "")
     doParallel::registerDoParallel(cl)
-    exportList <- list()
   } else {
     # windows
     cl <- parallel::makeCluster(nnodes, type = "PSOCK", outfile = "")
     doParallel::registerDoParallel(cl)
-    exportList <- list()
   }
 
   # compute steps for progress log.info #TB20240229

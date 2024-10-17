@@ -70,19 +70,34 @@ GetPartialEfSizes <- function(featureMat,
     }
     subMerge <- metaMat
     subMerge$FeatureValue <- featureMat [, multiFeat]
-    subSubMerge <- na.exclude(subMerge[, c(as.character(subTemp$metaVariable), "FeatureValue")])
+    subTemp_metaVars <- as.character(subTemp$metaVariable)
+    subSubMerge <- na.exclude(subMerge[, c(subTemp_metaVars, "FeatureValue")])
+    fullModForm <- as.formula(paste(
+      "rank (FeatureValue) ~",
+      paste(subTemp_metaVars, collapse = " + ")
+    ))
     if (!is.na(fixedVar[[1]])) {
-      subSubMerge <- na.exclude(subMerge[, c(as.character(subTemp$metaVariable), fixedVar, "FeatureValue")])
-    }
-    fullModForm <- as.formula(paste("rank (FeatureValue) ~", paste(subTemp$metaVariable, collapse = " + ")))
-    fullRsq <- summary(lm(fullModForm, data = subSubMerge))$r.squared
-    if (!is.na(randomVar[[1]])) {
-      subSubMerge <- na.exclude(subMerge[, na.exclude(c(as.character(subTemp$metaVariable), fixedVar, randomVar, "FeatureValue"))])
+      subSubMerge <- na.exclude(subMerge[, c(subTemp_metaVars, fixedVar, "FeatureValue")])
       fullModForm <- as.formula(paste(
         "rank (FeatureValue) ~",
-        paste(subTemp$metaVariable, collapse = " + "),
+        paste(c(subTemp_metaVars, fixedVar), collapse = " + ")
+      ))
+    }
+    fullRsq <- summary(lm(fullModForm, data = subSubMerge))$r.squared
+    if (!is.na(randomVar[[1]])) {
+      subSubMerge <- na.exclude(subMerge[, na.exclude(c(subTemp_metaVars, fixedVar, randomVar, "FeatureValue"))])
+      fullModForm <- as.formula(paste(
+        "rank (FeatureValue) ~",
+        paste(subTemp_metaVars, collapse = " + "),
         paste0("+ (1|", randomVar, ")")
       ))
+      if (!is.na(fixedVar[[1]])) {
+        fullModForm <- as.formula(paste(
+          "rank (FeatureValue) ~",
+          paste(c(subTemp_metaVars, fixedVar), collapse = " + "),
+          paste0("+ (1|", randomVar, ")")
+        ))
+      }
       fullRsq <-  ConditionalR2(lme4::lmer(fullModForm, REML = F, data = subSubMerge))
     }
 
@@ -137,19 +152,20 @@ GetPartialEfSizes <- function(featureMat,
       next
     }
     # iteratively remove one of the individually significant metavariables from the model
-    for (metaVar in subTemp$metaVariable) {
+    for (metaVar in subTemp_metaVars) {
       if (metaVar %in% c(randomVar, fixedVar)) {
         next
       }
       reducedModForm <- as.formula(paste(
         "rank (FeatureValue) ~",
-        paste(subTemp$metaVariable[-which(subTemp$metaVariable %in% c(metaVar, randomVar))], collapse = " + ")
+        paste(na.exclude(c(subTemp_metaVars[-which(subTemp_metaVars %in% c(metaVar, randomVar))], fixedVar)), collapse = " + ")
+        # keeping randomVar in previous line might not be necessary, as randomVars should not be in subTemp anyways
       ))
       reducedRsq <- summary(lm(reducedModForm, data = subSubMerge))$r.squared
       if (!is.na(randomVar[[1]])) {
         reducedModForm <- as.formula(paste(
           "rank (FeatureValue) ~",
-          paste(subTemp$metaVariable[-which(subTemp$metaVariable %in% c(metaVar, randomVar))], collapse = " + "),
+          paste(na.exclude(c(subTemp_metaVars[-which(subTemp_metaVars %in% c(metaVar, randomVar))], fixedVar)), collapse = " + "),
           paste0("+ (1|", randomVar, ")")
         ))
         reducedRsq <-  ConditionalR2(lme4::lmer(reducedModForm, REML = F, data = subSubMerge))
@@ -192,6 +208,6 @@ GetPartialEfSizes <- function(featureMat,
     output$partial <- as.numeric(output$partial)
     output$partialRel <- as.numeric(output$partialRel)
     output$partialNorm <- as.numeric(output$partialNorm)
-  }
+  } # for multifeat
   return(output)
 }

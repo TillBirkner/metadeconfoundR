@@ -43,7 +43,7 @@ test_that("Function `BuildHeatmap()` works correctly", {
     "treating input as 'intermedData = T' Buildheatmap output!!"
     )
 
-  example_output_wide <- readRDS("2024_10_10_example_output_wide.rds")
+  example_output_wide <- readRDS("2024_10_17_example_output_wide.rds")
   # plot from wide format data
   expect_no_error(
     BuildHeatmap(

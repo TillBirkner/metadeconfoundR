@@ -5,8 +5,8 @@ test_that("standard options", {
   feature <- reduced_feature
   metaMat <- metaMatMetformin
   # using metadeconfound output created 2024 09 24
-  # write.table(example_output, "tests/testthat/example_output.tsv", sep = "\t", row.names = F)
-  expected_output <- read.table("example_output.tsv", header = T, sep = "\t")
+  # write.table(result, "tests/testthat/2024_10_17_example_output.tsv", sep = "\t", row.names = F)
+  expected_output <- read.table("2024_10_17_example_output.tsv", header = T, sep = "\t")
 
   result <- MetaDeconfound(featureMat = feature,
                            metaMat = metaMat,
@@ -18,7 +18,31 @@ test_that("standard options", {
   result$metaVariable <- as.character(result$metaVariable)
   expect_equal(result, expected_output)
 
-  # simply check, that collectMods is running wothout errors
+
+  #single metadata input
+  # saveRDS(resultOnlyStatus, "tests/testthat/2024_10_17_example_output_OnlyStatus.rds")
+  expected_output_OnlyStatus <- readRDS("2024_10_17_example_output_OnlyStatus.rds")
+
+  resultOnlyStatus <- MetaDeconfound(featureMat = feature,
+                           metaMat = metaMat[, 1,drop = F],
+                           logLevel = "INFO",
+                           returnLong = T
+  )
+  resultOnlyStatus$feature <- as.character(resultOnlyStatus$feature)
+  resultOnlyStatus$metaVariable <- as.character(resultOnlyStatus$metaVariable)
+  expected_output_OnlyStatus$feature <- as.character(expected_output_OnlyStatus$feature)
+  expected_output_OnlyStatus$metaVariable <- as.character(expected_output_OnlyStatus$metaVariable)
+  expect_equal(resultOnlyStatus, expected_output_OnlyStatus)
+
+  expect_no_error(
+    resultOnlyStatus_partial <- GetPartialEfSizes(
+      featureMat = feature,
+      metaMat = metaMat[, 1, drop = F],
+      metaDeconfOutput = resultOnlyStatus
+    )
+  )
+
+  # simply check, that collectMods is running without errors
   # saving all models to file would create >40 MB .rds file
   expect_no_error(MetaDeconfound(featureMat = feature,
                                  metaMat = metaMat,
@@ -26,17 +50,15 @@ test_that("standard options", {
                                  returnLong = T,
                                  collectMods = T
   ))
-  # simply check, that collectMods is running wothout errors
-  # saving all models to file would create >40 MB .rds file
   expect_no_error(MetaDeconfound(featureMat = feature,
                                  metaMat = metaMat,
                                  logLevel = "INFO",
-                                 returnLong = F,
+                                 returnLong = F, # wide
                                  collectMods = T
   ))
 
-  # saveRDS(result_wide, "tests/testthat/2024_10_10_example_output_wide.rds")
-  expected_output_wide <- readRDS("2024_10_10_example_output_wide.rds")
+  # saveRDS(result_wide, "tests/testthat/2024_10_17_example_output_wide.rds")
+  expected_output_wide <- readRDS("2024_10_17_example_output_wide.rds")
 
   result_wide <- MetaDeconfound(featureMat = feature,
                            metaMat = metaMat,
@@ -89,19 +111,13 @@ test_that("standard options", {
 
 
 test_that("standard options parallel", {
-  # read in input and expected output
   feature <- reduced_feature
   metaMat <- metaMatMetformin
-  # using metadeconfound output created 2024 09 24
-  # write.table(example_output, "tests/testthat/example_output.tsv", sep = "\t", row.names = F)
-  expected_output <- read.table("example_output.tsv", header = T, sep = "\t")
-  #expected_output$feature <- as.factor(expected_output$feature)
-  #expected_output$metaVariable <- as.factor(expected_output$metaVariable)
+  expected_output <- read.table("2024_10_17_example_output.tsv", header = T, sep = "\t")
 
-  # Call the function
   result <- MetaDeconfound(featureMat = feature,
                            metaMat = metaMat,
-                           logLevel = "INFO",
+                           logLevel = "ERROR",
                            returnLong = T,
                            nnodes = 2
   )
@@ -115,19 +131,19 @@ test_that("standard options parallel", {
 test_that("random and fixed effects", {
   feature <- reduced_feature
   metaMat <- metaMatMetformin
-  # using metadeconfound output created 2024 09 24
-  # write.table(example_output_rand, "tests/testthat/example_outputrand.tsv", sep = "\t", row.names = F)
-  #saveRDS(result, "tests/testthat/2024_10_09_example_output_rand.rds")
-  expected_output <- readRDS("2024_10_09_example_output_rand.rds")
-  #expected_output$feature <- as.factor(expected_output$feature)
-  #expected_output$metaVariable <- as.factor(expected_output$metaVariable)
+  # saveRDS(result, "tests/testthat/2024_10_16_example_output_rand.rds")
+  expected_output <- readRDS("2024_10_16_example_output_rand.rds")
 
+  temp_file <- tempfile()
   result <- MetaDeconfound(featureMat = feature,
                            metaMat = metaMat,
-                           logLevel = "INFO",
+                           logLevel = "DEBUG",
                            returnLong = T,
-                           randomVar = c("Dataset")
+                           doConfs = 1,
+                           randomVar = c("Dataset"),
+                           logfile = temp_file
   )
+  unlink(temp_file)
 
   result$feature <- as.character(result$feature)
   result$metaVariable <- as.character(result$metaVariable)
@@ -139,7 +155,7 @@ test_that("random and fixed effects", {
   expected_output_fix <- readRDS("2024_10_10_example_output_fix.rds")
   resultFix <- MetaDeconfound(featureMat = feature,
                               metaMat = metaMat,
-                              logLevel = "INFO",
+                              logLevel = "WARN",
                               returnLong = T,
                               fixedVar = c("continuous_dummy")
   )
@@ -147,8 +163,8 @@ test_that("random and fixed effects", {
   resultFix$metaVariable <- as.character(resultFix$metaVariable)
   expected_output_fix$feature <- as.character(expected_output_fix$feature)
   expected_output_fix$metaVariable <- as.character(expected_output_fix$metaVariable)
-  expect_equal(dim(resultFix), dim(expected_output_fix))
-  #expect_equal(resultFix, expected_output_fix)
+  #expect_equal(dim(resultFix), dim(expected_output_fix))
+  expect_equal(resultFix, expected_output_fix, tolerance = 0.0001)
 
   # saveRDS(resultFixRand, "tests/testthat/2024_10_10_example_output_fixRand.rds")
   expected_output_fix_rand <- readRDS("2024_10_10_example_output_fixRand.rds")
@@ -340,6 +356,17 @@ test_that("correct error handling", {
     ),
     "randomVar does not need to be supplied as list anymore, please change to new syntax.",
     fixed = FALSE
+  )
+
+  # below robustCutoff
+  expect_error(
+    MetaDeconfound(featureMat = feature[1:11, ],
+                   metaMat = metaMat[1:11, ],
+                   logLevel = "ERROR",
+                   returnLong = T
+    ),
+    'Not enough(robustCutoff = 5 ) samples in either case or controle group.',
+    fixed = TRUE
   )
 
   # # specific error
