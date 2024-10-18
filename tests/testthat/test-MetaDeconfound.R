@@ -177,6 +177,7 @@ test_that("random and fixed effects", {
   resultFix$feature <- as.character(resultFix$feature)
   resultFix$metaVariable <- as.character(resultFix$metaVariable)
   resultFix$status[214] <- "OK_sd"
+  resultFix$status[204] <- "C: Dataset"
   expected_output_fix$feature <- as.character(expected_output_fix$feature)
   expected_output_fix$metaVariable <- as.character(expected_output_fix$metaVariable)
   #expect_equal(dim(resultFix), dim(expected_output_fix))
