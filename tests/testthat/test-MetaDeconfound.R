@@ -166,6 +166,8 @@ test_that("random and fixed effects", {
                resultFix$collectedMods$MS0047$altered_dummy$Dataset$cov))
   print(lapply(resultFix$collectedMods$MS0047$altered_dummy$Dataset, summary))
 
+  print(sessionInfo())
+
   resultFix <- resultFix$stdOutput
   resultFix$feature <- as.character(resultFix$feature)
   resultFix$metaVariable <- as.character(resultFix$metaVariable)
