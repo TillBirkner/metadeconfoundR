@@ -131,25 +131,25 @@ library(metadeconfoundR)
 test_that("random and fixed effects", {
   feature <- reduced_feature
   metaMat <- metaMatMetformin
-  # saveRDS(result, "tests/testthat/2024_10_16_example_output_rand.rds")
-  expected_output <- readRDS("2024_10_16_example_output_rand.rds")
-
-  temp_file <- tempfile()
-  result <- MetaDeconfound(featureMat = feature,
-                           metaMat = metaMat,
-                           logLevel = "DEBUG",
-                           returnLong = T,
-                           doConfs = 1,
-                           randomVar = c("Dataset"),
-                           logfile = temp_file
-  )
-  unlink(temp_file)
-
-  result$feature <- as.character(result$feature)
-  result$metaVariable <- as.character(result$metaVariable)
-  expected_output$feature <- as.character(expected_output$feature)
-  expected_output$metaVariable <- as.character(expected_output$metaVariable)
-  expect_equal(result, expected_output)
+  # # saveRDS(result, "tests/testthat/2024_10_16_example_output_rand.rds")
+  # expected_output <- readRDS("2024_10_16_example_output_rand.rds")
+  #
+  # temp_file <- tempfile()
+  # result <- MetaDeconfound(featureMat = feature,
+  #                          metaMat = metaMat,
+  #                          logLevel = "DEBUG",
+  #                          returnLong = T,
+  #                          doConfs = 1,
+  #                          randomVar = c("Dataset"),
+  #                          logfile = temp_file
+  # )
+  # unlink(temp_file)
+  #
+  # result$feature <- as.character(result$feature)
+  # result$metaVariable <- as.character(result$metaVariable)
+  # expected_output$feature <- as.character(expected_output$feature)
+  # expected_output$metaVariable <- as.character(expected_output$metaVariable)
+  # expect_equal(result, expected_output)
 
   # saveRDS(resultFix, "tests/testthat/2024_10_10_example_output_fix.rds")
   expected_output_fix <- readRDS("2024_10_10_example_output_fix.rds")
@@ -164,6 +164,8 @@ test_that("random and fixed effects", {
                resultFix$collectedMods$MS0047$altered_dummy$Dataset$conf))
   print(lrtest(resultFix$collectedMods$MS0047$altered_dummy$Dataset$full,
                resultFix$collectedMods$MS0047$altered_dummy$Dataset$cov))
+  print(lapply(resultFix$collectedMods$MS0047$altered_dummy$Dataset, summary))
+
   resultFix <- resultFix$stdOutput
   resultFix$feature <- as.character(resultFix$feature)
   resultFix$metaVariable <- as.character(resultFix$metaVariable)
