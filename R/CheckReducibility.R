@@ -413,7 +413,6 @@ CheckReducibility <- function(featureMat,
           # one covariate has influence on feature ...
           # beyond that of the other covariate
 
-
           if (is(lmA, "logical") ||
               is(lmAnother, "logical") ||
               is(lmBoth, "logical") ) {
@@ -449,6 +448,28 @@ CheckReducibility <- function(featureMat,
 
           aP_forward <- safe_lrtest(lmBoth, lmAnother)
           aP_reverse <- safe_lrtest(lmBoth, lmA)
+
+          if (is(lmBoth, "lm") && anyNA(lmBoth$coefficients)) {
+            flog.warn(paste0("In full model containing: ",
+                             paste0(names(lmBoth$coefficients),
+                                    collapse = ", "),
+                             ", NA coefficient(s) are present: ",
+                             paste0(names(lmBoth$coefficients)[is.na(lmBoth$coefficients)],
+                                    collapse = ", "),
+                             ". Setting forward and reverse LRTs to non-significant."
+                             ),
+                      name = "my.logger")
+            aP_forward <- 1
+            aP_reverse <- 1
+          }# else if (is(lmBoth, "lmerMod") && lme4::isSingular(lmBoth)) {
+          #   flog.warn(paste0("Full model: '",
+          #                    lmBoth@call,
+          #                    "' with FeatureFalue == ",
+          #                    aFeature,
+          #                    " appears to have a singularity problem.",
+          #                    ),
+          #             name = "my.logger")
+          # }
 
           # additonal control of confidence intervals for the covariates within the linear models
           conf_aCovariate <- TRUE

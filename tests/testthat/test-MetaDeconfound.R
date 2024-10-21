@@ -151,8 +151,8 @@ test_that("random and fixed effects", {
   expected_output$metaVariable <- as.character(expected_output$metaVariable)
   expect_equal(result, expected_output)
 
-  # saveRDS(resultFix, "tests/testthat/2024_10_10_example_output_fix.rds")
-  expected_output_fix <- readRDS("2024_10_10_example_output_fix.rds")
+  # saveRDS(resultFix, "tests/testthat/2024_10_21_example_output_fix.rds")
+  expected_output_fix <- readRDS("2024_10_21_example_output_fix.rds")
   resultFix <- MetaDeconfound(featureMat = feature,
                               metaMat = metaMat,
                               logLevel = "INFO",
@@ -176,8 +176,8 @@ test_that("random and fixed effects", {
   #resultFix <- resultFix$stdOutput
   resultFix$feature <- as.character(resultFix$feature)
   resultFix$metaVariable <- as.character(resultFix$metaVariable)
-  resultFix$status[214] <- "OK_sd"
-  resultFix$status[204] <- "C: Dataset"
+  #resultFix$status[214] <- "OK_sd"
+  #resultFix$status[204] <- "C: Dataset"
   expected_output_fix$feature <- as.character(expected_output_fix$feature)
   expected_output_fix$metaVariable <- as.character(expected_output_fix$metaVariable)
   #expect_equal(dim(resultFix), dim(expected_output_fix))
