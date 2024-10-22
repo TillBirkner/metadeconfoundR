@@ -19,9 +19,10 @@ NaiveAssociation <- function(featureMat,
                              adjustMethod,
                              verbosity) {
 
-
-  if (nnodes < 1) {
-    nnodes <- 1
+  #new TB20240926
+  `%toggleDoPar%` <- `%do%`
+  if (nnodes != 1) {
+    `%toggleDoPar%` <- `%dopar%`
   }
 
   #new TB20221125
@@ -59,7 +60,7 @@ NaiveAssociation <- function(featureMat,
   }
 
   i <- 0
-  flog.debug(
+  futile.logger::flog.debug(
     paste(
       "counter",
       "aCovariate",
@@ -93,7 +94,7 @@ NaiveAssociation <- function(featureMat,
     } # default as categorical
   }
 
-  r = foreach::foreach(i= seq_along(features), .combine='rbind') %dopar% {
+  r = foreach::foreach(i= seq_along(features), .combine='rbind') %toggleDoPar% {
 
     somePs <- vector(length = noCovariates)
     someDs <- vector(length = noCovariates)
@@ -110,7 +111,7 @@ NaiveAssociation <- function(featureMat,
       if ((i %% progressSteps) == 0) {#TB20240229
         progress <- paste0(round(x = ((i/length(features))*100),
                                  digits = 2), "%")
-        flog.info(msg = paste("NaiveAssociation -- processed",
+        futile.logger::flog.info(msg = paste("NaiveAssociation -- processed",
                               progress,
                               "of features."),
                   name = "my.logger")
@@ -127,7 +128,7 @@ NaiveAssociation <- function(featureMat,
       aFeature <- as.character (features [i])
       aCovariate <- as.character (covariates [j])
 
-      flog.debug(
+      futile.logger::flog.debug(
         paste(
           i,
           aCovariate,
@@ -145,7 +146,7 @@ NaiveAssociation <- function(featureMat,
         someDs[j] <- aD
 
 
-        flog.debug(paste0("skipped ", aCovariate), name = "my.logger")
+        futile.logger::flog.debug(paste0("skipped ", aCovariate), name = "my.logger")
 
         next
       }
@@ -208,9 +209,9 @@ NaiveAssociation <- function(featureMat,
     else if (variableType == "binary" && conVar) {
       # MWU test if binary and 	# SKF20200221
 
-      aP <- stats::wilcox.test (
+      aP <- suppressWarnings(stats::wilcox.test (
           subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"],
-          subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"])$p.value
+          subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"]))$p.value
 
       aD <- CliffsDelta(
         as.vector (
@@ -224,23 +225,28 @@ NaiveAssociation <- function(featureMat,
     else if (variableType == "continuous" && conVar) {
       # spearman test if continuous and numerical 	# SKF20200221
 
-      aP <- stats::cor.test (subMerge [, aCovariate],
-                             subMerge [, "FeatureValue"],
-                             method = "spearman")$p.value
-      aD <- stats::cor.test (subMerge [, aCovariate],
-                             subMerge [, "FeatureValue"],
-                             method = "spearman")$estimate
+      corTestObj <- suppressWarnings(stats::cor.test (subMerge [, aCovariate],
+                                                      subMerge [, "FeatureValue"],
+                                                      method = "spearman"))
+      aP <- corTestObj$p.value
+      aD <- corTestObj$estimate
+      # aP <- stats::cor.test (subMerge [, aCovariate],
+      #                        subMerge [, "FeatureValue"],
+      #                        method = "spearman")$p.value
+      # aD <- stats::cor.test (subMerge [, aCovariate],
+      #                        subMerge [, "FeatureValue"],
+      #                        method = "spearman")$estimate
     }
 
-    else if (variableType == "categorical" && conVar) {  # now never happens, probably 	# SKF20200221
-#      else if (con2 && !con5) {  # kruskal-wallis test if
-                                  # not binary AND not numerical
-      aP <- stats::kruskal.test (
-        g = as.factor(subMerge [[aCovariate]]),
-        x = subMerge [["FeatureValue"]])$p.value
-
-      aD <- Inf
-    }
+#     else if (variableType == "categorical" && conVar) {  # now never happens, probably 	# SKF20200221
+# #      else if (con2 && !con5) {  # kruskal-wallis test if
+#                                   # not binary AND not numerical
+#       aP <- stats::kruskal.test (
+#         g = as.factor(subMerge [[aCovariate]]),
+#         x = subMerge [["FeatureValue"]])$p.value
+#
+#       aD <- Inf
+#     }
 
       somePs[j] <- aP
       someDs[j] <- aD
@@ -250,7 +256,7 @@ NaiveAssociation <- function(featureMat,
 
     if ((i %% progressSteps) == 0) {#TB20240229
       progress <- paste0(round(x = ((i/length(features))*100),digits = 2), "%")
-      flog.info(msg = paste("NaiveAssociation -- processed",
+      futile.logger::flog.info(msg = paste("NaiveAssociation -- processed",
                             progress,
                             "of features."),
                 name = "my.logger")
@@ -270,9 +276,9 @@ NaiveAssociation <- function(featureMat,
   parallel::stopCluster(cl)
 
 
-  flog.info(msg = paste("NaiveAssociation -- processed 100% of features."),
+  futile.logger::flog.info(msg = paste("NaiveAssociation -- processed 100% of features."),
             name = "my.logger")
-  flog.debug(paste("NaiveAssociation -- ncol(parallelreturn):", ncol(r)),
+  futile.logger::flog.debug(paste("NaiveAssociation -- ncol(parallelreturn):", ncol(r)),
              name = "my.logger")
 
   Ps <- r[, seq_len(ncol(r)/2), drop = F]

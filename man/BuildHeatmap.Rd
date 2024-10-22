@@ -20,7 +20,8 @@ BuildHeatmap(
   keepFeature = NULL,
   trusted = c("OK_sd", "OK_nc", "OK_d", "AD"),
   tileBordCol = "black",
-  reOrder = "both"
+  reOrder = "both",
+  plotPartial = "Ds"
 )
 }
 \arguments{
@@ -81,6 +82,8 @@ as trustworthy, not-confounded signal. default = c("OK_sd", "OK_nc", "OK_d", "AD
 \item{tileBordCol}{tile border color of  heatmap tiles, default: "black"}
 
 \item{reOrder}{reorder features and/or metadata? possible options: c("both", "feat", "meta", "none"), default: "both"}
+
+\item{plotPartial}{choose which effect site should be plotted. options: c("Ds", "partial", "partialRel, partialNorm"), default: "Ds"}
 }
 \value{
 ggplot2 object

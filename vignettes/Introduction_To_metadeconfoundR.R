@@ -87,6 +87,30 @@ BuildHeatmap(example_output) +
     plot.subtitle = element_blank()
   )
 
+## ----produceLongOut, eval=FALSE-----------------------------------------------
+#  print(example_output[101:105, ])
+
+## ----headLongInput, echo=FALSE------------------------------------------------
+knitr::kable(example_output[101:105, ])
+
+## ----runImportLongPrior-------------------------------------------------------
+
+minQValues <- ImportLongPrior(longPrior = example_output,
+                                featureMat = reduced_feature,
+                                metaMat = metaMatMetformin)
+
+## ----fakeshowminQ, eval=FALSE-------------------------------------------------
+#  print(minQValues[1:5, 1:5])
+
+## ----showminQValues, echo=FALSE-----------------------------------------------
+knitr::kable(minQValues[1:5, 1:5])
+
+## ----runInformedMetadeconf, eval=FALSE----------------------------------------
+#  
+#  example_output2 <- MetaDeconfound(featureMat = reduced_feature,
+#                                    metaMat = metaMatMetformin,
+#                                    minQValues = minQValues)
+
 ## ----sessionInfo, results="asis", echo=FALSE----------------------------------
 pander::pander(sessionInfo())
 

@@ -181,6 +181,65 @@ BuildHeatmap(example_output) +
   )
 ```
 
+## importLongPrior()
+
+The newly added function ImportLongPrior() of the metadeconfoundR package allows for easy integration of a list of feature-metadata pairings into a new run of the main Metadeconfound() function.
+
+These pairings must be supplied in the form of a long-format data.frame with the first column called "feature" containing names of omics features and the second column called "metaVariable" containing names of the respective associated metadata variable. When only these two columns are used as input for ImportLongPrior(), all given pairings are assumed to be significant.
+
+
+Additional columns called "Qs" and "status", as produced by metadeconfoundR: 
+
+```{r produceLongOut, eval=FALSE}
+print(example_output[101:105, ])
+```
+```{r headLongInput, echo=FALSE}
+knitr::kable(example_output[101:105, ])
+```
+
+can also be supplied. Whenever the "status" column is part of the input, only feature--metadata pairings having a status other than "NS" are assumed to be significant.
+
+--------------------------------------------------------------------------------  
+
+To assure only features and metadata present in the current dataset are imported, 
+the two input data.frames for the Metadeconfound() function, featureMat and metaMat, also need to be supplied to ImportLongPrior().
+It is therefore important to have consistent naming of variables between datasets.
+
+```{r runImportLongPrior}
+
+minQValues <- ImportLongPrior(longPrior = example_output,
+                                featureMat = reduced_feature,
+                                metaMat = metaMatMetformin)
+```
+
+In any case, ImportLongPrior() will return a wide-format data.frame containing significance values for the supplied pairings. If a "Qs" column was part of the longPrior input, these multiple-testing corrected p-values will be used for the output. If no "Qs" was supplied, artificial "significant" values of -1 will be used to mark significant associations.
+
+
+```{r fakeshowminQ, eval=FALSE}
+print(minQValues[1:5, 1:5])
+```
+
+```{r showminQValues, echo=FALSE}
+knitr::kable(minQValues[1:5, 1:5])
+```
+
+This data.frame can now be used as the minQValues input parameter of MetaDeconfound().
+
+```{r runInformedMetadeconf, eval=FALSE}
+
+example_output2 <- MetaDeconfound(featureMat = reduced_feature,
+                                  metaMat = metaMatMetformin,
+                                  minQValues = minQValues)
+```
+
+This way, all significant feature--metadata pairings in the minQValues data.frame will be treated as potential confounders in the MetaDeconfound(). 
+
+Note that this example is only to demonstrate the general process of integrating
+prior knowledge into a MetaDeconfound() analysis. Using the output of a
+MetaDeconfound() run as minQValues input for a second run with the exact
+same features and metadata will not lead to any new insights since the set
+of QValues calculated by MetaDeconfound() and the set supplied using the
+minQValues parameter are identical in this case.
 
 ***
 

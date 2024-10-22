@@ -44,6 +44,7 @@
 #' as trustworthy, not-confounded signal. default = c("OK_sd", "OK_nc", "OK_d", "AD")
 #' @param tileBordCol tile border color of  heatmap tiles, default: "black"
 #' @param reOrder reorder features and/or metadata? possible options: c("both", "feat", "meta", "none"), default: "both"
+#' @param plotPartial choose which effect site should be plotted. options: c("Ds", "partial", "partialRel, partialNorm"), default: "Ds"
 #' @return ggplot2 object
 #' @details for more details and explanations please see the package vignette.
 #' @examples
@@ -80,7 +81,8 @@ BuildHeatmap <- function(metaDeconfOutput,
                          keepFeature = NULL,
                          trusted = c("OK_sd", "OK_nc", "OK_d", "AD"),
                          tileBordCol = "black",
-                         reOrder = "both"
+                         reOrder = "both",
+                         plotPartial = "Ds" # 20240905 TB
                          ) {
 
 
@@ -119,13 +121,23 @@ BuildHeatmap <- function(metaDeconfOutput,
     status <- reshape2::melt(data = metaDeconfOutput$status,
                    varnames = c("feature", "metaVariable"),
                    value.name = "status")
-  } else if (ncol(metaDeconfOutput) == 9) {
+  } else if ((sum(c("stars", "insignificant", "featureNames") %in% colnames(metaDeconfOutput))) == 3) {
     warning("treating input as 'intermedData = T' Buildheatmap output!!")
     fromIntermed <- TRUE
     effectSize <- metaDeconfOutput
 
   } else {
     effectSize <- metaDeconfOutput[, c("feature", "metaVariable", "Ds")]
+
+    if (plotPartial == "partial") {
+      effectSize$Ds <- metaDeconfOutput$partial
+      keepMeta <- unique(c(keepMeta, "maxRsq")) # always show total explainable Rsq if applicable
+    } else if (plotPartial == "partialRel") {
+      effectSize$Ds <- metaDeconfOutput$partialRel
+    } else if (plotPartial == "partialNorm") {
+      effectSize$Ds <- metaDeconfOutput$partialNorm
+    }
+
     fdr <- metaDeconfOutput[, c("feature", "metaVariable", "Qs")]
     status <- metaDeconfOutput[, c("feature", "metaVariable", "status")]
 
@@ -268,6 +280,13 @@ BuildHeatmap <- function(metaDeconfOutput,
              levels = levels(as.factor(effectSize$metaVariable)) [ord2])
   }
 
+  if (plotPartial == "partial") {
+    # put the additional "maxRsq" column in last position always
+    effectSize$metaVariable <- factor(effectSize$metaVariable, levels = c(setdiff(
+      levels(effectSize$metaVariable), "maxRsq"
+    ), "maxRsq"))
+  }
+
 
   # ord <- hclust(dist(eff_cast, method = "euclidean"), method = "ward.D")$order
   # eff_cast <- scale(t(eff_cast))
@@ -347,7 +366,7 @@ BuildHeatmap <- function(metaDeconfOutput,
     legendShapes <- c(8)
   }
 
-  # include added name coluns into plots!!
+  # include added name colums into plots!!
   if (cuneiform) {
 
     # put together needed shapes and their meaning
@@ -379,7 +398,7 @@ BuildHeatmap <- function(metaDeconfOutput,
                            mid = d_col[2],
                            high = d_col[3],
                            midpoint = 0,
-                           guide = guide_colorbar (raster = F),
+                           guide = guide_colorbar (display = "gradient"),
                            limits = c(lowerLim,upperLim)) +
       # the shape lines color indicate confounding status
       scale_color_manual(name = "Confounding status",
@@ -414,7 +433,7 @@ BuildHeatmap <- function(metaDeconfOutput,
                            mid = d_col[2],
                            high = d_col[3],
                            midpoint = 0,
-                           guide = guide_colorbar (raster = F),
+                           guide = guide_colorbar (display = "gradient"),
                            limits = c(lowerLim,upperLim)) +
       # add significance stars/circles for deconfounded/confounded associations
       geom_text(aes(label= .data$stars, colour = .data$status),
