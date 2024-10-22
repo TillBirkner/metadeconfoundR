@@ -1,23 +1,15 @@
 library(testthat)
-library(metadeconfoundR)  # Your package name
+library(metadeconfoundR)
 
 test_that("Function `BuildHeatmap()` works correctly", {
-
   feature <- reduced_feature
   metaMat <- metaMatMetformin
-  input <- readRDS("example_output.rds")
 
+  input <- readRDS("example_output.rds")
   # 2024 09 24 saveRDS(heatmapPlot, "tests/testthat/expected_BuildHeatmap_output.rds")
   expected_output <- readRDS("expected_BuildHeatmap_output.rds")
-  #expected_output <- heatmapPlot
-
-
-  # Call the function
   result <- BuildHeatmap(input)
-
-  # Verify that the result matches the expected output
   expect_equal(result$data, expected_output$data)
-
 
 
   expect_warning(
@@ -47,7 +39,66 @@ test_that("Function `BuildHeatmap()` works correctly", {
   # plot from wide format data
   expect_no_error(
     BuildHeatmap(
-      example_output_wide
+      example_output_wide,
+      d_range = "full"
+    )
+  )
+
+  # wrong number of colors
+  expect_error(
+    BuildHeatmap(
+      example_output_wide,
+      d_col = c("red", "blue")
+    ),
+    "wrong number of colors in d_col!\nSupply colors for c(min, middle, max)!",
+    fixed = TRUE
+  )
+
+  # wrong d_range
+  expect_error(
+    BuildHeatmap(
+      example_output_wide,
+      d_range = "partTime"
+    ),
+    'd_range must be either "fit" or "full"!',
+    fixed = TRUE
+  )
+
+  # no trusted
+  expect_error(
+    BuildHeatmap(
+      example_output_wide,
+      trusted = c()
+    ),
+    '"trusted" must contain at least one trusted status label',
+    fixed = TRUE
+  )
+
+})
+
+test_that("Function `BuildHeatmap()` works correctly with partial Eff", {
+  feature <- reduced_feature
+  metaMat <- metaMatMetformin
+  input <- readRDS("2024_10_10_example_output_partialRand.rds")
+
+  expect_no_error(
+    BuildHeatmap(
+      input,
+      plotPartial = "partial"
+    )
+  )
+
+  expect_no_error(
+    BuildHeatmap(
+      input,
+      plotPartial = "partialRel"
+    )
+  )
+
+  expect_no_error(
+    BuildHeatmap(
+      input,
+      plotPartial = "partialNorm"
     )
   )
 
