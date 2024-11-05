@@ -484,7 +484,7 @@ CheckReducibility <- function(featureMat,
               is.numeric(subsubMerge[, anotherCovariate])
               ) {
             # if (is.numeric(subsubMerge[, aCovariate]) && is.numeric(subsubMerge[, anotherCovariate])) { # categorical variables are excluded for easier processing
-            confints <- confint(lmBoth, parm = c(aCovariate, anotherCovariate), method = "Wald")
+            confints <- suppressMessages(confint(lmBoth, parm = c(aCovariate, anotherCovariate), method = "Wald"))
             conf_aCovariate <- !(sign(confints[aCovariate, 1]) == sign(confints[aCovariate, 2])) # signs are different, if confint is spanning 0
             conf_anotherCovariate  <- !(sign(confints[anotherCovariate, 1]) == sign(confints[anotherCovariate, 2]))
 
