@@ -488,8 +488,8 @@ CheckReducibility <- function(featureMat,
             conf_aCovariate <- !(sign(confints[aCovariate, 1]) == sign(confints[aCovariate, 2])) # signs are different, if confint is spanning 0
             conf_anotherCovariate  <- !(sign(confints[anotherCovariate, 1]) == sign(confints[anotherCovariate, 2]))
 
-            if ((aP_forward < PHS_cutoff) &&
-                conf_aCovariate) {
+            if (is.na(conf_aCovariate) || ((aP_forward < PHS_cutoff) &&
+                conf_aCovariate)) {
               # if forward test is significant, but aCovariate confint spans 0
               flog.warn(
                 msg = paste(
@@ -499,7 +499,7 @@ CheckReducibility <- function(featureMat,
                   anotherCovariate,
                   '-- forward linear model is < PHS_cutoff, but confidence intervall for',
                   aCovariate,
-                  'is spanning 0.'
+                  'is spanning 0 (or NA).'
                 ),
                 name = "my.logger"
               )
@@ -511,8 +511,8 @@ CheckReducibility <- function(featureMat,
             }
 
             #if (! is.na (aP_forward) && (aP_reverse < PHS_cutoff) && conf_anotherCovariate) { # if reverse test is significant, but anotherCovariate confint spans 0
-            if ((aP_reverse < PHS_cutoff) &&
-                conf_anotherCovariate) {
+            if (is.na(conf_anotherCovariate) || ((aP_reverse < PHS_cutoff) &&
+                conf_anotherCovariate)) {
               # if reverse test is significant, but anotherCovariate confint spans 0
               flog.warn(
                 msg = paste(
@@ -522,7 +522,7 @@ CheckReducibility <- function(featureMat,
                   anotherCovariate,
                   '-- reverse linear model is < PHS_cutoff, but confidence intervall for',
                   anotherCovariate,
-                  'is spanning 0.'
+                  'is spanning 0 (or NA).'
                 ),
                 name = "my.logger"
               )
