@@ -10,6 +10,7 @@ Version 1.0.3
   - bug fix of bug disabling computation of confidence intervalls of lrts
   - implementaion of truly linear computation mode when nnodes = 1
   - additional test to filter out non trustworthy lrts in some scenarios with highly colinear metavariables
+  - stricter tests for complete separaion when glms are computed
 
   - BuildHeatmap()
     - added "plotPartial" argument to choose between

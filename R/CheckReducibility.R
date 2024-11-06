@@ -306,7 +306,7 @@ CheckReducibility <- function(featureMat,
           # remove rows where anotherCovariate has NAs
           subsubMerge <- eval (parse (text = paste0 ("subset (subMerge, ! is.na (", anotherCovariate, "))")))
 
-          if (logistic == T & !is.na(randomVar[[1]])) {
+          if (logistic == T) {
             flog.debug("testing separation", name = "my.logger")
             #test for separation in model without random part
             glmmodeltext <-          paste0 ("glm (FeatureValue ~ ",
@@ -324,7 +324,7 @@ CheckReducibility <- function(featureMat,
                                     "and",
                                     anotherCovariate),
                         name = "my.logger")
-              separation <- T
+              #separation <- T
               status <- NA
               if (collectMods) {
                 collectedMods[[aFeature]][[aCovariate]][[anotherCovariate]][["full"]] <- glmmodel
