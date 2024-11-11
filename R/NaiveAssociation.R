@@ -2,6 +2,7 @@
 #' @import stats
 #' @importFrom  lmtest lrtest
 #' @import futile.logger
+#' @import detectseparation
 
 NaiveAssociation <- function(featureMat,
                              samples,
@@ -151,92 +152,110 @@ NaiveAssociation <- function(featureMat,
         next
       }
 
-	variableType <- getVariableType (na.exclude(subMerge[[aCovariate]]), aCovariate)
+      variableType <- getVariableType (na.exclude(subMerge[[aCovariate]]), aCovariate)
+      conVar <- TRUE
+      varX <- na.exclude (cbind (subMerge [[aCovariate]], subMerge [["FeatureValue"]]))
 
-  conVar <- TRUE
-  varX <- na.exclude (cbind (subMerge [[aCovariate]], subMerge [["FeatureValue"]]))
-
-  if (sum (! is.na (subMerge [["FeatureValue"]])) < 1 ||
-      # TRUE if only NA-values
-      nrow (varX) <= 2 ||
-      # TRUE if if there are not at least three rows without NAs
-      length (unique (varX [, 1])) < 2 ||
-      # TRUE if there are not at least two different metadata values in non-NA subset
-      length (unique (varX [, 2])) < 2) {
-      # TRUE if there are not at least two different feature values in non-NA subset
+      if (sum (! is.na (subMerge [["FeatureValue"]])) < 1 ||
+          # TRUE if only NA-values
+          nrow (varX) <= 2 ||
+          # TRUE if if there are not at least three rows without NAs
+          length (unique (varX [, 1])) < 2 ||
+          # TRUE if there are not at least two different metadata values in non-NA subset
+          length (unique (varX [, 2])) < 2) {
+          # TRUE if there are not at least two different feature values in non-NA subset
         conVar <- FALSE
-  }
-
-
-  subSubMerge <- na.exclude(subMerge[, c(aCovariate, "FeatureValue")])
-    if (logistic == TRUE && conVar) {
-      formulaNull <- paste0 ("stats::glm (FeatureValue ~ 1, data = subSubMerge, family = \"binomial\")", collapse = "")
-      formulaVar <- paste0 ("stats::glm (FeatureValue ~ ", aCovariate, ", data = subSubMerge, family = \"binomial\")", collapse = "")
-
-      lmNull <- eval (parse (text = as.character (formulaNull)))
-      lmVar <- eval (parse (text = as.character (formulaVar)))
-
-      aP <- lmtest::lrtest (lmNull, lmVar)$'Pr(>Chisq)' [2]
-      if (variableType == "categorical") {
-        aD <- Inf
-      } else if (variableType == "binary") {
-        aD <- stats::cor.test (subMerge [, aCovariate],
-                               subMerge [, "FeatureValue"],
-                               )$estimate
-      } else  if (variableType == "continuous") {
-        aD <- CliffsDelta(
-          as.vector (
-            na.exclude (
-              subMerge [subMerge [["FeatureValue"]] == 0, aCovariate])),
-          as.vector (
-            na.exclude (
-              subMerge [subMerge [["FeatureValue"]] == 1, aCovariate])))
       }
-      #aD <- lmVar$coef [2]
 
+
+      subSubMerge <- na.exclude(subMerge[, c(aCovariate, "FeatureValue")])
+
+      if (logistic == TRUE && conVar) {
+
+
+        formulaVar <- paste0 (
+          "stats::glm (FeatureValue ~ ",
+          aCovariate,
+          ", data = subSubMerge, family = \"binomial\")",
+          collapse = ""
+        )
+        lmVar <- eval (parse (text = as.character (formulaVar)))
+
+        formulaNull <- paste0 ("stats::glm (FeatureValue ~ 1, data = subSubMerge, family = \"binomial\")", collapse = "")
+        lmNull <- eval (parse (text = as.character (formulaNull)))
+
+    aP <- NA
+    glmSepTested <- update(lmVar, method="detect_separation")
+    if (glmSepTested$outcome) {
+      flog.warn(
+        msg = paste(
+          "Separation for:", aFeature, "and",
+          aCovariate),
+        name = "my.logger")
+    } else {
+      aP <- lmtest::lrtest (lmNull, lmVar)$'Pr(>Chisq)' [2]
     }
 
-    else if (variableType == "categorical" && conVar) {
-      # KW test if false binary and 	# SKF20200221
-
-      aP <- stats::kruskal.test (
-        g = as.factor(subMerge [[aCovariate]]),
-        x = subMerge [["FeatureValue"]])$p.value
-
+    if (variableType == "categorical") {
       aD <- Inf
-    }
-
-    else if (variableType == "binary" && conVar) {
-      # MWU test if binary and 	# SKF20200221
-
-      aP <- suppressWarnings(stats::wilcox.test (
-          subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"],
-          subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"]))$p.value
-
+    } else if (variableType == "binary") {
+      aD <- stats::cor.test (subMerge [, aCovariate],
+                             subMerge [, "FeatureValue"],
+                             )$estimate
+    } else  if (variableType == "continuous") {
       aD <- CliffsDelta(
         as.vector (
           na.exclude (
-            subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"])),
+            subMerge [subMerge [["FeatureValue"]] == 0, aCovariate])),
         as.vector (
           na.exclude (
-            subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"])))
+            subMerge [subMerge [["FeatureValue"]] == 1, aCovariate])))
     }
+    #aD <- lmVar$coef [2]
 
-    else if (variableType == "continuous" && conVar) {
-      # spearman test if continuous and numerical 	# SKF20200221
+  }
 
-      corTestObj <- suppressWarnings(stats::cor.test (subMerge [, aCovariate],
-                                                      subMerge [, "FeatureValue"],
-                                                      method = "spearman"))
-      aP <- corTestObj$p.value
-      aD <- corTestObj$estimate
-      # aP <- stats::cor.test (subMerge [, aCovariate],
-      #                        subMerge [, "FeatureValue"],
-      #                        method = "spearman")$p.value
-      # aD <- stats::cor.test (subMerge [, aCovariate],
-      #                        subMerge [, "FeatureValue"],
-      #                        method = "spearman")$estimate
-    }
+  else if (variableType == "categorical" && conVar) {
+    # KW test if false binary and 	# SKF20200221
+
+    aP <- stats::kruskal.test (
+      g = as.factor(subMerge [[aCovariate]]),
+      x = subMerge [["FeatureValue"]])$p.value
+
+    aD <- Inf
+  }
+
+  else if (variableType == "binary" && conVar) {
+    # MWU test if binary and 	# SKF20200221
+
+    aP <- suppressWarnings(stats::wilcox.test (
+        subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"],
+        subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"]))$p.value
+
+    aD <- CliffsDelta(
+      as.vector (
+        na.exclude (
+          subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"])),
+      as.vector (
+        na.exclude (
+          subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"])))
+  }
+
+  else if (variableType == "continuous" && conVar) {
+    # spearman test if continuous and numerical 	# SKF20200221
+
+    corTestObj <- suppressWarnings(stats::cor.test (subMerge [, aCovariate],
+                                                    subMerge [, "FeatureValue"],
+                                                    method = "spearman"))
+    aP <- corTestObj$p.value
+    aD <- corTestObj$estimate
+    # aP <- stats::cor.test (subMerge [, aCovariate],
+    #                        subMerge [, "FeatureValue"],
+    #                        method = "spearman")$p.value
+    # aD <- stats::cor.test (subMerge [, aCovariate],
+    #                        subMerge [, "FeatureValue"],
+    #                        method = "spearman")$estimate
+  }
 
 #     else if (variableType == "categorical" && conVar) {  # now never happens, probably 	# SKF20200221
 # #      else if (con2 && !con5) {  # kruskal-wallis test if
@@ -266,12 +285,6 @@ NaiveAssociation <- function(featureMat,
 
   } # for i (foreach)
 
-  # # close parallel processing environment
-  # if (.Platform$OS.type == "unix") {
-  #   parallel::stopCluster(cl) # unix
-  # } else {
-  #   parallel::stopCluster(cl)
-  # }
   # close parallel processing environment
   parallel::stopCluster(cl)
 

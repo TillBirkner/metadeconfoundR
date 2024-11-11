@@ -205,8 +205,8 @@ test_that("logistic regression", {
   feature[feature > 0] <- 1
   metaMat <- metaMatMetformin
   # using metadeconfound output created 2024 09 26
-  # write.table(example_output, "tests/testthat/example_output_logistic.tsv", sep = "\t", row.names = F)
-  expected_output <- read.table("example_output_logistic.tsv", header = T, sep = "\t")
+  # write.table(example_output, "tests/testthat/2024_11_07_example_output_logistic.tsv", sep = "\t", row.names = F)
+  expected_output <- read.table("2024_11_07_example_output_logistic.tsv", header = T, sep = "\t")
 
   result <- MetaDeconfound(featureMat = feature,
                            metaMat = metaMat,
@@ -221,8 +221,8 @@ test_that("logistic regression", {
   expect_equal(result, expected_output)
 
   #combination of randomVars AND logistic mode
-  # saveRDS(resultlogRand, "tests/testthat/2024_10_10_example_output_log_rand.rds")
-  expected_output_logRand <- readRDS("2024_10_10_example_output_log_rand.rds")
+  # saveRDS(resultlogRand, "tests/testthat/2024_11_07_example_output_log_rand.rds")
+  expected_output_logRand <- readRDS("2024_11_07_example_output_log_rand.rds")
 
   resultlogRand <- MetaDeconfound(featureMat = feature,
                            metaMat = metaMat,

@@ -2,9 +2,8 @@
 #' @import lmtest
 #' @import lme4
 #' @import futile.logger
-#' @import detectseparation
 #' @importFrom methods is
-
+#' @import detectseparation
 
 CheckReducibility <- function(featureMat,
                               metaMat,
@@ -184,27 +183,6 @@ CheckReducibility <- function(featureMat,
       subMerge <- subMerge[!is.na(subMerge$FeatureValue), ]
       subMerge <- eval (parse (text = paste0 ("subset (subMerge, ! is.na (", aCovariate, "))")))
 
-      # test for complete separation in model using only feature and covariate
-      if (logistic == T & !is.na(randomVar[[1]])) {
-
-        flog.debug("testing separation without pot conf", name = "my.logger")
-
-        #test for separation in model without random part
-        glmmodeltext <-          paste0 ("stats::glm (FeatureValue ~ ",
-                                         aCovariate,
-                                         ", data = subMerge, family = \"binomial\", method = \"detect_separation\")")
-        isSeperated <- eval(parse(text = as.character(glmmodeltext)))
-        if (isSeperated$outcome) {
-          flog.warn(msg = paste("Separation for:",
-                                aFeature,
-                                "and",
-                                aCovariate),
-                    name = "my.logger")
-          statusLine[j] <- "AD"
-          next
-        }
-      }
-
       # rank transfer the metavariables listed in doRanks
       if (!is.na(doRanks[[1]])) {
         for (toRank in doRanks) {
@@ -306,42 +284,35 @@ CheckReducibility <- function(featureMat,
           # remove rows where anotherCovariate has NAs
           subsubMerge <- eval (parse (text = paste0 ("subset (subMerge, ! is.na (", anotherCovariate, "))")))
 
-          if (logistic == T) {
+          modAlg <- "stats::lm (rank (FeatureValue) ~ "
+          lastPart <- paste0(", data = subsubMerge)", collapse = "")
+
+
+          if (logistic == TRUE) { # alternative behavior for binary features
+            modAlg <- "stats::glm (FeatureValue ~ "
+            lastPart <- ", data = subsubMerge, family = \"binomial\")"
+
             flog.debug("testing separation", name = "my.logger")
-            #test for separation in model without random part
-            glmmodeltext <-          paste0 ("glm (FeatureValue ~ ",
-                                             aCovariate,
-                                             " + ",
-                                             anotherCovariate,
-                                             ", data = subMerge, family = \"binomial\")")
+            glmmodeltext <- paste0 (modAlg,
+                                    paste0(c(aCovariate, anotherCovariate),
+                                           collapse = " + "),
+                                    lastPart)
             glmmodel <- eval(parse(text = as.character(glmmodeltext)))
-            isSeperated <- update(glmmodel, method="detect_separation")
-            if (isSeperated$outcome) {
-              flog.warn(msg = paste("Separation for:",
-                                    aFeature,
-                                    ",",
-                                    aCovariate,
-                                    "and",
-                                    anotherCovariate),
-                        name = "my.logger")
-              #separation <- T
+            if (update(glmmodel, method="detect_separation")$outcome) {
+              flog.warn(
+                msg = paste(
+                  "Separation for:", aFeature, ",",
+                  aCovariate, "and", anotherCovariate),
+                name = "my.logger")
               status <- NA
               if (collectMods) {
                 collectedMods[[aFeature]][[aCovariate]][[anotherCovariate]][["full"]] <- glmmodel
               }
               next
             }
+
           }
-
-
-          modAlg <- "stats::lm (rank (FeatureValue) ~ "
-          lastPart <- paste0(", data = subsubMerge)", collapse = "")
-
-          if (logistic == TRUE) { # alternative behavior for binary features
-            modAlg <- "stats::glm (FeatureValue ~ "
-            lastPart <- ", data = subsubMerge, family = \"binomial\")"
-          }
-          if (rawCounts == TRUE) { # alternative behavior for not rarefied abundances
+          else if (rawCounts == TRUE) { # alternative behavior for not rarefied abundances
             modAlg <- "stats::glm (cbind(FeatureValue, totReadCount) ~ "
             lastPart <- ", data = subsubMerge, family = \"binomial\")"
           }
@@ -363,9 +334,8 @@ CheckReducibility <- function(featureMat,
                                  nAGQ,
                                  ")",
                                  collapse = "")
-
-            }
-            if (rawCounts == TRUE) { # alternative behavior for not rarefied abundances
+            } # end if (logistic == TRUE)
+            else if (rawCounts == TRUE) { # alternative behavior for not rarefied abundances
               modAlg <- "lme4::glmer (cbind(FeatureValue, totReadCount) ~ "
               lastPart <- paste0(randomVarLine,
                                  ", data = subsubMerge, family = \"binomial\", nAGQ = ",
@@ -373,7 +343,7 @@ CheckReducibility <- function(featureMat,
                                  ")",
                                  collapse = "")
             }
-          }
+          } # end if (!is.na(randomVar[[1]]))
 
           flog.debug(
             paste("LRTsFwdRvsFor",
@@ -418,29 +388,6 @@ CheckReducibility <- function(featureMat,
               is(lmBoth, "logical") ) {
             # class is logical if lmX == NA
 
-            # flog.debug(
-            #   paste(
-            #     "LRTsFwdRvsFor",
-            #     aFeature,
-            #     aCovariate,
-            #     anotherCovariate,
-            #     "found faulty models!\n",
-            #     lmAText,
-            #     "\n",
-            #     summary(lmA),
-            #     "\n",
-            #     lmAnotherText,
-            #     "\n",
-            #     summary(lmAnother),
-            #     "\n",
-            #     lmBothText,
-            #     "\n",
-            #     summary(lmBoth),
-            #     "\n",
-            #     sep = "\t"
-            #   ),
-            #   name = "my.logger"
-            # )
             status <- "AD"
             flog.debug("This should never be executed!", name = "my.logger")
             next
@@ -461,15 +408,7 @@ CheckReducibility <- function(featureMat,
                       name = "my.logger")
             aP_forward <- 1
             aP_reverse <- 1
-          }# else if (is(lmBoth, "lmerMod") && lme4::isSingular(lmBoth)) {
-          #   flog.warn(paste0("Full model: '",
-          #                    lmBoth@call,
-          #                    "' with FeatureFalue == ",
-          #                    aFeature,
-          #                    " appears to have a singularity problem.",
-          #                    ),
-          #             name = "my.logger")
-          # }
+          }
 
           # additonal control of confidence intervals for the covariates within the linear models
           conf_aCovariate <- TRUE
