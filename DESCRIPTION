@@ -1,7 +1,7 @@
 Package: metadeconfoundR
 Type: Package
 Title: Covariate-Sensitive Analysis of Cross-Sectional High-Dimensional Data
-Version: 1.0.3
+Version: 1.0.4
 Authors@R: c(person(given = "Till",
            family = "Birkner",
            role = c("aut", "cre"),

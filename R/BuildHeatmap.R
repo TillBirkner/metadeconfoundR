@@ -43,8 +43,13 @@
 #' @param trusted character vector of confounding status labels to be treated
 #' as trustworthy, not-confounded signal. default = c("OK_sd", "OK_nc", "OK_d", "AD")
 #' @param tileBordCol tile border color of  heatmap tiles, default: "black"
-#' @param reOrder reorder features and/or metadata? possible options: c("both", "feat", "meta", "none"), default: "both"
-#' @param plotPartial choose which effect site should be plotted. options: c("Ds", "partial", "partialRel, partialNorm"), default: "Ds"
+#' @param reOrder reorder features and/or metadata? possible options: c("both",
+#' "feat", "meta", "none"), default: "both"
+#' @param plotPartial choose which effect site should be plotted.
+#' options: c("Ds", "partial", "partialRel, partialNorm"), default: "Ds"
+#' @param starSize size of asterisks/circles in resulting heatmap, default: 2
+#' @param starNudge_y nudge y-axis position of asterisks/circles in
+#' resulting heatmap, default: 0
 #' @return ggplot2 object
 #' @details for more details and explanations please see the package vignette.
 #' @examples
@@ -82,7 +87,9 @@ BuildHeatmap <- function(metaDeconfOutput,
                          trusted = c("OK_sd", "OK_nc", "OK_d", "AD"),
                          tileBordCol = "black",
                          reOrder = "both",
-                         plotPartial = "Ds" # 20240905 TB
+                         plotPartial = "Ds", # 20240905 TB
+                         starSize = 2, # 20241114 TB
+                         starNudge_y = 0
                          ) {
 
 
@@ -437,8 +444,8 @@ BuildHeatmap <- function(metaDeconfOutput,
                            limits = c(lowerLim,upperLim)) +
       # add significance stars/circles for deconfounded/confounded associations
       geom_text(aes(label= .data$stars, colour = .data$status),
-                size=2,
-                key_glyph = "point") +
+                size=starSize,
+                key_glyph = "point", nudge_y = starNudge_y) +
       scale_color_manual(name = "confounding status",
                          values = signifCol,
                          labels = signifMeaning) +

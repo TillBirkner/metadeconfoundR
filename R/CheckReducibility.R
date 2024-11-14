@@ -152,8 +152,8 @@ CheckReducibility <- function(featureMat,
       return(statusLine)
     }
 
+    aFeature <- as.character (features [i])
     for (j in seq_along(covariates)) {
-      aFeature <- as.character (features [i])
       aCovariate <- as.character (covariates [j])
 
       status <- "NS"
@@ -288,9 +288,14 @@ CheckReducibility <- function(featureMat,
           lastPart <- paste0(", data = subsubMerge)", collapse = "")
 
 
-          if (logistic == TRUE) { # alternative behavior for binary features
+          if (logistic == T || rawCounts == T) {
             modAlg <- "stats::glm (FeatureValue ~ "
             lastPart <- ", data = subsubMerge, family = \"binomial\")"
+
+            if (rawCounts == T) {
+              modAlg <- "stats::glm (cbind(FeatureValue, totReadCount) ~ "
+
+            }
 
             flog.debug("testing separation", name = "my.logger")
             glmmodeltext <- paste0 (modAlg,
@@ -312,10 +317,10 @@ CheckReducibility <- function(featureMat,
             }
 
           }
-          else if (rawCounts == TRUE) { # alternative behavior for not rarefied abundances
-            modAlg <- "stats::glm (cbind(FeatureValue, totReadCount) ~ "
-            lastPart <- ", data = subsubMerge, family = \"binomial\")"
-          }
+          # else if (rawCounts == TRUE) { # alternative behavior for not rarefied abundances
+          #   modAlg <- "stats::glm (cbind(FeatureValue, totReadCount) ~ "
+          #   lastPart <- ", data = subsubMerge, family = \"binomial\")"
+          # }
 
           if (!is.na(fixedVar[[1]])) { # prefix the lastPart with fixedEffect names
             lastPart <- paste0(randomVarLine, lastPart, collapse = "")
@@ -424,12 +429,31 @@ CheckReducibility <- function(featureMat,
               ) {
             # if (is.numeric(subsubMerge[, aCovariate]) && is.numeric(subsubMerge[, anotherCovariate])) { # categorical variables are excluded for easier processing
             confints <- suppressMessages(confint(lmBoth, parm = c(aCovariate, anotherCovariate), method = "Wald"))
-            conf_aCovariate <- !(sign(confints[aCovariate, 1]) == sign(confints[aCovariate, 2])) # signs are different, if confint is spanning 0
-            conf_anotherCovariate  <- !(sign(confints[anotherCovariate, 1]) == sign(confints[anotherCovariate, 2]))
 
-            if (is.na(conf_aCovariate) || ((aP_forward < PHS_cutoff) &&
+            conf_aCovariate <- tryCatch({
+              sign(confints[aCovariate, 1]) != sign(confints[aCovariate, 2])
+              # signs are different, if confint is spanning 0
+            }, error = function(e) {
+              NA
+            })
+
+            conf_anotherCovariate  <- tryCatch({
+              sign(confints[anotherCovariate, 1]) != sign(confints[anotherCovariate, 2])
+            }, error = function(e) {
+              NA
+            })
+
+            if (is.na(conf_aCovariate) || # if something went wrong with calculating confInts
+                ((aP_forward < PHS_cutoff) && # if forward test is significant, but aCovariate confint spans 0
                 conf_aCovariate)) {
-              # if forward test is significant, but aCovariate confint spans 0
+
+              ending <- 'is spanning 0.'
+
+              if (is.na(conf_aCovariate)) {
+                ending <- 'is NA. Test for high collinearity of these metavariables
+                (including fixed/random effects if applicable)!'
+              }
+
               flog.warn(
                 msg = paste(
                   'lrt: ',
@@ -438,7 +462,7 @@ CheckReducibility <- function(featureMat,
                   anotherCovariate,
                   '-- forward linear model is < PHS_cutoff, but confidence intervall for',
                   aCovariate,
-                  'is spanning 0 (or NA).'
+                  ending
                 ),
                 name = "my.logger"
               )
@@ -453,6 +477,14 @@ CheckReducibility <- function(featureMat,
             if (is.na(conf_anotherCovariate) || ((aP_reverse < PHS_cutoff) &&
                 conf_anotherCovariate)) {
               # if reverse test is significant, but anotherCovariate confint spans 0
+
+              ending <- 'is spanning 0.'
+
+              if (is.na(conf_anotherCovariate)) {
+                ending <- 'is NA. Test for high collinearity of these metavariables
+                (including fixed/random effects if applicable)!'
+              }
+
               flog.warn(
                 msg = paste(
                   'lrt: ',
@@ -461,7 +493,7 @@ CheckReducibility <- function(featureMat,
                   anotherCovariate,
                   '-- reverse linear model is < PHS_cutoff, but confidence intervall for',
                   anotherCovariate,
-                  'is spanning 0 (or NA).'
+                  ending
                 ),
                 name = "my.logger"
               )
