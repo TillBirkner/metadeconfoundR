@@ -1,10 +1,24 @@
 Version 1.0.4
-  - BuildHeatmap()
-    - new options "starSize" and "starNudge_y" to control size and positioning of confounding status asterisks/circles
-
   - MetaDeconfound()
     - improved error handling for glms/glmers whith highly collinear metavariables
     - bugfix in confidence interval calculations
+    - bugfix for ncol(fatureMat) == 1
+    - new optional input argument "mediationMat"
+      - perform mediation analysis between features of featureMat and mediadtionMat, controlled for effects from variables in metaMat
+      - features in mediationMat will not be tested for confounding effects on each other or variables from metaMat
+    - new optinoal argument "mediationMat"
+      - supply a second omics space to perform mediation analysis between featureMat and mediationMat
+    - new optional argument "adjustLevel"
+      - specify different multiple testing p-value correction approaches
+        - 1: correct for number of features per metavariable (default)
+        - 2: correct for number of features x number of meatavariables
+        - 3: correct for number of features x number of mediationMat features (default when mediationMat is supllied)
+
+  - BuildHeatmap()
+    - new options "starSize" and "starNudge_y" to control size and positioning of confounding status asterisks/circles
+    - metavariables can be split into separate groups by adding a "grounpingVar" columns to metaDeconfOutput.
+      - this is done by default when mediationMat is supplied to MetaDeconfound()
+      - uses facet_grid(), so output can be tweaked using "+ theme(strip.XXX)" options
 
 Version 1.0.3
   - implementation of new funtion GetPartialEfSizes()

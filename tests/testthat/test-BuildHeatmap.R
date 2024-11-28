@@ -5,9 +5,11 @@ test_that("Function `BuildHeatmap()` works correctly", {
   feature <- reduced_feature
   metaMat <- metaMatMetformin
 
-  input <- readRDS("example_output.rds")
-  # 2024 09 24 saveRDS(heatmapPlot, "tests/testthat/expected_BuildHeatmap_output.rds")
-  expected_output <- readRDS("expected_BuildHeatmap_output.rds")
+  input <- read.table("2024_10_17_example_output.tsv", header = T, sep = "\t")
+  input$feature <- as.factor(input$feature)
+  input$metaVariable <- as.factor(input$metaVariable)
+  # saveRDS(result, "tests/testthat/20241128_exampl_output_BuildHeatmap.rds")
+  expected_output <- readRDS("20241128_exampl_output_BuildHeatmap.rds")
   result <- BuildHeatmap(input)
   expect_equal(result$data, expected_output$data)
 

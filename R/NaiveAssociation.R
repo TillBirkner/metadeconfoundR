@@ -3,6 +3,7 @@
 #' @importFrom  lmtest lrtest
 #' @import futile.logger
 #' @import detectseparation
+#' @importFrom reshape2 melt dcast
 
 NaiveAssociation <- function(featureMat,
                              samples,
@@ -18,7 +19,9 @@ NaiveAssociation <- function(featureMat,
                              nnodes,
                              rawCounts, # new TB20221129
                              adjustMethod,
-                             verbosity) {
+                             adjustLevel,
+                             mediationMat
+                             ) {
 
   #new TB20240926
   `%toggleDoPar%` <- `%do%`
@@ -73,27 +76,6 @@ NaiveAssociation <- function(featureMat,
     name = "my.logger"
   )
 
-  ##
-
-  getVariableType <- function (values, variable) {
-    if (is.numeric (values) &&
-        all (values %in% c (0, 1)) &&
-        !(!is.null (typeContinuous) &&
-          variable %in% typeContinuous) &&
-        !(!is.null (typeCategorical) && variable %in% typeCategorical)) {
-      return ("binary") # treat as binary
-    } # this fulfils criteria of binary (0, 1) and not in the special cases
-    else if ((is.numeric (values) ||
-              (!is.null (typeContinuous) &&
-               variable %in% typeContinuous)) &&
-             !(!is.null (typeCategorical) && variable %in% typeCategorical)) {
-      return ("continuous") # treat as continuous
-    } # this fulfils criteria of not being restricted to 0, 1; still numeric,
-        # or guaranteed continuous (redundant?); and not categorical
-    else {
-      return ("categorical") # treat as categorical
-    } # default as categorical
-  }
 
   r = foreach::foreach(i= seq_along(features), .combine='rbind') %toggleDoPar% {
 
@@ -152,7 +134,7 @@ NaiveAssociation <- function(featureMat,
         next
       }
 
-      variableType <- getVariableType (na.exclude(subMerge[[aCovariate]]), aCovariate)
+      variableType <- VarType (na.exclude(subMerge[[aCovariate]]), aCovariate, typeCategorical, typeContinuous)
       conVar <- TRUE
       varX <- na.exclude (cbind (subMerge [[aCovariate]], subMerge [["FeatureValue"]]))
 
@@ -294,20 +276,60 @@ NaiveAssociation <- function(featureMat,
   futile.logger::flog.debug(paste("NaiveAssociation -- ncol(parallelreturn):", ncol(r)),
              name = "my.logger")
 
-  Ps <- r[, seq_len(ncol(r)/2), drop = F]
-  rownames(Ps) <- features[seq_len(nrow(r))]
+  # Ps <- r[, seq_len(ncol(r)/2), drop = F]
+  # rownames(Ps) <- features[seq_len(nrow(r))]
+  # colnames(Ps) <- covariates
+  #
+  # Ds <- r[, -(seq_len(ncol(r)/2)), drop = F]
+  # rownames(Ds) <- features[seq_len(nrow(r))]
+  # colnames(Ds) <- covariates
+  #
+  # Qs <- matrix (NA, length(features[seq_len(nrow(r))]), length(covariates))
+  # rownames(Qs) <- features[seq_len(nrow(r))]
+  # colnames(Qs) <- covariates
+
+  if (is.null(ncol(r))) {
+    r <- t(r)
+  }
+
+  Ps <- r[, seq_len(noCovariates), drop = F]
+  rownames(Ps) <- features
   colnames(Ps) <- covariates
 
-  Ds <- r[, -(seq_len(ncol(r)/2)), drop = F]
-  rownames(Ds) <- features[seq_len(nrow(r))]
+  Ds <- r[, -(seq_len(noCovariates)), drop = F]
+  rownames(Ds) <- features
   colnames(Ds) <- covariates
 
-  Qs <- matrix (NA, length(features[seq_len(nrow(r))]), length(covariates))
-  rownames(Qs) <- features[seq_len(nrow(r))]
+  Qs <- matrix (NA, length(features), length(covariates))
+  rownames(Qs) <- features
   colnames(Qs) <- covariates
 
-  for (i in seq_len(ncol(Ps))) {
-    Qs[, i] <- stats::p.adjust (Ps[, i], method = adjustMethod)
+  if (adjustLevel == 1) {
+    for (i in seq_len(noCovariates)) {
+      Qs[, i] <- stats::p.adjust (Ps[, i], method = adjustMethod)
+    }
   }
+  else if (adjustLevel == 2) {
+    Ps_long <- reshape2::melt(Ps, varnames = c("feature", "metaVariable"), value.name = "Ps")
+    Ps_long$Ps <- stats::p.adjust (Ps_long$Ps, method = adjustMethod)
+
+    Qs <- reshape2::dcast(Ps_long, feature ~ metaVariable, value.var = "Ps")
+    rownames(Qs) <- Qs$feature
+    Qs$feature <- NULL
+    Qs <- as.matrix(Qs)
+  }
+  else if (adjustLevel == 3) {
+    Ps_long <- reshape2::melt(Ps, varnames = c("feature", "metaVariable"), value.name = "Ps")
+    Ps_long$Qs <- Ps_long$Ps
+    Ps_long$Qs[Ps_long$metaVariable %in% colnames(mediationMat)] <-
+      stats::p.adjust (Ps_long$Qs[Ps_long$metaVariable %in% colnames(mediationMat)], method = adjustMethod)
+    Ps_long$Ps <- Ps_long$Qs
+    Ps_long$Qs <- NULL
+    Qs <- reshape2::dcast(Ps_long, feature ~ metaVariable, value.var = "Ps")
+    rownames(Qs) <- Qs$feature
+    Qs$feature <- NULL
+    Qs <- as.matrix(Qs)
+  }
+
   return(list(Ps=Ps, Ds=Ds, Qs=Qs))
 }

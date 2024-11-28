@@ -29,7 +29,6 @@ CheckReducibility <- function(featureMat,
                               logistic, # new SKF20201017
                               rawCounts, # new TB20220202
                               maintenance,
-                              verbosity,
                               nAGQ,
                               collectMods # new TB20220208
                               ) {
@@ -577,6 +576,9 @@ CheckReducibility <- function(featureMat,
   flog.info(msg = paste("Deconfounding -- processed 100% of features."),
             name = "my.logger")
 
+  if (is.null(ncol(r))) {
+    r <- t(r)
+  }
   rownames(r) <- features
   colnames(r) <- covariates
 

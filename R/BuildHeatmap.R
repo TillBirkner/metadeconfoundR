@@ -134,7 +134,11 @@ BuildHeatmap <- function(metaDeconfOutput,
     effectSize <- metaDeconfOutput
 
   } else {
-    effectSize <- metaDeconfOutput[, c("feature", "metaVariable", "Ds")]
+
+    if (!"groupingVar" %in% colnames(metaDeconfOutput)) {
+      metaDeconfOutput$groupingVar <- "metadata"
+    }
+    effectSize <- metaDeconfOutput[, c("feature", "metaVariable", "Ds", "groupingVar")]
 
     if (plotPartial == "partial") {
       effectSize$Ds <- metaDeconfOutput$partial
@@ -151,6 +155,10 @@ BuildHeatmap <- function(metaDeconfOutput,
     effectSize$Ds[effectSize$Ds == Inf] <- 0
     effectSize$Ds[is.na(effectSize$Ds)] <- 0
     fdr$Qs[is.na(fdr$Qs)] <- 1
+  }
+
+  if (is.null(effectSize$groupingVar)) {
+    effectSize$groupingVar <- "metadata"
   }
 
   if (!fromIntermed) {
@@ -413,7 +421,7 @@ BuildHeatmap <- function(metaDeconfOutput,
                          labels = signifMeaning) +
       guides(#shape = FALSE,
              color = guide_legend(override.aes = list(shape  = 24))) +
-
+      facet_grid(cols = vars(groupingVar), space = "free_x", drop = T, scales = "free_x") +
       # make it pretty
       theme_classic() +
       theme(axis.text.x = element_text(size = 7,
@@ -425,7 +433,9 @@ BuildHeatmap <- function(metaDeconfOutput,
                                        hjust = 1,
                                        vjust = 0.35),
             plot.title.position = "plot",
-            plot.title = element_text(hjust = 0)) +
+            plot.title = element_text(hjust = 0),
+            strip.background = element_blank()
+      ) +
       labs(title="Summarizing cuneiform plot",
            #subtitle="FDR-values: < 0.001 = ***, < 0.01 = **, < 0.1 = * ",
            x = "Metadata variables",
@@ -450,7 +460,7 @@ BuildHeatmap <- function(metaDeconfOutput,
                          values = signifCol,
                          labels = signifMeaning) +
       guides(color = guide_legend(override.aes = list(shape = legendShapes) ) ) +
-
+      facet_grid(cols = vars(groupingVar), space = "free_x", drop = T, scales = "free_x") +
       # make it pretty
       theme_classic() +
       theme(axis.text.x = element_text(size = 7,
@@ -463,7 +473,10 @@ BuildHeatmap <- function(metaDeconfOutput,
                                        vjust = 0.35),
             plot.title.position = "plot",
             plot.title = element_text(hjust = 0),
-            plot.subtitle=element_text(size=8)) +
+            plot.subtitle=element_text(size=8),
+            strip.background = element_blank()
+
+            ) +
       labs(title="Summarizing heatmap",
            subtitle="p.adjust-values: < 0.001 = ***, < 0.01 = **, < 0.1 = * ",
            x = "Metadata variables",
