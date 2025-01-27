@@ -322,6 +322,18 @@ the order of factor levels of the groupingVar column.
 
 ------------------------------------------------------------------------
 
+# BuildConfounderMap()
+
+Minimal input consists only of an output object from the main
+`MetaDeconfound()` function. This will return in a list of ggplot2/ggrpah circos plots with one plot per input feature. All metavariables significantly associated to the respective feature are shown as circles with filling color and line thickness depicted as effect size and confounding status, respectively. The confounder-confounded relationship between the metavariables are shown as directional lines connecting them. 
+```{r runBuildConfounderMap, echo=T, fig.cap = "Figure 7: BuildConfounderMap() example plot", fig.width = 4, fig.height=4 }
+plotObject <- BuildConfounderMap(example_output)
+library(ggraph)
+plotObject$MS0001
+```
+
+------------------------------------------------------------------------
+
 # importLongPrior()
 
 The function `ImportLongPrior()` of the metadeconfoundR package allows
@@ -452,7 +464,7 @@ ex_out_partial <- GetPartialEfSizes(
 )
 ```
 
-```{r runPartialPlotting, eval=TRUE, echo=FALSE, message=FALSE, fig.width = 4.5, fig.height=5, fig.cap="Figure 7: BuildHeatmap() plotting of partial effect sizes calculated by GetPartialEfSizes()"}
+```{r runPartialPlotting, eval=TRUE, echo=FALSE, message=FALSE, fig.width = 4.5, fig.height=5, fig.cap="Figure 8: BuildHeatmap() plotting of partial effect sizes calculated by GetPartialEfSizes()"}
 
 partialHM_Rand <- BuildHeatmap(ex_out_partial,
                                plotPartial = "partial",

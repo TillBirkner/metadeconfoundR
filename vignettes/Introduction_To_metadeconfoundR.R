@@ -117,6 +117,11 @@ BuildHeatmap(example_output) +
     plot.subtitle = element_blank()
   )
 
+## ----runBuildConfounderMap, echo=T, fig.cap = "Figure 7: BuildConfounderMap() example plot", fig.width = 4, fig.height=4----
+plotObject <- BuildConfounderMap(example_output)
+library(ggraph)
+plotObject$MS0001
+
 ## ----produceLongOut, eval=FALSE-----------------------------------------------
 #  print(example_output[101:105, ])
 
@@ -149,7 +154,7 @@ ex_out_partial <- GetPartialEfSizes(
   randomVar = c("Dataset")
 )
 
-## ----runPartialPlotting, eval=TRUE, echo=FALSE, message=FALSE, fig.width = 4.5, fig.height=5, fig.cap="Figure 7: BuildHeatmap() plotting of partial effect sizes calculated by GetPartialEfSizes()"----
+## ----runPartialPlotting, eval=TRUE, echo=FALSE, message=FALSE, fig.width = 4.5, fig.height=5, fig.cap="Figure 8: BuildHeatmap() plotting of partial effect sizes calculated by GetPartialEfSizes()"----
 
 partialHM_Rand <- BuildHeatmap(ex_out_partial,
                                plotPartial = "partial",

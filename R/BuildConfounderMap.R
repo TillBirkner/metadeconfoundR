@@ -21,7 +21,7 @@
 #' default c("red", "white", "blue")
 #' @param trusted character vector of confounding status labels to be treated
 #' as trustworthy, not-confounded signal. default = c("OK_sd", "OK_nc", "OK_d", "AD")
-#' @return ggplot2 object
+#' @return list of ggplot2 objects
 #' @details for more details and explanations please see the package vignette.
 #'
 #' @examples

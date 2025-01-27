@@ -41,7 +41,7 @@ default c("red", "white", "blue")}
 as trustworthy, not-confounded signal. default = c("OK_sd", "OK_nc", "OK_d", "AD")}
 }
 \value{
-ggplot2 object
+list of ggplot2 objects
 }
 \description{
 BuildConfounderMap summarizes confounder analysis of a \link[metadeconfoundR]{MetaDeconfound} output in a circle plot
