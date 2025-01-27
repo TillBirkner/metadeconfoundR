@@ -1,6 +1,7 @@
 #' @importFrom foreach %dopar%
-#' @import stats
 #' @importFrom  lmtest lrtest
+#' @importFrom  stats glm
+#' @importFrom  stats cor.test kruskal.test wilcox.test p.adjust update
 #' @import futile.logger
 #' @import detectseparation
 #' @importFrom reshape2 melt dcast

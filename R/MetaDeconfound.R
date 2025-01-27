@@ -103,6 +103,7 @@
 #' @import futile.logger
 #' @importFrom reshape2 melt
 #' @importFrom methods is
+#' @importFrom stats na.omit
 #' @export
 #'
 
@@ -279,7 +280,7 @@ MetaDeconfound <- function(featureMat,
       featureMat,
       2,
       FUN = function (x)
-        VarType(na.exclude(x), varName, NULL, NULL)
+        VarType(na.exclude(x), "varName", NULL, NULL)
     ) == "binary")) {
       futile.logger::flog.warn(msg = 'There appear to be binary features in featurMat. Remove from featureMat, or set logistic = T.', name = "my.logger")
     }
@@ -288,7 +289,7 @@ MetaDeconfound <- function(featureMat,
         featureMat,
         2,
         FUN = function (x)
-          VarType(na.exclude(x), varName, NULL, NULL)
+          VarType(na.exclude(x), "varName", NULL, NULL)
       ) == "continuous")) {
         futile.logger::flog.warn(msg = 'There appear to be continuous features in featurMat. Remove from featureMat, or set logistic = F.', name = "my.logger")
       }

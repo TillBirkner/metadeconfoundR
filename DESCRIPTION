@@ -25,7 +25,7 @@ Encoding: UTF-8
 LazyData: true
 URL: https://github.com/TillBirkner/metadeconfoundR
 BugReports: https://github.com/TillBirkner/metadeconfoundR/issues
-Imports: lmtest, foreach, parallel, doParallel, stats, futile.logger, lme4, ggplot2, reshape2, methods, rlang
+Imports: lmtest, foreach, parallel, doParallel, stats, futile.logger, lme4, ggplot2, reshape2, methods, rlang, circlize, dplyr, ggraph, igraph, magrittr, scales
 Depends: detectseparation
 Suggests: 
     pander,

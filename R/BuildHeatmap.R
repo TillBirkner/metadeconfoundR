@@ -69,6 +69,7 @@
 #' @importFrom reshape2 melt
 #' @importFrom methods is
 #' @importFrom rlang .data
+#' @importFrom stats na.exclude hclust dist as.formula median var lm
 #' @export
 
 BuildHeatmap <- function(metaDeconfOutput,
@@ -421,7 +422,7 @@ BuildHeatmap <- function(metaDeconfOutput,
                          labels = signifMeaning) +
       guides(#shape = FALSE,
              color = guide_legend(override.aes = list(shape  = 24))) +
-      facet_grid(cols = vars(groupingVar), space = "free_x", drop = T, scales = "free_x") +
+      facet_grid(cols = vars(.data$groupingVar), space = "free_x", drop = T, scales = "free_x") +
       # make it pretty
       theme_classic() +
       theme(axis.text.x = element_text(size = 7,
@@ -460,7 +461,7 @@ BuildHeatmap <- function(metaDeconfOutput,
                          values = signifCol,
                          labels = signifMeaning) +
       guides(color = guide_legend(override.aes = list(shape = legendShapes) ) ) +
-      facet_grid(cols = vars(groupingVar), space = "free_x", drop = T, scales = "free_x") +
+      facet_grid(cols = vars(.data$groupingVar), space = "free_x", drop = T, scales = "free_x") +
       # make it pretty
       theme_classic() +
       theme(axis.text.x = element_text(size = 7,

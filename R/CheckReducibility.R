@@ -4,6 +4,7 @@
 #' @import futile.logger
 #' @importFrom methods is
 #' @import detectseparation
+#' @importFrom stats update confint
 
 CheckReducibility <- function(featureMat,
                               metaMat,
