@@ -11,6 +11,7 @@ BuildConfounderMap(
   featureNames = NULL,
   metaVariableNames = NULL,
   d_col = c("blue", "white", "red"),
+  d_range = "full",
   trusted = c("OK_sd", "OK_nc", "OK_d", "AD")
 )
 }
@@ -36,6 +37,11 @@ second column: human-readable.}
 
 \item{d_col}{set color range for effect size as c(minimum, middle, maximum),
 default c("red", "white", "blue")}
+
+\item{d_range}{range of effect size colors shown; "full": (default) range from
+-1 to +1 (best for comparability between multiple plots);
+"fit": range reduced according to maximum and minimum effect size
+present in resulting plot (better color resolution for weaker effects)}
 
 \item{trusted}{character vector of confounding status labels to be treated
 as trustworthy, not-confounded signal. default = c("OK_sd", "OK_nc", "OK_d", "AD")}

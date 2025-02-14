@@ -398,8 +398,8 @@ CheckReducibility <- function(featureMat,
             next
           }
 
-          aP_forward <- safe_lrtest(lmBoth, lmAnother)
-          aP_reverse <- safe_lrtest(lmBoth, lmA)
+          aP_forward <- safe_lrtest(lmBoth, lmAnother) # effect of adding aCovariate
+          aP_reverse <- safe_lrtest(lmBoth, lmA) #effect of adding anotherCovariate
 
           if (is(lmBoth, "lm") && anyNA(lmBoth$coefficients)) {
             flog.warn(paste0("In full model containing: ",
@@ -418,7 +418,7 @@ CheckReducibility <- function(featureMat,
           # additonal control of confidence intervals for the covariates within the linear models
           conf_aCovariate <- TRUE
           conf_anotherCovariate <- TRUE
-          if (doConfs >= 0 && #          doConfs = 1 --> just logging
+          if (doConfs > 0 && #          doConfs = 1 --> just logging
               !is(lmBoth, "logical") && #  the full model is working
               !is.na (aP_forward) && #     the lrts worked
               !is.na (aP_reverse) &&
@@ -471,9 +471,12 @@ CheckReducibility <- function(featureMat,
               )
               if (doConfs > 1) {
                 # if doConfs ==2 make lrt non-significant
-                aP_forward <- 1
+                # aP_forward <- 1 # --> no unique effect of aCovariate
+                # setting aP_forward <- 1 leads to labeling as confounded or AD,
+                # so "OK_d" can never be kept
+                status <- "OK_d"
               }
-              status <- "OK_d"
+
             }
 
             #if (! is.na (aP_forward) && (aP_reverse < PHS_cutoff) && conf_anotherCovariate) { # if reverse test is significant, but anotherCovariate confint spans 0
@@ -501,12 +504,10 @@ CheckReducibility <- function(featureMat,
                 name = "my.logger"
               )
               if (doConfs > 1) {
-                # if doConfs ==2 make lrt non-significant
-                aP_reverse <- 1
+                aP_reverse <- 1 # --> no unique effect of anotherCovariate
+                # aCovariate will not be labeled as being confounded by anotherCovariate anymore
               }
             }
-
-            # }
           } # if doConfs
 
           if (! is.na (aP_forward) &&

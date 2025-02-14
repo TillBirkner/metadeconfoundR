@@ -7,10 +7,10 @@
 #' low-significance entries from data
 #' @param d_cutoff optional effect size cutoff used to remove
 #' low effect size entries from data
-#' @param d_range range of effect sizes shown; "full": (default) range from
-#' -1 to +1;
+#' @param d_range range of effect size colors shown; "full": (default) range from
+#' -1 to +1 (best for comparability between multiple plots);
 #' "fit": range reduced according to maximum and minimum effect size
-#' present in resulting plot
+#' present in resulting plot (better color resolution for weaker effects)
 #' @param d_col set color range for effect size as c(minimum, middle, maximum),
 #' default c("red", "white", "blue")
 #' @param cuneiform optional logical parameter,
@@ -81,7 +81,7 @@ BuildHeatmap <- function(metaDeconfOutput,
                          intermedData = FALSE,
                          featureNames = NULL,
                          metaVariableNames = NULL,
-                         d_range = "fit",
+                         d_range = "full",
                          d_col = c("blue", "white", "red"),
                          keepMeta = NULL,
                          keepFeature = NULL,

@@ -22,7 +22,7 @@ MetaDeconfound(
   minQValues = NULL,
   deconfT = NULL,
   deconfF = NULL,
-  doConfs = 0,
+  doConfs = 2,
   doRanks = NA,
   randomVar = NA,
   fixedVar = NA,
@@ -44,8 +44,9 @@ names, listing features for all samples}
 
 \item{metaMat}{a data frame with row(sample ID) and
 column(meta data such as age,BMI and all possible confounders)
-names listing metadata for all samples. first column should be case status
-with case=1 and control=0. All binary variables need to be in 0/1 syntax!}
+names listing metadata for all samples. The first column should be a binary
+status/outcome variable (e.g. case=1 and control=0).
+All other binary variables need to be in 0/1 syntax as well.}
 
 \item{nnodes}{number of nodes/cores to be used for parallel processing}
 
@@ -92,8 +93,8 @@ reported will be treated as potentially confounding influences.}
 \item{deconfF}{vector of metavariable names *never* to be included as potential confounder}
 
 \item{doConfs}{optional parameter for additional computation of confidence
-interval of linear models in the deconfounding step
-(0 = no , 1 = logging, 2 = strict)}
+interval of linear models in the deconfounding step. level:
+(0 = no , 1 = logging, 2 = strict (default))}
 
 \item{doRanks}{optional vector of metavariable names, that should be rank
 transformed when building linear models in the doconfounding step}

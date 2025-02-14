@@ -8,8 +8,9 @@
 #' names, listing features for all samples
 #' @param metaMat a data frame with row(sample ID) and
 #' column(meta data such as age,BMI and all possible confounders)
-#' names listing metadata for all samples. first column should be case status
-#' with case=1 and control=0. All binary variables need to be in 0/1 syntax!
+#' names listing metadata for all samples. The first column should be a binary
+#' status/outcome variable (e.g. case=1 and control=0).
+#' All other binary variables need to be in 0/1 syntax as well.
 #' @param nnodes number of nodes/cores to be used for parallel processing
 #' @param adjustMethod multiple testing p-value correction using one of the
 #' methods of \link[stats]{p.adjust.methods}
@@ -40,8 +41,8 @@
 #' @param deconfT vector of metavariable names *always* to be included as potential confounder
 #' @param deconfF vector of metavariable names *never* to be included as potential confounder
 #' @param doConfs optional parameter for additional computation of confidence
-#' interval of linear models in the deconfounding step
-#' (0 = no , 1 = logging, 2 = strict)
+#' interval of linear models in the deconfounding step. level:
+#' (0 = no , 1 = logging, 2 = strict (default))
 #' @param doRanks optional vector of metavariable names, that should be rank
 #' transformed when building linear models in the doconfounding step
 #' @param randomVar optional vector of metavariable names to be treated as
@@ -125,7 +126,7 @@ MetaDeconfound <- function(featureMat,
                            minQValues = NULL,
                            deconfT = NULL,
                            deconfF = NULL,
-                           doConfs = 0,
+                           doConfs = 2,
                            doRanks = NA,
                            randomVar = NA,
                            fixedVar = NA,# new TB20230727
@@ -151,13 +152,9 @@ MetaDeconfound <- function(featureMat,
 
   ###
   ###
-  ### logging start and initial sanity checks on input paramters
+  ### logging start and initial sanity checks on input parameters
   ###
   ###
-
-  if (is.null(logfile) && (doConfs > 0)) {
-    stop('Error - "doConfs" parameeter is set to > 0 but "logfile" is not specified. Can not log warnings for confidence intervalls spanning 0.')
-  }
 
   futile.logger::flog.info(msg = '###',
             name = "my.logger"
@@ -185,8 +182,12 @@ MetaDeconfound <- function(featureMat,
   }
 
   if (is(featureMat, "tbl") | is(metaMat, "tbl") | is(mediationMat, "tbl")) {
-    futile.logger::flog.warn(msg = "Tibbles detected in input data frames. This might lead to unexpected behaviors. Please convert to standard data.frame class!",
+    futile.logger::flog.warn(msg = "Tibbles detected in input data frames. This might lead to unexpected behaviors. Please convert to base data.frame class!",
                name = "my.logger")
+  }
+
+  if (is.null(logfile) && (doConfs > 0)) {
+    futile.logger::flog.debug(msg = 'doConfs" parameter is set to > 0 but "logfile" is not specified. Can not log warnings for confidence intervals spanning 0.')
   }
 
   if (nrow(metaMat) != nrow(featureMat)) {
@@ -347,7 +348,7 @@ MetaDeconfound <- function(featureMat,
                             minQValues=NULL,
                             deconfT = NULL,
                             deconfF = NULL,
-                            doConfs = 0,
+                            doConfs = 2,
                             doRanks = NA,
                             randomVar = NA,
                             fixedVar = NA,

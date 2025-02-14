@@ -19,6 +19,10 @@
 #' second column: human-readable.
 #' @param d_col set color range for effect size as c(minimum, middle, maximum),
 #' default c("red", "white", "blue")
+#' @param d_range range of effect size colors shown; "full": (default) range from
+#' -1 to +1 (best for comparability between multiple plots);
+#' "fit": range reduced according to maximum and minimum effect size
+#' present in resulting plot (better color resolution for weaker effects)
 #' @param trusted character vector of confounding status labels to be treated
 #' as trustworthy, not-confounded signal. default = c("OK_sd", "OK_nc", "OK_d", "AD")
 #' @return list of ggplot2 objects
@@ -55,6 +59,7 @@ BuildConfounderMap <- function(metaDeconfOutput,
                                featureNames = NULL,
                                metaVariableNames = NULL,
                                d_col = c("blue", "white", "red"),
+                               d_range = "full",
                                trusted = c("OK_sd", "OK_nc", "OK_d", "AD")) {
   if (is(metaDeconfOutput, "list")) {
     long_out <- reshape2::melt(
@@ -227,8 +232,16 @@ BuildConfounderMap <- function(metaDeconfOutput,
                                            circular = TRUE)
     # order the nodes properly
     graph_layout <- graph_layout_original %>% dplyr::filter(.data$leaf == T) %>% dplyr::mutate(y_old = .data$y)
-    graph_layout$section <- sapply(graph_layout$x, function(x)
-      ifelse(sign(x) == 1, 1, 2))
+    # graph_layout$section <- sapply(graph_layout$x, function(x)
+    #   ifelse(sign(x) == 1, 1, 2))
+
+    graph_layout$y <- jitter(graph_layout$y, 0.01)
+    graph_layout$x <- jitter(graph_layout$x, 0.01)
+    graph_layout$y_old <- graph_layout$y
+
+    graph_layout$section <- 1
+    graph_layout$section[sign(graph_layout$x) != 1] <- 2
+
     graph_layout$y <- c(sapply(unique(graph_layout$section), function(x) {
       if (x == 1)
         graph_layout[graph_layout$section == x, ]$y[order(graph_layout[graph_layout$section == x, ]$y, decreasing = T)]
@@ -240,6 +253,14 @@ BuildConfounderMap <- function(metaDeconfOutput,
     graph_layout$section <- NULL
     graph_layout_new <- rbind(graph_layout_original[1, ], graph_layout)
     attributes(graph_layout_new) <- attributes(graph_layout_original)
+
+    lowerLim <- min(vertices$effectSize)
+    upperLim <- max(vertices$effectSize)
+
+    if (d_range == "full") {
+      lowerLim <- -1
+      upperLim <- 1
+    }
 
     # plot the data
     if (nrow(tmp %>% dplyr::filter(grepl("C:", .data$status))) >= 1) {
@@ -277,7 +298,8 @@ BuildConfounderMap <- function(metaDeconfOutput,
           high = d_col[3],
           n.breaks = 5,
           na.value = "white",
-          name = "effect size"
+          name = "effect size",
+          limits= c(lowerLim,upperLim)
         ) +
         ggraph::geom_node_text(
           aes(
@@ -336,7 +358,8 @@ BuildConfounderMap <- function(metaDeconfOutput,
           high = d_col[3],
           n.breaks = 5,
           na.value = "white",
-          name = "effect size"
+          name = "effect size",
+          limits= c(lowerLim,upperLim)
         ) +
         ggraph::geom_node_text(
           aes(
