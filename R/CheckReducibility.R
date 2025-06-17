@@ -41,12 +41,23 @@ CheckReducibility <- function(featureMat,
 
   # removed tryCatch from safe functions
   safe_lm <- function(lmText) {
-    out <- eval(parse(text = as.character(lmText)))
+    #out <- eval(parse(text = as.character(lmText)))
+    out <- tryCatch(eval(parse(text = as.character(lmText))),
+                    error = function(cond){
+      flog.warn(paste0("(g)lm(er) failed with error meessage: ", cond$message))
+      NA
+    })
     return(out)
   }
 
   safe_lrtest <- function(lm1, lm2) {
-    out <- lmtest::lrtest(lm1, lm2)$'Pr(>Chisq)' [2]
+    #out <- lmtest::lrtest(lm1, lm2)$'Pr(>Chisq)' [2]
+
+    out <- tryCatch(lmtest::lrtest(lm1, lm2)$'Pr(>Chisq)' [2],
+                    error = function(cond){
+      flog.warn(paste0("model lrt failed with error meessage: ", cond$message))
+      NA
+    })
     return(out)
   }
 
@@ -242,6 +253,13 @@ CheckReducibility <- function(featureMat,
 
         flog.debug(paste("LRT_randOnly_for", aFeature, aCovariate, aP_mixed, sep = "\t"),
                    name = "my.logger")
+
+        if (collectMods) {
+          collectedMods[[aFeature]][[aCovariate]][["randomFixedEffectsOnly"]] <- list()
+          collectedMods[[aFeature]][[aCovariate]][["randomFixedEffectsOnly"]][["full"]] <- mixedmodel1
+          collectedMods[[aFeature]][[aCovariate]][["randomFixedEffectsOnly"]][["small"]] <- mixedmodel2
+        }
+
 
         if (!is.na(aP_mixed) && aP_mixed >= PHS_cutoff) {
 
