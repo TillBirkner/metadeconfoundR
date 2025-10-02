@@ -1,3 +1,9 @@
+Version 1.0.5
+  - "confounded confounders" will now be removed from the status label of a confounded variable.
+    - Example: If the association of D with feature Y is confounded by C1 and C2, but the association of C1 with Y is in turn confounded by C2, then only C2 will be listed as confounder of Y~D
+  - improvments in some logging messages
+  - featureMat is now checked for non-numeric columns at start-up.
+
 Version 1.0.4
   - MetaDeconfound()
     - improved error handling for glms/glmers whith highly collinear metavariables
@@ -46,8 +52,6 @@ Version 1.0.3
       - "partial": plotting signed partial R-squared, including an additional column showing the total explainable variance per feature
       - "partialRel": plotting proportion of explainable variance of a feature tracable to a metavariable
       - "partialNorm": plotting respective normalized partial effect size
-
-
 
 Version 1.0.2
   - CRAN release

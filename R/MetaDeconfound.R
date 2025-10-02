@@ -224,13 +224,23 @@ MetaDeconfound <- function(featureMat,
   faultyColnamesFeat <- colnames(featureMat)[which(colnames(featureMat) != make.names(colnames(featureMat)))]
   faultyRownamesMeta <-rownames(metaMat)[which(rownames(metaMat) != make.names(rownames(metaMat)))]
   if (length(c(faultyColnamesMeta, faultyColnamesFeat, faultyRownamesMeta)) > 0) {
-    futile.logger::flog.warn(msg = "Unallowed characters detected in rownames and/or colnames of featureMat and/or metaMat!\n
-              metadeconfoundR will try to remove these characters using the make.names() function.",
-               name = "my.logger")
+    futile.logger::flog.warn(
+    msg = paste0(
+        "\n\tUnallowed characters detected in rownames and/or colnames of featureMat and/or metaMat!\n",
+        "\tmetadeconfoundR will try to remove these characters using the make.names() function."
+        ),
+    name = "my.logger")
     colnames(metaMat) <- make.names(colnames(metaMat), unique = T)
     colnames(featureMat) <- make.names(colnames(featureMat), unique = T)
     rownames(metaMat) <- make.names(rownames(metaMat), unique = T)
     rownames(featureMat) <- make.names(rownames(featureMat), unique = T)
+  }
+
+  allNumColls <- sapply(featureMat, FUN = function(x) is(x, "numeric"))
+  if (!all(allNumColls)) {
+    futile.logger::flog.error(msg = "Non-numeric columns detected in featureMat.",
+                              name = "my.logger")
+    stop("Non-numeric columns detected in featureMat.")
   }
 
   if (!is.null(deconfT) | !is.null(deconfF)) {
@@ -278,22 +288,22 @@ MetaDeconfound <- function(featureMat,
   # make sure only continuous OR binary features are applied for logistic = F/T.
   if (!logistic) {
     if (any(apply(
-      featureMat,
-      2,
-      FUN = function (x)
-        VarType(na.exclude(x), "varName", NULL, NULL)
-    ) == "binary")) {
+          featureMat,
+          2,
+          FUN = function (x)
+            VarType(na.exclude(x), "varName", NULL, NULL)
+          ) == "binary")) {
       futile.logger::flog.warn(msg = 'There appear to be binary features in featurMat. Remove from featureMat, or set logistic = T.', name = "my.logger")
     }
-    else {
-      if (any(apply(
-        featureMat,
-        2,
-        FUN = function (x)
-          VarType(na.exclude(x), "varName", NULL, NULL)
-      ) == "continuous")) {
-        futile.logger::flog.warn(msg = 'There appear to be continuous features in featurMat. Remove from featureMat, or set logistic = F.', name = "my.logger")
-      }
+  }
+  else {
+    if (any(apply(
+          featureMat,
+          2,
+          FUN = function (x)
+            VarType(na.exclude(x), "varName", NULL, NULL)
+          ) == "continuous")) {
+      futile.logger::flog.warn(msg = 'There appear to be continuous features in featurMat. Remove from featureMat, or set logistic = F.', name = "my.logger")
     }
   }
 

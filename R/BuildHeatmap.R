@@ -385,6 +385,10 @@ BuildHeatmap <- function(metaDeconfOutput,
   # include added name colums into plots!!
   if (cuneiform) {
 
+    if (length(signifMeaning) == 2) {
+      signifMeaning[1] <- "confounded/\nnot significant"
+    }
+
     # put together needed shapes and their meaning
     divShapes <- c()
     divShapesMeaning <- c()
