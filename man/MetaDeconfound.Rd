@@ -34,6 +34,7 @@ MetaDeconfound(
   returnLong = FALSE,
   collectMods = FALSE,
   mediationMat = NULL,
+  noConfConfs = TRUE,
   ...
 )
 }
@@ -143,6 +144,10 @@ standard Ps/Qs/Ds/status output.}
 with row(sample ID) and column(feature such as metabolite or microbial
 OTU ) names. Features supplied here will be tested for associations in
 featureMat, and confounder controlled for variables in metaMat.}
+
+\item{noConfConfs}{DEFAULT = TRUE; Set FALSE if confounders that are
+themselves confounded by other variables should be kept in the list of
+confounders in the status label of affected associations.}
 
 \item{...}{for additional arguments used internally (development/debugging)}
 }

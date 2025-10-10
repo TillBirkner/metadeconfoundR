@@ -31,7 +31,8 @@ CheckReducibility <- function(featureMat,
                               rawCounts, # new TB20220202
                               maintenance,
                               nAGQ,
-                              collectMods # new TB20220208
+                              collectMods, # new TB20220208
+                              noConfConfs # new TB20250827
                               ) {
 
 
@@ -603,23 +604,27 @@ CheckReducibility <- function(featureMat,
   colnames(r) <- covariates
 
   # 2025 08 27 remove confounded confounders
-  for (i in seq_along(rownames(r))) {
-    if (any(grepl("^C:", r[i, ]))) {
-      confounders <- sub("C: ", "", r[i, ])
-      confounders <- stringr::str_split(confounders, ", ")
-      names(confounders) <- colnames(r)
-      for (j in seq_along(colnames(r))) {
-        if (any(confounders[[j]] %in% colnames(r))) {
-          confounded_confounder <- c()
-          for (k in seq_along(confounders[[j]])) {
-            ks_confounders <- confounders[[ confounders[[j]][k] ]]
-            if (any(ks_confounders %in% confounders[[j]])) {
-              confounded_confounder <- c(confounded_confounder, k)
+  if (noConfConfs) {
+    flog.info(msg = paste("Removing 'confounded confounders' from status labels. Set noConfConfs = FALSE to keep them."),
+              name = "my.logger")
+    for (i in seq_along(rownames(r))) {
+      if (any(grepl("^C:", r[i, ]))) {
+        confounders <- sub("C: ", "", r[i, ])
+        confounders <- stringr::str_split(confounders, ", ")
+        names(confounders) <- colnames(r)
+        for (j in seq_along(colnames(r))) {
+          if (any(confounders[[j]] %in% colnames(r))) {
+            confounded_confounder <- c()
+            for (k in seq_along(confounders[[j]])) {
+              ks_confounders <- confounders[[ confounders[[j]][k] ]]
+              if (any(ks_confounders %in% confounders[[j]])) {
+                confounded_confounder <- c(confounded_confounder, k)
+              }
             }
-          }
-          if (length(confounded_confounder) > 0) {
-            confounders[[j]] <- confounders[[j]][-confounded_confounder]
-            r[i, j] <- paste0("C: ", paste(confounders[[j]], collapse = ", "))
+            if (length(confounded_confounder) > 0) {
+              confounders[[j]] <- confounders[[j]][-confounded_confounder]
+              r[i, j] <- paste0("C: ", paste(confounders[[j]], collapse = ", "))
+            }
           }
         }
       }

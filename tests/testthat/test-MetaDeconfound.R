@@ -4,14 +4,15 @@ library(metadeconfoundR)
 test_that("standard options", {
   feature <- reduced_feature
   metaMat <- metaMatMetformin
-  # using metadeconfound output created 2024 09 24
-  # write.table(result, "tests/testthat/2024_10_17_example_output.tsv", sep = "\t", row.names = F)
-  expected_output <- read.table("2024_10_17_example_output.tsv", header = T, sep = "\t")
+  # using metadeconfound output created 2025 10 07
+  #write.table(result, "tests/testthat/2025_10_07_example_output.tsv", sep = "\t", row.names = F)
+  expected_output <- read.table("2025_10_07_example_output.tsv", header = T, sep = "\t")
 
   result <- MetaDeconfound(featureMat = feature,
                            metaMat = metaMat,
                            logLevel = "INFO",
-                           returnLong = T
+                           returnLong = T,
+                           doRanks = c("altered_dummy") # test doRanks functionality
                            )
 
   result$feature <- as.character(result$feature)
@@ -42,23 +43,8 @@ test_that("standard options", {
     )
   )
 
-  # simply check, that collectMods is running without errors
-  # saving all models to file would create >40 MB .rds file
-  expect_no_error(MetaDeconfound(featureMat = feature,
-                                 metaMat = metaMat,
-                                 logLevel = "INFO",
-                                 returnLong = T,
-                                 collectMods = T
-  ))
-  expect_no_error(MetaDeconfound(featureMat = feature,
-                                 metaMat = metaMat,
-                                 logLevel = "INFO",
-                                 returnLong = F, # wide
-                                 collectMods = T
-  ))
-
-  # saveRDS(result_wide, "tests/testthat/2024_10_17_example_output_wide.rds")
-  expected_output_wide <- readRDS("2024_10_17_example_output_wide.rds")
+  # saveRDS(result_wide, "tests/testthat/2025_10_07_example_output_wide.rds")
+  expected_output_wide <- readRDS("2025_10_07_example_output_wide.rds")
 
   result_wide <- MetaDeconfound(featureMat = feature,
                            metaMat = metaMat,
@@ -113,7 +99,7 @@ test_that("standard options", {
 test_that("standard options parallel", {
   feature <- reduced_feature
   metaMat <- metaMatMetformin
-  expected_output <- read.table("2024_10_17_example_output.tsv", header = T, sep = "\t")
+  expected_output <- read.table("2025_10_07_example_output.tsv", header = T, sep = "\t")
 
   result <- MetaDeconfound(featureMat = feature,
                            metaMat = metaMat,
@@ -126,6 +112,20 @@ test_that("standard options parallel", {
   result$metaVariable <- as.character(result$metaVariable)
 
   expect_equal(result, expected_output)
+
+
+  # test adjust level 2 output
+  expected_output <- readRDS("2025_10_07_example_output_adjustLevel2.rds")
+  result <- MetaDeconfound(featureMat = feature,
+                           metaMat = metaMat,
+                           logLevel = "ERROR",
+                           returnLong = T,
+                           nnodes = 2,
+                           adjustLevel = 2
+  )
+  #saveRDS(result, "tests/testthat/2025_10_07_example_output_adjustLevel2.rds")
+  expect_equal(result, expected_output)
+
 })
 
 test_that("random and fixed effects", {
@@ -150,6 +150,24 @@ test_that("random and fixed effects", {
   expected_output$feature <- as.character(expected_output$feature)
   expected_output$metaVariable <- as.character(expected_output$metaVariable)
   expect_equal(result, expected_output)
+
+
+  # simply check, that collectMods is running without errors
+  # saving all models to file would create >40 MB .rds file
+  expect_no_error(MetaDeconfound(featureMat = feature[, 1:5],
+                                 metaMat = metaMat,
+                                 logLevel = "WARN",
+                                 returnLong = T,
+                                 collectMods = T,
+                                 randomVar = c("Dataset")
+  ))
+  expect_no_error(MetaDeconfound(featureMat = feature[, 1:5],
+                                 metaMat = metaMat,
+                                 logLevel = "WARN",
+                                 returnLong = F, # wide
+                                 collectMods = T,
+                                 randomVar = c("Dataset")
+  ))
 
   # saveRDS(resultFix, "tests/testthat/2024_10_21_example_output_fix.rds")
   expected_output_fix <- readRDS("2024_10_21_example_output_fix.rds")
@@ -219,6 +237,37 @@ test_that("logistic regression", {
   result$metaVariable <- as.character(result$metaVariable)
 
   expect_equal(result, expected_output)
+
+  #
+  expect_no_error(
+    MetaDeconfound(featureMat = feature[, c("MS0035"), drop = F],
+                   metaMat = metaMat,
+                   logLevel = "WARN",
+                   returnLong = T,
+                   logistic = T,
+                   collectMods = T
+    )
+  )
+
+  #
+  # expect_warning(
+  #   MetaDeconfound(featureMat = feature[, c("MS0035"), drop = F],
+  #                  metaMat = metaMat,
+  #                  logLevel = "WARN",
+  #                  returnLong = T,
+  #                  logistic = T,
+  #                  collectMods = T
+  #   ), "Separation for: MS0035 and Status", fixed = T
+  # )
+
+  expect_snapshot(
+    MetaDeconfound(featureMat = feature[, c("MS0035"), drop = F],
+                   metaMat = metaMat,
+                   logLevel = "WARN",
+                   returnLong = T,
+                   logistic = T
+    ), transform = function(x) {gsub("\\[.+\\]", "\\[\\]", x)}
+  )
 
   #combination of randomVars AND logistic mode
   # saveRDS(resultlogRand, "tests/testthat/2024_11_07_example_output_log_rand.rds")
@@ -384,6 +433,20 @@ test_that("correct error handling", {
                    returnLong = T
     ),
     'Not enough(robustCutoff = 5 ) samples in either case or controle group.',
+    fixed = TRUE
+  )
+
+  # 2025 10 07
+  # non-numeric columns in featureMat
+  featureWithNonNum <- feature
+  featureWithNonNum$nonNumCol <- rownames(featureWithNonNum)
+  expect_error(
+    MetaDeconfound(featureMat = featureWithNonNum,
+                   metaMat = metaMat,
+                   logLevel = "ERROR",
+                   returnLong = T
+    ),
+    'Non-numeric columns detected in featureMat.',
     fixed = TRUE
   )
 

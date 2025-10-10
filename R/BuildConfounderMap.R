@@ -133,7 +133,6 @@ BuildConfounderMap <- function(metaDeconfOutput,
     long_out$metaVariable <- factor(as.factor(long_out$metaVariable), levels = map)
   }
 
-
   # create table of edges
   # edges <- data.frame(from = "origin",
   #                     to = unique(long_out[long_out$Qs < q_cutoff, ]$metaVariable) %>%
@@ -147,6 +146,7 @@ BuildConfounderMap <- function(metaDeconfOutput,
 
   uniqueNames <- unique(long_out$feature) #TB20250123
   names(uniqueNames) <- uniqueNames #TB20250123
+
   # plot_list <- lapply(unique(long_out$feature), function(x) {
   #   tmp <- long_out %>% dplyr::filter(Qs < q_cutoff & feature == x)
   plot_list <- lapply(uniqueNames, function(x) { #TB20250123
@@ -213,13 +213,16 @@ BuildConfounderMap <- function(metaDeconfOutput,
       to  <-  match(connect$to, vertices$name)
 
       # create color palettes
-      if (length(featureColor == 1))
+      if (length(featureColor) == 1) {
         color_graph_fun <- circlize::colorRamp2(c(0, 1), c(featureColor, "#F5F5F5"))
-      else
+      } else {
         color_graph_fun <- circlize::colorRamp2(c(0, 1), c(featureColor[names(featureColor) == x], "#F5F5F5"))
+      }
       color_graph <- color_graph_fun(seq(0, 1, length.out = 100))
       names(color_graph) <- seq(0, 1, length.out = 100)
     }
+
+
     color_node_fun <- circlize::colorRamp2(c(-1, 0, 1), d_col)
     color_node <- color_node_fun(seq(-1, 1, length.out = 100))
     names(color_node) <- seq(-1, 1, length.out = 100)
