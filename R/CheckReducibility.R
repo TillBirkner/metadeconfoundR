@@ -5,6 +5,7 @@
 #' @importFrom methods is
 #' @import detectseparation
 #' @importFrom stats update confint
+#' @importFrom stringr str_split
 
 CheckReducibility <- function(featureMat,
                               metaMat,
