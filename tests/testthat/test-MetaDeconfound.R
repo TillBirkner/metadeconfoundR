@@ -260,13 +260,19 @@ test_that("logistic regression", {
   #   ), "Separation for: MS0035 and Status", fixed = T
   # )
 
+  removeVarLines <- function(x) {
+    x_a <- gsub("\\[.+\\]", "\\[\\]", x)
+    x_a <- gsub("^starting worker.+", "", x_a)
+    return(x_a[x_a != ""])
+  }
+
   expect_snapshot(
     MetaDeconfound(featureMat = feature[, c("MS0035"), drop = F],
                    metaMat = metaMat,
                    logLevel = "WARN",
                    returnLong = T,
                    logistic = T
-    ), transform = function(x) {gsub("\\[.+\\]", "\\[\\]", x)}
+    ), transform = removeVarLines
   )
 
   #combination of randomVars AND logistic mode

@@ -102,7 +102,7 @@ CheckReducibility <- function(featureMat,
     `%toggleDoPar%` <- `%dopar%`
   }
 
-  # load parralel processing environment
+  # load parallel processing environment
   if (.Platform$OS.type == "unix") {
     # unix
     cl <- parallel::makeForkCluster(nnodes = nnodes, outfile = "")
@@ -125,7 +125,7 @@ CheckReducibility <- function(featureMat,
     statusLine <- vector(length = noCovariates, mode = "character")
     # find all covariates which on their end have effect on the feature
     # add all those that shall always be tested, and remove those that shall never be tested
-    lCovariates <- covariates[which(Qs[i, ] < QCutoff)]
+    lCovariates <- covariates[which((Qs[i, ] < QCutoff) & (abs(Ds[i, ]) > DCutoff))]
     lCovariates <- c(lCovariates, deconfT)
     lCovariates <- lCovariates[!(lCovariates %in% deconfF)]
     # remove names of random variables from this list
@@ -179,6 +179,7 @@ CheckReducibility <- function(featureMat,
           abs (Ds [i, j]) <= DCutoff) {
 
         if (aCovariate %in% RVnames) {
+          # randomVars will have NA Qs, so are always caught here
           # set label to NA for all random vars
           statusLine[j] <- NA
           next
