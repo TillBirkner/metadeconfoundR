@@ -251,6 +251,7 @@ test_that("logistic regression", {
   removeVarLines <- function(x) {
     x_a <- gsub("WARN \\[.+\\]", "\\[\\]", x)
     x_a <- gsub("^starting worker.+", "", x_a)
+    x_a <- gsub("::warning title=WARN::", "\\[\\] ", x_a)
     return(x_a[x_a != ""])
   }
 
@@ -265,10 +266,9 @@ test_that("logistic regression", {
                  returnLong = T,
                  logistic = T,
                  logfile = log_file)
-  txt <- readLines(log_file, warn = FALSE)
+  txt <- removeVarLines(readLines(log_file, warn = FALSE))
 
-  expect_snapshot(txt, transform = removeVarLines
-  )
+  expect_snapshot(txt)
 
 
 
