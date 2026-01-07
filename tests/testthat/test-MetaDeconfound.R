@@ -254,13 +254,20 @@ test_that("logistic regression", {
     return(x_a[x_a != ""])
   }
 
-  expect_snapshot(
-    MetaDeconfound(featureMat = feature[, c("MS0035"), drop = F],
-                   metaMat = metaMat,
-                   logLevel = "WARN",
-                   returnLong = T,
-                   logistic = T
-    ), transform = removeVarLines
+  log_file <- tempfile(fileext = ".txt")
+  on.exit({
+    if (file.exists(log_file)) unlink(log_file)
+  }, add = TRUE)
+
+  result_loglog <-  MetaDeconfound(featureMat = feature[, c("MS0035"), drop = F],
+                 metaMat = metaMat,
+                 logLevel = "WARN",
+                 returnLong = T,
+                 logistic = T,
+                 logfile = log_file)
+  txt <- readLines(log_file, warn = FALSE)
+
+  expect_snapshot(txt, transform = removeVarLines
   )
 
 
