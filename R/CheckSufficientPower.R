@@ -1,4 +1,4 @@
-#' @import futile.logger
+#' @import logger
 
 
 CheckSufficientPower <- function(metaMat,
@@ -27,21 +27,18 @@ CheckSufficientPower <- function(metaMat,
     noControl <- length(metaMat[metaMat[,1] == 0, ])
   }
 
-  flog.debug(paste("CheckSufficientPower -- covariates: ",
-                   paste(covariates, collapse = ", ")),
-             name = "my.logger")
-  flog.debug(paste("CheckSufficientPower -- noCovariates:",
-                   noCovariates),
-             name = "my.logger")
+  logger::log_debug(namespace = "metadeconfoundR", paste("CheckSufficientPower -- covariates: ",
+                   paste(covariates, collapse = ", ")))
+  logger::log_debug(namespace = "metadeconfoundR", paste("CheckSufficientPower -- noCovariates:",
+                   noCovariates))
 
 
   if (noCondition < robustCutoff | noControl < robustCutoff) {
-    flog.error(msg = paste("Not enough (robustCutoff =",
+    logger::log_error(namespace = "metadeconfoundR", paste("Not enough (robustCutoff =",
                            robustCutoff,
                            ") samples for either case (== 1) or control (== 0) group in metaMat column one (",
                            covariates[1],
-                           "). Make sure column one of metaMat is a binary (0/1) variable."),
-               name = "my.logger")
+                           "). Make sure column one of metaMat is a binary (0/1) variable."))
     stop(paste("Not enough(robustCutoff =", robustCutoff, ") samples in either case or controle group."))
   }
 

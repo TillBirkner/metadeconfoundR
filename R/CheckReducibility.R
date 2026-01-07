@@ -1,7 +1,7 @@
 #' @import foreach
 #' @import lmtest
 #' @import lme4
-#' @import futile.logger
+#' @import logger
 #' @importFrom methods is
 #' @import detectseparation
 #' @importFrom stats update confint
@@ -46,7 +46,7 @@ CheckReducibility <- function(featureMat,
     #out <- eval(parse(text = as.character(lmText)))
     out <- tryCatch(eval(parse(text = as.character(lmText))),
                     error = function(cond){
-      flog.warn(paste0("(g)lm(er) failed with error meessage: ", cond$message))
+      logger::log_warn(namespace = "metadeconfoundR", paste0("(g)lm(er) failed with error meessage: ", cond$message))
       NA
     })
     return(out)
@@ -57,7 +57,7 @@ CheckReducibility <- function(featureMat,
 
     out <- tryCatch(lmtest::lrtest(lm1, lm2)$'Pr(>Chisq)' [2],
                     error = function(cond){
-      flog.warn(paste0("model lrt failed with error meessage: ", cond$message))
+      logger::log_warn(namespace = "metadeconfoundR", paste0("model lrt failed with error meessage: ", cond$message))
       NA
     })
     return(out)
@@ -136,28 +136,25 @@ CheckReducibility <- function(featureMat,
 
 
 
-    flog.debug(paste(
+    logger::log_debug(namespace = "metadeconfoundR", paste(
       as.character(i),
       length(features),
       length(covariates),
       length(lCovariates),
       paste(lCovariates, collapse = ", "),
       sep = "\t"
-      ),
-    name = "my.logger"
-    )
+      ))
 
     if (length (lCovariates) == 0 ) {
 
-      flog.debug("returned whole NS line", name = "my.logger")
+      logger::log_debug(namespace = "metadeconfoundR", "returned whole NS line", name = "my.logger")
 
       if ((i %% progressSteps) == 0) {#TB20240229
         progress <- paste0(round(x = ((i/length(features))*100),
                                  digits = 2), "%")
-        flog.info(msg = paste("Deconfounding -- processed",
+        logger::log_info(namespace = "metadeconfoundR", paste("Deconfounding -- processed",
                               progress,
-                              "of features."),
-                  name = "my.logger")
+                              "of features."))
       }
 
       statusLine[seq_along(covariates)] <- "NS"
@@ -232,8 +229,7 @@ CheckReducibility <- function(featureMat,
                          collapse = "")
         }
 
-        flog.debug(paste("LRT_randOnly_for", aFeature, aCovariate, sep = "\t"),
-                   name = "my.logger")
+        logger::log_debug(namespace = "metadeconfoundR", paste("LRT_randOnly_for", aFeature, aCovariate, sep = "\t"))
 
         mixedmodel1Text <- paste0 (head,
                                    aCovariate,
@@ -254,8 +250,7 @@ CheckReducibility <- function(featureMat,
 
         aP_mixed <- safe_lrtest(mixedmodel1, mixedmodel2)
 
-        flog.debug(paste("LRT_randOnly_for", aFeature, aCovariate, aP_mixed, sep = "\t"),
-                   name = "my.logger")
+        logger::log_debug(namespace = "metadeconfoundR", paste("LRT_randOnly_for", aFeature, aCovariate, aP_mixed, sep = "\t"))
 
         if (collectMods) {
           collectedMods[[aFeature]][[aCovariate]][["randomFixedEffectsOnly"]] <- list()
@@ -318,18 +313,17 @@ CheckReducibility <- function(featureMat,
 
             }
 
-            flog.debug("testing separation", name = "my.logger")
+            logger::log_debug(namespace = "metadeconfoundR", "testing separation")
             glmmodeltext <- paste0 (modAlg,
                                     paste0(c(aCovariate, anotherCovariate),
                                            collapse = " + "),
                                     lastPart)
             glmmodel <- eval(parse(text = as.character(glmmodeltext)))
             if (update(glmmodel, method="detect_separation")$outcome) {
-              flog.warn(
-                msg = paste(
+              logger::log_warn(namespace = "metadeconfoundR",
+                paste(
                   "Separation for:", aFeature, ",",
-                  aCovariate, "and", anotherCovariate),
-                name = "my.logger")
+                  aCovariate, "and", anotherCovariate))
               status <- NA
               if (collectMods) {
                 collectedMods[[aFeature]][[aCovariate]][[anotherCovariate]][["full"]] <- glmmodel
@@ -371,15 +365,13 @@ CheckReducibility <- function(featureMat,
             }
           } # end if (!is.na(randomVar[[1]]))
 
-          flog.debug(
+          logger::log_debug(namespace = "metadeconfoundR",
             paste("LRTsFwdRvsFor",
                   aFeature,
                   aCovariate,
                   anotherCovariate,
                   sep = "\t"
-                  ),
-            name = "my.logger"
-            )
+                  ))
 
           # compute the three needed linear models
           lmBothText <- paste0 (modAlg,
@@ -415,7 +407,7 @@ CheckReducibility <- function(featureMat,
             # class is logical if lmX == NA
 
             status <- "AD"
-            flog.debug("This should never be executed!", name = "my.logger")
+            logger::log_debug(namespace = "metadeconfoundR", "This should never be executed!")
             next
           }
 
@@ -423,15 +415,14 @@ CheckReducibility <- function(featureMat,
           aP_reverse <- safe_lrtest(lmBoth, lmA) #effect of adding anotherCovariate
 
           if (is(lmBoth, "lm") && anyNA(lmBoth$coefficients)) {
-            flog.warn(paste0("In full model containing: ",
+            logger::log_warn(namespace = "metadeconfoundR", paste0("In full model containing: ",
                              paste0(names(lmBoth$coefficients),
                                     collapse = ", "),
                              ", NA coefficient(s) are present: ",
                              paste0(names(lmBoth$coefficients)[is.na(lmBoth$coefficients)],
                                     collapse = ", "),
                              ". Setting forward and reverse LRTs to non-significant."
-                             ),
-                      name = "my.logger")
+                             ))
             aP_forward <- 1
             aP_reverse <- 1
           }
@@ -478,8 +469,8 @@ CheckReducibility <- function(featureMat,
                 (including fixed/random effects if applicable)!'
               }
 
-              flog.warn(
-                msg = paste(
+              logger::log_warn(namespace = "metadeconfoundR",
+                paste(
                   'lrt: ',
                   features[i],
                   aCovariate,
@@ -487,9 +478,7 @@ CheckReducibility <- function(featureMat,
                   '-- forward linear model is < PHS_cutoff, but confidence intervall for',
                   aCovariate,
                   ending
-                ),
-                name = "my.logger"
-              )
+                ))
               if (doConfs > 1) {
                 # if doConfs ==2 make lrt non-significant
                 # aP_forward <- 1 # --> no unique effect of aCovariate
@@ -512,8 +501,8 @@ CheckReducibility <- function(featureMat,
                 (including fixed/random effects if applicable)!'
               }
 
-              flog.warn(
-                msg = paste(
+              logger::log_warn(namespace = "metadeconfoundR",
+                paste(
                   'lrt: ',
                   features[i],
                   aCovariate,
@@ -521,9 +510,7 @@ CheckReducibility <- function(featureMat,
                   '-- reverse linear model is < PHS_cutoff, but confidence intervall for',
                   anotherCovariate,
                   ending
-                ),
-                name = "my.logger"
-              )
+                ))
               if (doConfs > 1) {
                 aP_reverse <- 1 # --> no unique effect of anotherCovariate
                 # aCovariate will not be labeled as being confounded by anotherCovariate anymore
@@ -551,7 +538,7 @@ CheckReducibility <- function(featureMat,
             status <- "AD"
           } # cannot be ruled out another feature explains this
 
-          flog.debug(
+          logger::log_debug(namespace = "metadeconfoundR",
             paste(
               "LRTsFwdRvsFor",
               aFeature,
@@ -560,9 +547,7 @@ CheckReducibility <- function(featureMat,
               aP_forward,
               aP_reverse,
               sep = "\t"
-            ),
-            name = "my.logger"
-          )
+            ))
         } #end "for (anotherCovariate in lCovariates) {"
 
 
@@ -584,20 +569,18 @@ CheckReducibility <- function(featureMat,
     if ((i %% progressSteps) == 0) {#TB20240229
       progress <- paste0(round(x = ((i/length(features))*100),
                                digits = 2), "%")
-      flog.info(msg = paste("Deconfounding -- processed",
+      logger::log_info(namespace = "metadeconfoundR", paste("Deconfounding -- processed",
                             progress,
-                            "of features."),
-                name = "my.logger")
+                            "of features."))
     }
-    flog.debug("one more line done!", name = "my.logger")
+    logger::log_debug(namespace = "metadeconfoundR", "one more line done!")
     statusLine
   }# foreach loop
 
   parallel::stopCluster(cl) # close parallel processing environment
-  flog.debug("Everything done in checkReducibility!", name = "my.logger")
+  logger::log_debug(namespace = "metadeconfoundR", "Everything done in checkReducibility!")
 
-  flog.info(msg = paste("Deconfounding -- processed 100% of features."),
-            name = "my.logger")
+  logger::log_info(namespace = "metadeconfoundR", paste("Deconfounding -- processed 100% of features."))
 
   if (is.null(ncol(r))) {
     r <- t(r)
@@ -607,8 +590,7 @@ CheckReducibility <- function(featureMat,
 
   # 2025 08 27 remove confounded confounders
   if (noConfConfs) {
-    flog.info(msg = paste("Removing 'confounded confounders' from status labels. Set noConfConfs = FALSE to keep them."),
-              name = "my.logger")
+    logger::log_info(namespace = "metadeconfoundR", paste("Removing 'confounded confounders' from status labels. Set noConfConfs = FALSE to keep them."))
     for (i in seq_along(rownames(r))) {
       if (any(grepl("^C:", r[i, ]))) {
         confounders <- sub("C: ", "", r[i, ])

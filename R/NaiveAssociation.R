@@ -2,7 +2,7 @@
 #' @importFrom  lmtest lrtest
 #' @importFrom  stats glm
 #' @importFrom  stats cor.test kruskal.test wilcox.test p.adjust update
-#' @import futile.logger
+#' @import logger
 #' @import detectseparation
 #' @importFrom reshape2 melt dcast
 
@@ -65,7 +65,7 @@ NaiveAssociation <- function(featureMat,
   }
 
   i <- 0
-  futile.logger::flog.debug(
+  logger::log_debug(namespace = "metadeconfoundR",
     paste(
       "counter",
       "aCovariate",
@@ -73,9 +73,7 @@ NaiveAssociation <- function(featureMat,
       "noCovariates" ,
       "isRobust[aCovariate]",
       sep = "\t"
-    ),
-    name = "my.logger"
-  )
+    ))
 
 
   r = foreach::foreach(i= seq_along(features), .combine='rbind') %toggleDoPar% {
@@ -95,10 +93,9 @@ NaiveAssociation <- function(featureMat,
       if ((i %% progressSteps) == 0) {#TB20240229
         progress <- paste0(round(x = ((i/length(features))*100),
                                  digits = 2), "%")
-        futile.logger::flog.info(msg = paste("NaiveAssociation -- processed",
+        logger::log_info(namespace = "metadeconfoundR", paste("NaiveAssociation -- processed",
                               progress,
-                              "of features."),
-                  name = "my.logger")
+                              "of features."))
       }
 
       return(c(as.numeric(somePs), as.numeric(someDs)))
@@ -112,15 +109,14 @@ NaiveAssociation <- function(featureMat,
       aFeature <- as.character (features [i])
       aCovariate <- as.character (covariates [j])
 
-      futile.logger::flog.debug(
+      logger::log_debug(namespace = "metadeconfoundR",
         paste(
           i,
           aCovariate,
           aFeature,
           noCovariates ,
           isRobust[aCovariate],
-          sep = "\t"),
-        name = "my.logger")
+          sep = "\t"))
 
       aD <- NA_real_
       aP <- NA_real_
@@ -130,7 +126,7 @@ NaiveAssociation <- function(featureMat,
         someDs[j] <- aD
 
 
-        futile.logger::flog.debug(paste0("skipped ", aCovariate), name = "my.logger")
+        logger::log_debug(namespace = "metadeconfoundR", paste0("skipped ", aCovariate))
 
         next
       }
@@ -170,11 +166,10 @@ NaiveAssociation <- function(featureMat,
     aP <- NA
     glmSepTested <- update(lmVar, method="detect_separation")
     if (glmSepTested$outcome) {
-      flog.warn(
-        msg = paste(
+      logger::log_warn(namespace = "metadeconfoundR",
+        paste(
           "Separation for:", aFeature, "and",
-          aCovariate),
-        name = "my.logger")
+          aCovariate))
     } else {
       aP <- lmtest::lrtest (lmNull, lmVar)$'Pr(>Chisq)' [2]
     }
@@ -258,10 +253,9 @@ NaiveAssociation <- function(featureMat,
 
     if ((i %% progressSteps) == 0) {#TB20240229
       progress <- paste0(round(x = ((i/length(features))*100),digits = 2), "%")
-      futile.logger::flog.info(msg = paste("NaiveAssociation -- processed",
+      logger::log_info(namespace = "metadeconfoundR", paste("NaiveAssociation -- processed",
                             progress,
-                            "of features."),
-                name = "my.logger")
+                            "of features."))
     }
 
     return(c(as.numeric(somePs), as.numeric(someDs)))
@@ -272,10 +266,8 @@ NaiveAssociation <- function(featureMat,
   parallel::stopCluster(cl)
 
 
-  futile.logger::flog.info(msg = paste("NaiveAssociation -- processed 100% of features."),
-            name = "my.logger")
-  futile.logger::flog.debug(paste("NaiveAssociation -- ncol(parallelreturn):", ncol(r)),
-             name = "my.logger")
+  logger::log_info(namespace = "metadeconfoundR", paste("NaiveAssociation -- processed 100% of features."))
+  logger::log_debug(namespace = "metadeconfoundR", paste("NaiveAssociation -- ncol(parallelreturn):", ncol(r)))
 
   # Ps <- r[, seq_len(ncol(r)/2), drop = F]
   # rownames(Ps) <- features[seq_len(nrow(r))]

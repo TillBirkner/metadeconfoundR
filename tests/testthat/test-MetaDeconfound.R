@@ -238,7 +238,6 @@ test_that("logistic regression", {
 
   expect_equal(result, expected_output)
 
-  #
   expect_no_error(
     MetaDeconfound(featureMat = feature[, c("MS0035"), drop = F],
                    metaMat = metaMat,
@@ -248,17 +247,6 @@ test_that("logistic regression", {
                    collectMods = T
     )
   )
-
-  #
-  # expect_warning(
-  #   MetaDeconfound(featureMat = feature[, c("MS0035"), drop = F],
-  #                  metaMat = metaMat,
-  #                  logLevel = "WARN",
-  #                  returnLong = T,
-  #                  logistic = T,
-  #                  collectMods = T
-  #   ), "Separation for: MS0035 and Status", fixed = T
-  # )
 
   removeVarLines <- function(x) {
     x_a <- gsub("\\[.+\\]", "\\[\\]", x)
@@ -274,6 +262,7 @@ test_that("logistic regression", {
                    logistic = T
     ), transform = removeVarLines
   )
+
 
   #combination of randomVars AND logistic mode
   # saveRDS(resultlogRand, "tests/testthat/2024_11_07_example_output_log_rand.rds")

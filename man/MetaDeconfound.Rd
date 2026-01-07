@@ -72,7 +72,7 @@ in order to have sufficient power for association testing}
 \item{logfile}{name of optional logging file.}
 
 \item{logLevel}{logging verbosity, possible levels:
-TRACE, DEBUG, INFO, WARN, ERROR, FATAL, DEFAULT = INFO}
+TRACE, DEBUG, INFO, WARN, ERROR, FATAL, OFF,  DEFAULT = INFO}
 
 \item{startStop}{vector of optional strings controlling which
 parts of the pipeline should be executed.
