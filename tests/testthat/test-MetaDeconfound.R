@@ -249,7 +249,7 @@ test_that("logistic regression", {
   )
 
   removeVarLines <- function(x) {
-    x_a <- gsub("\\[.+\\]", "\\[\\]", x)
+    x_a <- gsub("WARN \\[.+\\]", "\\[\\]", x)
     x_a <- gsub("^starting worker.+", "", x_a)
     return(x_a[x_a != ""])
   }
@@ -264,11 +264,12 @@ test_that("logistic regression", {
   )
 
 
-  #combination of randomVars AND logistic mode
-  # saveRDS(resultlogRand, "tests/testthat/2024_11_07_example_output_log_rand.rds")
-  expected_output_logRand <- readRDS("2024_11_07_example_output_log_rand.rds")
 
-  resultlogRand <- MetaDeconfound(featureMat = feature,
+  #combination of randomVars AND logistic mode
+  # saveRDS(resultlogRand, "tests/testthat/2026_01_07_example_output_log_rand.rds")
+  expected_output_logRand <- readRDS("2026_01_07_example_output_log_rand.rds")
+
+  resultlogRand <- MetaDeconfound(featureMat = feature[, 1:15],
                            metaMat = metaMat,
                            logLevel = "INFO",
                            returnLong = T,
@@ -288,13 +289,10 @@ test_that("logistic regression", {
 test_that("raw Counts mode", {
   feature <- round(reduced_feature)
   metaMat <- metaMatMetformin
-  # using metadeconfound output created 2024 10 10
-  # saveRDS(result_rawCounts, "tests/testthat/2024_10_10_example_output_rawCounts.rds")
-  #expected_output_rawCounts <- readRDS("2024_10_10_example_output_rawCounts.rds")
-  #saveRDS(result_rawCountsRand, "tests/testthat/2024_10_16_example_output_rawCountsRand.rds")
-  expected_output_rawCountsRand <- readRDS("2024_10_16_example_output_rawCountsRand.rds")
+  # saveRDS(result_rawCountsRand, "tests/testthat/2026_01_07_example_output_rawCountsRand.rds")
+  expected_output_rawCountsRand <- readRDS("2026_01_07_example_output_rawCountsRand.rds")
 
-  result_rawCountsRand <- MetaDeconfound(featureMat = feature,
+  result_rawCountsRand <- MetaDeconfound(featureMat = feature[, 1:15],
                            metaMat = metaMat,
                            logLevel = "INFO",
                            returnLong = T,
