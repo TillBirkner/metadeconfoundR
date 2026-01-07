@@ -52,6 +52,7 @@ jobs:
       - uses: r-lib/actions/check-r-package@v2
         env:
           GITHUB_ACTIONS: "false"
+          CI: "false"
         with:
           upload-snapshots: true
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
