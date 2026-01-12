@@ -248,27 +248,33 @@ test_that("logistic regression", {
     )
   )
 
-  removeVarLines <- function(x) {
-    x_a <- gsub("WARN \\[.+\\]", "\\[\\]", x)
-    x_a <- gsub("^starting worker.+", "", x_a)
-    x_a <- gsub("::warning title=WARN::", "\\[\\] ", x_a)
-    return(x_a[x_a != ""])
-  }
-
   log_file <- tempfile(fileext = ".txt")
   on.exit({
     if (file.exists(log_file)) unlink(log_file)
   }, add = TRUE)
 
-  result_loglog <-  MetaDeconfound(featureMat = feature[, c("MS0035"), drop = F],
+  # saveRDS(result_loglog, "tests/testthat/2026_01_12_example_output_loglog.rds")
+  expected_output_loglog <- readRDS("2026_01_12_example_output_loglog.rds")
+
+  result_loglog <-  MetaDeconfound(featureMat = feature,
                  metaMat = metaMat,
                  logLevel = "WARN",
                  returnLong = T,
                  logistic = T,
                  logfile = log_file)
-  txt <- removeVarLines(readLines(log_file, warn = FALSE))
+  # test output
+  expect_equal(result_loglog, expected_output_loglog)
 
-  expect_snapshot(txt)
+  # test logging output with correct number of separation warnings
+  txt <- readLines(log_file, warn = FALSE)
+  expect_equal(sum(
+    grepl(
+      "Separation for: MS0(035|037|054|067|071|080|089|102|136|142) and (Status|Dataset|Metformin)",
+      txt
+    )
+  ), 21)
+
+
 
 
 
