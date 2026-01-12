@@ -1,7 +1,10 @@
 #' @importFrom foreach %dopar%
-#' @import stats
 #' @importFrom  lmtest lrtest
-#' @import futile.logger
+#' @importFrom  stats glm
+#' @importFrom  stats cor.test kruskal.test wilcox.test p.adjust update
+#' @import logger
+#' @import detectseparation
+#' @importFrom reshape2 melt dcast
 
 NaiveAssociation <- function(featureMat,
                              samples,
@@ -17,7 +20,9 @@ NaiveAssociation <- function(featureMat,
                              nnodes,
                              rawCounts, # new TB20221129
                              adjustMethod,
-                             verbosity) {
+                             adjustLevel,
+                             mediationMat
+                             ) {
 
   #new TB20240926
   `%toggleDoPar%` <- `%do%`
@@ -60,7 +65,7 @@ NaiveAssociation <- function(featureMat,
   }
 
   i <- 0
-  futile.logger::flog.debug(
+  logger::log_debug(namespace = "metadeconfoundR",
     paste(
       "counter",
       "aCovariate",
@@ -68,31 +73,8 @@ NaiveAssociation <- function(featureMat,
       "noCovariates" ,
       "isRobust[aCovariate]",
       sep = "\t"
-    ),
-    name = "my.logger"
-  )
+    ))
 
-  ##
-
-  getVariableType <- function (values, variable) {
-    if (is.numeric (values) &&
-        all (values %in% c (0, 1)) &&
-        !(!is.null (typeContinuous) &&
-          variable %in% typeContinuous) &&
-        !(!is.null (typeCategorical) && variable %in% typeCategorical)) {
-      return ("binary") # treat as binary
-    } # this fulfils criteria of binary (0, 1) and not in the special cases
-    else if ((is.numeric (values) ||
-              (!is.null (typeContinuous) &&
-               variable %in% typeContinuous)) &&
-             !(!is.null (typeCategorical) && variable %in% typeCategorical)) {
-      return ("continuous") # treat as continuous
-    } # this fulfils criteria of not being restricted to 0, 1; still numeric,
-        # or guaranteed continuous (redundant?); and not categorical
-    else {
-      return ("categorical") # treat as categorical
-    } # default as categorical
-  }
 
   r = foreach::foreach(i= seq_along(features), .combine='rbind') %toggleDoPar% {
 
@@ -111,10 +93,9 @@ NaiveAssociation <- function(featureMat,
       if ((i %% progressSteps) == 0) {#TB20240229
         progress <- paste0(round(x = ((i/length(features))*100),
                                  digits = 2), "%")
-        futile.logger::flog.info(msg = paste("NaiveAssociation -- processed",
+        logger::log_info(namespace = "metadeconfoundR", paste("NaiveAssociation -- processed",
                               progress,
-                              "of features."),
-                  name = "my.logger")
+                              "of features."))
       }
 
       return(c(as.numeric(somePs), as.numeric(someDs)))
@@ -128,15 +109,14 @@ NaiveAssociation <- function(featureMat,
       aFeature <- as.character (features [i])
       aCovariate <- as.character (covariates [j])
 
-      futile.logger::flog.debug(
+      logger::log_debug(namespace = "metadeconfoundR",
         paste(
           i,
           aCovariate,
           aFeature,
           noCovariates ,
           isRobust[aCovariate],
-          sep = "\t"),
-        name = "my.logger")
+          sep = "\t"))
 
       aD <- NA_real_
       aP <- NA_real_
@@ -146,97 +126,114 @@ NaiveAssociation <- function(featureMat,
         someDs[j] <- aD
 
 
-        futile.logger::flog.debug(paste0("skipped ", aCovariate), name = "my.logger")
+        logger::log_debug(namespace = "metadeconfoundR", paste0("skipped ", aCovariate))
 
         next
       }
 
-	variableType <- getVariableType (na.exclude(subMerge[[aCovariate]]), aCovariate)
+      variableType <- VarType (na.exclude(subMerge[[aCovariate]]), aCovariate, typeCategorical, typeContinuous)
+      conVar <- TRUE
+      varX <- na.exclude (cbind (subMerge [[aCovariate]], subMerge [["FeatureValue"]]))
 
-  conVar <- TRUE
-  varX <- na.exclude (cbind (subMerge [[aCovariate]], subMerge [["FeatureValue"]]))
-
-  if (sum (! is.na (subMerge [["FeatureValue"]])) < 1 ||
-      # TRUE if only NA-values
-      nrow (varX) <= 2 ||
-      # TRUE if if there are not at least three rows without NAs
-      length (unique (varX [, 1])) < 2 ||
-      # TRUE if there are not at least two different metadata values in non-NA subset
-      length (unique (varX [, 2])) < 2) {
-      # TRUE if there are not at least two different feature values in non-NA subset
+      if (sum (! is.na (subMerge [["FeatureValue"]])) < 1 ||
+          # TRUE if only NA-values
+          nrow (varX) <= 2 ||
+          # TRUE if if there are not at least three rows without NAs
+          length (unique (varX [, 1])) < 2 ||
+          # TRUE if there are not at least two different metadata values in non-NA subset
+          length (unique (varX [, 2])) < 2) {
+          # TRUE if there are not at least two different feature values in non-NA subset
         conVar <- FALSE
-  }
-
-
-  subSubMerge <- na.exclude(subMerge[, c(aCovariate, "FeatureValue")])
-    if (logistic == TRUE && conVar) {
-      formulaNull <- paste0 ("stats::glm (FeatureValue ~ 1, data = subSubMerge, family = \"binomial\")", collapse = "")
-      formulaVar <- paste0 ("stats::glm (FeatureValue ~ ", aCovariate, ", data = subSubMerge, family = \"binomial\")", collapse = "")
-
-      lmNull <- eval (parse (text = as.character (formulaNull)))
-      lmVar <- eval (parse (text = as.character (formulaVar)))
-
-      aP <- lmtest::lrtest (lmNull, lmVar)$'Pr(>Chisq)' [2]
-      if (variableType == "categorical") {
-        aD <- Inf
-      } else if (variableType == "binary") {
-        aD <- stats::cor.test (subMerge [, aCovariate],
-                               subMerge [, "FeatureValue"],
-                               )$estimate
-      } else  if (variableType == "continuous") {
-        aD <- CliffsDelta(
-          as.vector (
-            na.exclude (
-              subMerge [subMerge [["FeatureValue"]] == 0, aCovariate])),
-          as.vector (
-            na.exclude (
-              subMerge [subMerge [["FeatureValue"]] == 1, aCovariate])))
       }
-      #aD <- lmVar$coef [2]
 
+
+      subSubMerge <- na.exclude(subMerge[, c(aCovariate, "FeatureValue")])
+
+      if (logistic == TRUE && conVar) {
+
+
+        formulaVar <- paste0 (
+          "stats::glm (FeatureValue ~ ",
+          aCovariate,
+          ", data = subSubMerge, family = \"binomial\")",
+          collapse = ""
+        )
+        lmVar <- eval (parse (text = as.character (formulaVar)))
+
+        formulaNull <- paste0 ("stats::glm (FeatureValue ~ 1, data = subSubMerge, family = \"binomial\")", collapse = "")
+        lmNull <- eval (parse (text = as.character (formulaNull)))
+
+    aP <- NA
+    glmSepTested <- update(lmVar, method="detect_separation")
+    if (glmSepTested$outcome) {
+      logger::log_warn(namespace = "metadeconfoundR",
+        paste(
+          "Separation for:", aFeature, "and",
+          aCovariate))
+    } else {
+      aP <- lmtest::lrtest (lmNull, lmVar)$'Pr(>Chisq)' [2]
     }
 
-    else if (variableType == "categorical" && conVar) {
-      # KW test if false binary and 	# SKF20200221
-
-      aP <- stats::kruskal.test (
-        g = as.factor(subMerge [[aCovariate]]),
-        x = subMerge [["FeatureValue"]])$p.value
-
+    if (variableType == "categorical") {
       aD <- Inf
-    }
-
-    else if (variableType == "binary" && conVar) {
-      # MWU test if binary and 	# SKF20200221
-
-      aP <- suppressWarnings(stats::wilcox.test (
-          subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"],
-          subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"]))$p.value
-
+    } else if (variableType == "binary") {
+      aD <- stats::cor.test (subMerge [, aCovariate],
+                             subMerge [, "FeatureValue"],
+                             )$estimate
+    } else  if (variableType == "continuous") {
       aD <- CliffsDelta(
         as.vector (
           na.exclude (
-            subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"])),
+            subMerge [subMerge [["FeatureValue"]] == 0, aCovariate])),
         as.vector (
           na.exclude (
-            subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"])))
+            subMerge [subMerge [["FeatureValue"]] == 1, aCovariate])))
     }
+    #aD <- lmVar$coef [2]
 
-    else if (variableType == "continuous" && conVar) {
-      # spearman test if continuous and numerical 	# SKF20200221
+  }
 
-      corTestObj <- suppressWarnings(stats::cor.test (subMerge [, aCovariate],
-                                                      subMerge [, "FeatureValue"],
-                                                      method = "spearman"))
-      aP <- corTestObj$p.value
-      aD <- corTestObj$estimate
-      # aP <- stats::cor.test (subMerge [, aCovariate],
-      #                        subMerge [, "FeatureValue"],
-      #                        method = "spearman")$p.value
-      # aD <- stats::cor.test (subMerge [, aCovariate],
-      #                        subMerge [, "FeatureValue"],
-      #                        method = "spearman")$estimate
-    }
+  else if (variableType == "categorical" && conVar) {
+    # KW test if false binary and 	# SKF20200221
+
+    aP <- stats::kruskal.test (
+      g = as.factor(subMerge [[aCovariate]]),
+      x = subMerge [["FeatureValue"]])$p.value
+
+    aD <- Inf
+  }
+
+  else if (variableType == "binary" && conVar) {
+    # MWU test if binary and 	# SKF20200221
+
+    aP <- suppressWarnings(stats::wilcox.test (
+        subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"],
+        subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"]))$p.value
+
+    aD <- CliffsDelta(
+      as.vector (
+        na.exclude (
+          subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"])),
+      as.vector (
+        na.exclude (
+          subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"])))
+  }
+
+  else if (variableType == "continuous" && conVar) {
+    # spearman test if continuous and numerical 	# SKF20200221
+
+    corTestObj <- suppressWarnings(stats::cor.test (subMerge [, aCovariate],
+                                                    subMerge [, "FeatureValue"],
+                                                    method = "spearman"))
+    aP <- corTestObj$p.value
+    aD <- corTestObj$estimate
+    # aP <- stats::cor.test (subMerge [, aCovariate],
+    #                        subMerge [, "FeatureValue"],
+    #                        method = "spearman")$p.value
+    # aD <- stats::cor.test (subMerge [, aCovariate],
+    #                        subMerge [, "FeatureValue"],
+    #                        method = "spearman")$estimate
+  }
 
 #     else if (variableType == "categorical" && conVar) {  # now never happens, probably 	# SKF20200221
 # #      else if (con2 && !con5) {  # kruskal-wallis test if
@@ -256,45 +253,76 @@ NaiveAssociation <- function(featureMat,
 
     if ((i %% progressSteps) == 0) {#TB20240229
       progress <- paste0(round(x = ((i/length(features))*100),digits = 2), "%")
-      futile.logger::flog.info(msg = paste("NaiveAssociation -- processed",
+      logger::log_info(namespace = "metadeconfoundR", paste("NaiveAssociation -- processed",
                             progress,
-                            "of features."),
-                name = "my.logger")
+                            "of features."))
     }
 
     return(c(as.numeric(somePs), as.numeric(someDs)))
 
   } # for i (foreach)
 
-  # # close parallel processing environment
-  # if (.Platform$OS.type == "unix") {
-  #   parallel::stopCluster(cl) # unix
-  # } else {
-  #   parallel::stopCluster(cl)
-  # }
   # close parallel processing environment
   parallel::stopCluster(cl)
 
 
-  futile.logger::flog.info(msg = paste("NaiveAssociation -- processed 100% of features."),
-            name = "my.logger")
-  futile.logger::flog.debug(paste("NaiveAssociation -- ncol(parallelreturn):", ncol(r)),
-             name = "my.logger")
+  logger::log_info(namespace = "metadeconfoundR", paste("NaiveAssociation -- processed 100% of features."))
+  logger::log_debug(namespace = "metadeconfoundR", paste("NaiveAssociation -- ncol(parallelreturn):", ncol(r)))
 
-  Ps <- r[, seq_len(ncol(r)/2), drop = F]
-  rownames(Ps) <- features[seq_len(nrow(r))]
+  # Ps <- r[, seq_len(ncol(r)/2), drop = F]
+  # rownames(Ps) <- features[seq_len(nrow(r))]
+  # colnames(Ps) <- covariates
+  #
+  # Ds <- r[, -(seq_len(ncol(r)/2)), drop = F]
+  # rownames(Ds) <- features[seq_len(nrow(r))]
+  # colnames(Ds) <- covariates
+  #
+  # Qs <- matrix (NA, length(features[seq_len(nrow(r))]), length(covariates))
+  # rownames(Qs) <- features[seq_len(nrow(r))]
+  # colnames(Qs) <- covariates
+
+  if (is.null(ncol(r))) {
+    r <- t(r)
+  }
+
+  Ps <- r[, seq_len(noCovariates), drop = F]
+  rownames(Ps) <- features
   colnames(Ps) <- covariates
 
-  Ds <- r[, -(seq_len(ncol(r)/2)), drop = F]
-  rownames(Ds) <- features[seq_len(nrow(r))]
+  Ds <- r[, -(seq_len(noCovariates)), drop = F]
+  rownames(Ds) <- features
   colnames(Ds) <- covariates
 
-  Qs <- matrix (NA, length(features[seq_len(nrow(r))]), length(covariates))
-  rownames(Qs) <- features[seq_len(nrow(r))]
+  Qs <- matrix (NA, length(features), length(covariates))
+  rownames(Qs) <- features
   colnames(Qs) <- covariates
 
-  for (i in seq_len(ncol(Ps))) {
-    Qs[, i] <- stats::p.adjust (Ps[, i], method = adjustMethod)
+  if (adjustLevel == 1) {
+    for (i in seq_len(noCovariates)) {
+      Qs[, i] <- stats::p.adjust (Ps[, i], method = adjustMethod)
+    }
   }
+  else if (adjustLevel == 2) {
+    Ps_long <- reshape2::melt(Ps, varnames = c("feature", "metaVariable"), value.name = "Ps")
+    Ps_long$Ps <- stats::p.adjust (Ps_long$Ps, method = adjustMethod)
+
+    Qs <- reshape2::dcast(Ps_long, feature ~ metaVariable, value.var = "Ps")
+    rownames(Qs) <- Qs$feature
+    Qs$feature <- NULL
+    Qs <- as.matrix(Qs)
+  }
+  else if (adjustLevel == 3) {
+    Ps_long <- reshape2::melt(Ps, varnames = c("feature", "metaVariable"), value.name = "Ps")
+    Ps_long$Qs <- Ps_long$Ps
+    Ps_long$Qs[Ps_long$metaVariable %in% colnames(mediationMat)] <-
+      stats::p.adjust (Ps_long$Qs[Ps_long$metaVariable %in% colnames(mediationMat)], method = adjustMethod)
+    Ps_long$Ps <- Ps_long$Qs
+    Ps_long$Qs <- NULL
+    Qs <- reshape2::dcast(Ps_long, feature ~ metaVariable, value.var = "Ps")
+    rownames(Qs) <- Qs$feature
+    Qs$feature <- NULL
+    Qs <- as.matrix(Qs)
+  }
+
   return(list(Ps=Ps, Ds=Ds, Qs=Qs))
 }

@@ -1,10 +1,11 @@
 #' @import foreach
 #' @import lmtest
 #' @import lme4
-#' @import futile.logger
-#' @import detectseparation
+#' @import logger
 #' @importFrom methods is
-
+#' @import detectseparation
+#' @importFrom stats update confint
+#' @importFrom stringr str_split
 
 CheckReducibility <- function(featureMat,
                               metaMat,
@@ -30,9 +31,9 @@ CheckReducibility <- function(featureMat,
                               logistic, # new SKF20201017
                               rawCounts, # new TB20220202
                               maintenance,
-                              verbosity,
                               nAGQ,
-                              collectMods # new TB20220208
+                              collectMods, # new TB20220208
+                              noConfConfs # new TB20250827
                               ) {
 
 
@@ -42,12 +43,23 @@ CheckReducibility <- function(featureMat,
 
   # removed tryCatch from safe functions
   safe_lm <- function(lmText) {
-    out <- eval(parse(text = as.character(lmText)))
+    #out <- eval(parse(text = as.character(lmText)))
+    out <- tryCatch(eval(parse(text = as.character(lmText))),
+                    error = function(cond){
+      logger::log_warn(namespace = "metadeconfoundR", paste0("(g)lm(er) failed with error meessage: ", cond$message))
+      NA
+    })
     return(out)
   }
 
   safe_lrtest <- function(lm1, lm2) {
-    out <- lmtest::lrtest(lm1, lm2)$'Pr(>Chisq)' [2]
+    #out <- lmtest::lrtest(lm1, lm2)$'Pr(>Chisq)' [2]
+
+    out <- tryCatch(lmtest::lrtest(lm1, lm2)$'Pr(>Chisq)' [2],
+                    error = function(cond){
+      logger::log_warn(namespace = "metadeconfoundR", paste0("model lrt failed with error meessage: ", cond$message))
+      NA
+    })
     return(out)
   }
 
@@ -91,7 +103,7 @@ CheckReducibility <- function(featureMat,
     `%toggleDoPar%` <- `%dopar%`
   }
 
-  # load parralel processing environment
+  # load parallel processing environment
   if (.Platform$OS.type == "unix") {
     # unix
     cl <- parallel::makeForkCluster(nnodes = nnodes, outfile = "")
@@ -114,7 +126,7 @@ CheckReducibility <- function(featureMat,
     statusLine <- vector(length = noCovariates, mode = "character")
     # find all covariates which on their end have effect on the feature
     # add all those that shall always be tested, and remove those that shall never be tested
-    lCovariates <- covariates[which(Qs[i, ] < QCutoff)]
+    lCovariates <- covariates[which((Qs[i, ] < QCutoff) & (abs(Ds[i, ]) > DCutoff))]
     lCovariates <- c(lCovariates, deconfT)
     lCovariates <- lCovariates[!(lCovariates %in% deconfF)]
     # remove names of random variables from this list
@@ -124,28 +136,25 @@ CheckReducibility <- function(featureMat,
 
 
 
-    flog.debug(paste(
+    logger::log_debug(namespace = "metadeconfoundR", paste(
       as.character(i),
       length(features),
       length(covariates),
       length(lCovariates),
       paste(lCovariates, collapse = ", "),
       sep = "\t"
-      ),
-    name = "my.logger"
-    )
+      ))
 
     if (length (lCovariates) == 0 ) {
 
-      flog.debug("returned whole NS line", name = "my.logger")
+      logger::log_debug(namespace = "metadeconfoundR", "returned whole NS line", name = "my.logger")
 
       if ((i %% progressSteps) == 0) {#TB20240229
         progress <- paste0(round(x = ((i/length(features))*100),
                                  digits = 2), "%")
-        flog.info(msg = paste("Deconfounding -- processed",
+        logger::log_info(namespace = "metadeconfoundR", paste("Deconfounding -- processed",
                               progress,
-                              "of features."),
-                  name = "my.logger")
+                              "of features."))
       }
 
       statusLine[seq_along(covariates)] <- "NS"
@@ -153,8 +162,8 @@ CheckReducibility <- function(featureMat,
       return(statusLine)
     }
 
+    aFeature <- as.character (features [i])
     for (j in seq_along(covariates)) {
-      aFeature <- as.character (features [i])
       aCovariate <- as.character (covariates [j])
 
       status <- "NS"
@@ -168,6 +177,7 @@ CheckReducibility <- function(featureMat,
           abs (Ds [i, j]) <= DCutoff) {
 
         if (aCovariate %in% RVnames) {
+          # randomVars will have NA Qs, so are always caught here
           # set label to NA for all random vars
           statusLine[j] <- NA
           next
@@ -183,27 +193,6 @@ CheckReducibility <- function(featureMat,
       #remove NAs only in feature and acovariate column
       subMerge <- subMerge[!is.na(subMerge$FeatureValue), ]
       subMerge <- eval (parse (text = paste0 ("subset (subMerge, ! is.na (", aCovariate, "))")))
-
-      # test for complete separation in model using only feature and covariate
-      if (logistic == T & !is.na(randomVar[[1]])) {
-
-        flog.debug("testing separation without pot conf", name = "my.logger")
-
-        #test for separation in model without random part
-        glmmodeltext <-          paste0 ("stats::glm (FeatureValue ~ ",
-                                         aCovariate,
-                                         ", data = subMerge, family = \"binomial\", method = \"detect_separation\")")
-        isSeperated <- eval(parse(text = as.character(glmmodeltext)))
-        if (isSeperated$outcome) {
-          flog.warn(msg = paste("Separation for:",
-                                aFeature,
-                                "and",
-                                aCovariate),
-                    name = "my.logger")
-          statusLine[j] <- "AD"
-          next
-        }
-      }
 
       # rank transfer the metavariables listed in doRanks
       if (!is.na(doRanks[[1]])) {
@@ -240,8 +229,7 @@ CheckReducibility <- function(featureMat,
                          collapse = "")
         }
 
-        flog.debug(paste("LRT_randOnly_for", aFeature, aCovariate, sep = "\t"),
-                   name = "my.logger")
+        logger::log_debug(namespace = "metadeconfoundR", paste("LRT_randOnly_for", aFeature, aCovariate, sep = "\t"))
 
         mixedmodel1Text <- paste0 (head,
                                    aCovariate,
@@ -262,8 +250,14 @@ CheckReducibility <- function(featureMat,
 
         aP_mixed <- safe_lrtest(mixedmodel1, mixedmodel2)
 
-        flog.debug(paste("LRT_randOnly_for", aFeature, aCovariate, aP_mixed, sep = "\t"),
-                   name = "my.logger")
+        logger::log_debug(namespace = "metadeconfoundR", paste("LRT_randOnly_for", aFeature, aCovariate, aP_mixed, sep = "\t"))
+
+        if (collectMods) {
+          collectedMods[[aFeature]][[aCovariate]][["randomFixedEffectsOnly"]] <- list()
+          collectedMods[[aFeature]][[aCovariate]][["randomFixedEffectsOnly"]][["full"]] <- mixedmodel1
+          collectedMods[[aFeature]][[aCovariate]][["randomFixedEffectsOnly"]][["small"]] <- mixedmodel2
+        }
+
 
         if (!is.na(aP_mixed) && aP_mixed >= PHS_cutoff) {
 
@@ -306,45 +300,42 @@ CheckReducibility <- function(featureMat,
           # remove rows where anotherCovariate has NAs
           subsubMerge <- eval (parse (text = paste0 ("subset (subMerge, ! is.na (", anotherCovariate, "))")))
 
-          if (logistic == T & !is.na(randomVar[[1]])) {
-            flog.debug("testing separation", name = "my.logger")
-            #test for separation in model without random part
-            glmmodeltext <-          paste0 ("glm (FeatureValue ~ ",
-                                             aCovariate,
-                                             " + ",
-                                             anotherCovariate,
-                                             ", data = subMerge, family = \"binomial\")")
+          modAlg <- "stats::lm (rank (FeatureValue) ~ "
+          lastPart <- paste0(", data = subsubMerge)", collapse = "")
+
+
+          if (logistic == T || rawCounts == T) {
+            modAlg <- "stats::glm (FeatureValue ~ "
+            lastPart <- ", data = subsubMerge, family = \"binomial\")"
+
+            if (rawCounts == T) {
+              modAlg <- "stats::glm (cbind(FeatureValue, totReadCount) ~ "
+
+            }
+
+            logger::log_debug(namespace = "metadeconfoundR", "testing separation")
+            glmmodeltext <- paste0 (modAlg,
+                                    paste0(c(aCovariate, anotherCovariate),
+                                           collapse = " + "),
+                                    lastPart)
             glmmodel <- eval(parse(text = as.character(glmmodeltext)))
-            isSeperated <- update(glmmodel, method="detect_separation")
-            if (isSeperated$outcome) {
-              flog.warn(msg = paste("Separation for:",
-                                    aFeature,
-                                    ",",
-                                    aCovariate,
-                                    "and",
-                                    anotherCovariate),
-                        name = "my.logger")
-              separation <- T
+            if (update(glmmodel, method="detect_separation")$outcome) {
+              logger::log_warn(namespace = "metadeconfoundR",
+                paste(
+                  "Separation for:", aFeature, ",",
+                  aCovariate, "and", anotherCovariate))
               status <- NA
               if (collectMods) {
                 collectedMods[[aFeature]][[aCovariate]][[anotherCovariate]][["full"]] <- glmmodel
               }
               next
             }
-          }
 
-
-          modAlg <- "stats::lm (rank (FeatureValue) ~ "
-          lastPart <- paste0(", data = subsubMerge)", collapse = "")
-
-          if (logistic == TRUE) { # alternative behavior for binary features
-            modAlg <- "stats::glm (FeatureValue ~ "
-            lastPart <- ", data = subsubMerge, family = \"binomial\")"
           }
-          if (rawCounts == TRUE) { # alternative behavior for not rarefied abundances
-            modAlg <- "stats::glm (cbind(FeatureValue, totReadCount) ~ "
-            lastPart <- ", data = subsubMerge, family = \"binomial\")"
-          }
+          # else if (rawCounts == TRUE) { # alternative behavior for not rarefied abundances
+          #   modAlg <- "stats::glm (cbind(FeatureValue, totReadCount) ~ "
+          #   lastPart <- ", data = subsubMerge, family = \"binomial\")"
+          # }
 
           if (!is.na(fixedVar[[1]])) { # prefix the lastPart with fixedEffect names
             lastPart <- paste0(randomVarLine, lastPart, collapse = "")
@@ -363,9 +354,8 @@ CheckReducibility <- function(featureMat,
                                  nAGQ,
                                  ")",
                                  collapse = "")
-
-            }
-            if (rawCounts == TRUE) { # alternative behavior for not rarefied abundances
+            } # end if (logistic == TRUE)
+            else if (rawCounts == TRUE) { # alternative behavior for not rarefied abundances
               modAlg <- "lme4::glmer (cbind(FeatureValue, totReadCount) ~ "
               lastPart <- paste0(randomVarLine,
                                  ", data = subsubMerge, family = \"binomial\", nAGQ = ",
@@ -373,17 +363,15 @@ CheckReducibility <- function(featureMat,
                                  ")",
                                  collapse = "")
             }
-          }
+          } # end if (!is.na(randomVar[[1]]))
 
-          flog.debug(
+          logger::log_debug(namespace = "metadeconfoundR",
             paste("LRTsFwdRvsFor",
                   aFeature,
                   aCovariate,
                   anotherCovariate,
                   sep = "\t"
-                  ),
-            name = "my.logger"
-            )
+                  ))
 
           # compute the three needed linear models
           lmBothText <- paste0 (modAlg,
@@ -418,63 +406,31 @@ CheckReducibility <- function(featureMat,
               is(lmBoth, "logical") ) {
             # class is logical if lmX == NA
 
-            # flog.debug(
-            #   paste(
-            #     "LRTsFwdRvsFor",
-            #     aFeature,
-            #     aCovariate,
-            #     anotherCovariate,
-            #     "found faulty models!\n",
-            #     lmAText,
-            #     "\n",
-            #     summary(lmA),
-            #     "\n",
-            #     lmAnotherText,
-            #     "\n",
-            #     summary(lmAnother),
-            #     "\n",
-            #     lmBothText,
-            #     "\n",
-            #     summary(lmBoth),
-            #     "\n",
-            #     sep = "\t"
-            #   ),
-            #   name = "my.logger"
-            # )
             status <- "AD"
-            flog.debug("This should never be executed!", name = "my.logger")
+            logger::log_debug(namespace = "metadeconfoundR", "This should never be executed!")
             next
           }
 
-          aP_forward <- safe_lrtest(lmBoth, lmAnother)
-          aP_reverse <- safe_lrtest(lmBoth, lmA)
+          aP_forward <- safe_lrtest(lmBoth, lmAnother) # effect of adding aCovariate
+          aP_reverse <- safe_lrtest(lmBoth, lmA) #effect of adding anotherCovariate
 
           if (is(lmBoth, "lm") && anyNA(lmBoth$coefficients)) {
-            flog.warn(paste0("In full model containing: ",
+            logger::log_warn(namespace = "metadeconfoundR", paste0("In full model containing: ",
                              paste0(names(lmBoth$coefficients),
                                     collapse = ", "),
                              ", NA coefficient(s) are present: ",
                              paste0(names(lmBoth$coefficients)[is.na(lmBoth$coefficients)],
                                     collapse = ", "),
                              ". Setting forward and reverse LRTs to non-significant."
-                             ),
-                      name = "my.logger")
+                             ))
             aP_forward <- 1
             aP_reverse <- 1
-          }# else if (is(lmBoth, "lmerMod") && lme4::isSingular(lmBoth)) {
-          #   flog.warn(paste0("Full model: '",
-          #                    lmBoth@call,
-          #                    "' with FeatureFalue == ",
-          #                    aFeature,
-          #                    " appears to have a singularity problem.",
-          #                    ),
-          #             name = "my.logger")
-          # }
+          }
 
           # additonal control of confidence intervals for the covariates within the linear models
           conf_aCovariate <- TRUE
           conf_anotherCovariate <- TRUE
-          if (doConfs >= 0 && #          doConfs = 1 --> just logging
+          if (doConfs > 0 && #          doConfs = 1 --> just logging
               !is(lmBoth, "logical") && #  the full model is working
               !is.na (aP_forward) && #     the lrts worked
               !is.na (aP_reverse) &&
@@ -484,55 +440,82 @@ CheckReducibility <- function(featureMat,
               is.numeric(subsubMerge[, anotherCovariate])
               ) {
             # if (is.numeric(subsubMerge[, aCovariate]) && is.numeric(subsubMerge[, anotherCovariate])) { # categorical variables are excluded for easier processing
-            confints <- confint(lmBoth, parm = c(aCovariate, anotherCovariate), method = "Wald")
-            conf_aCovariate <- !(sign(confints[aCovariate, 1]) == sign(confints[aCovariate, 2])) # signs are different, if confint is spanning 0
-            conf_anotherCovariate  <- !(sign(confints[anotherCovariate, 1]) == sign(confints[anotherCovariate, 2]))
+            confints <- tryCatch({
+              suppressMessages(confint(lmBoth, parm = c(aCovariate, anotherCovariate)))
+            }, error = function(e) {
+              NA
+            })
+            conf_aCovariate <- tryCatch({
+              sign(confints[aCovariate, 1]) != sign(confints[aCovariate, 2])
+              # signs are different, if confint is spanning 0
+            }, error = function(e) {
+              NA
+            })
 
-            if ((aP_forward < PHS_cutoff) &&
-                conf_aCovariate) {
-              # if forward test is significant, but aCovariate confint spans 0
-              flog.warn(
-                msg = paste(
+            conf_anotherCovariate  <- tryCatch({
+              sign(confints[anotherCovariate, 1]) != sign(confints[anotherCovariate, 2])
+            }, error = function(e) {
+              NA
+            })
+
+            if (is.na(conf_aCovariate) || # if something went wrong with calculating confInts
+                ((aP_forward < PHS_cutoff) && # if forward test is significant, but aCovariate confint spans 0
+                conf_aCovariate)) {
+
+              ending <- 'is spanning 0.'
+
+              if (is.na(conf_aCovariate)) {
+                ending <- 'is NA. Test for high collinearity of these metavariables
+                (including fixed/random effects if applicable)!'
+              }
+
+              logger::log_warn(namespace = "metadeconfoundR",
+                paste(
                   'lrt: ',
                   features[i],
                   aCovariate,
                   anotherCovariate,
                   '-- forward linear model is < PHS_cutoff, but confidence intervall for',
                   aCovariate,
-                  'is spanning 0.'
-                ),
-                name = "my.logger"
-              )
+                  ending
+                ))
               if (doConfs > 1) {
                 # if doConfs ==2 make lrt non-significant
-                aP_forward <- 1
+                # aP_forward <- 1 # --> no unique effect of aCovariate
+                # setting aP_forward <- 1 leads to labeling as confounded or AD,
+                # so "OK_d" can never be kept
+                status <- "OK_d"
               }
-              status <- "OK_d"
+
             }
 
             #if (! is.na (aP_forward) && (aP_reverse < PHS_cutoff) && conf_anotherCovariate) { # if reverse test is significant, but anotherCovariate confint spans 0
-            if ((aP_reverse < PHS_cutoff) &&
-                conf_anotherCovariate) {
+            if (is.na(conf_anotherCovariate) || ((aP_reverse < PHS_cutoff) &&
+                conf_anotherCovariate)) {
               # if reverse test is significant, but anotherCovariate confint spans 0
-              flog.warn(
-                msg = paste(
+
+              ending <- 'is spanning 0.'
+
+              if (is.na(conf_anotherCovariate)) {
+                ending <- 'is NA. Test for high collinearity of these metavariables
+                (including fixed/random effects if applicable)!'
+              }
+
+              logger::log_warn(namespace = "metadeconfoundR",
+                paste(
                   'lrt: ',
                   features[i],
                   aCovariate,
                   anotherCovariate,
                   '-- reverse linear model is < PHS_cutoff, but confidence intervall for',
                   anotherCovariate,
-                  'is spanning 0.'
-                ),
-                name = "my.logger"
-              )
+                  ending
+                ))
               if (doConfs > 1) {
-                # if doConfs ==2 make lrt non-significant
-                aP_reverse <- 1
+                aP_reverse <- 1 # --> no unique effect of anotherCovariate
+                # aCovariate will not be labeled as being confounded by anotherCovariate anymore
               }
             }
-
-            # }
           } # if doConfs
 
           if (! is.na (aP_forward) &&
@@ -555,7 +538,7 @@ CheckReducibility <- function(featureMat,
             status <- "AD"
           } # cannot be ruled out another feature explains this
 
-          flog.debug(
+          logger::log_debug(namespace = "metadeconfoundR",
             paste(
               "LRTsFwdRvsFor",
               aFeature,
@@ -564,9 +547,7 @@ CheckReducibility <- function(featureMat,
               aP_forward,
               aP_reverse,
               sep = "\t"
-            ),
-            name = "my.logger"
-          )
+            ))
         } #end "for (anotherCovariate in lCovariates) {"
 
 
@@ -588,23 +569,51 @@ CheckReducibility <- function(featureMat,
     if ((i %% progressSteps) == 0) {#TB20240229
       progress <- paste0(round(x = ((i/length(features))*100),
                                digits = 2), "%")
-      flog.info(msg = paste("Deconfounding -- processed",
+      logger::log_info(namespace = "metadeconfoundR", paste("Deconfounding -- processed",
                             progress,
-                            "of features."),
-                name = "my.logger")
+                            "of features."))
     }
-    flog.debug("one more line done!", name = "my.logger")
+    logger::log_debug(namespace = "metadeconfoundR", "one more line done!")
     statusLine
   }# foreach loop
 
   parallel::stopCluster(cl) # close parallel processing environment
-  flog.debug("Everything done in checkReducibility!", name = "my.logger")
+  logger::log_debug(namespace = "metadeconfoundR", "Everything done in checkReducibility!")
 
-  flog.info(msg = paste("Deconfounding -- processed 100% of features."),
-            name = "my.logger")
+  logger::log_info(namespace = "metadeconfoundR", paste("Deconfounding -- processed 100% of features."))
 
+  if (is.null(ncol(r))) {
+    r <- t(r)
+  }
   rownames(r) <- features
   colnames(r) <- covariates
+
+  # 2025 08 27 remove confounded confounders
+  if (noConfConfs) {
+    logger::log_info(namespace = "metadeconfoundR", paste("Removing 'confounded confounders' from status labels. Set noConfConfs = FALSE to keep them."))
+    for (i in seq_along(rownames(r))) {
+      if (any(grepl("^C:", r[i, ]))) {
+        confounders <- sub("C: ", "", r[i, ])
+        confounders <- stringr::str_split(confounders, ", ")
+        names(confounders) <- colnames(r)
+        for (j in seq_along(colnames(r))) {
+          if (any(confounders[[j]] %in% colnames(r))) {
+            confounded_confounder <- c()
+            for (k in seq_along(confounders[[j]])) {
+              ks_confounders <- confounders[[ confounders[[j]][k] ]]
+              if (any(ks_confounders %in% confounders[[j]])) {
+                confounded_confounder <- c(confounded_confounder, k)
+              }
+            }
+            if (length(confounded_confounder) > 0) {
+              confounders[[j]] <- confounders[[j]][-confounded_confounder]
+              r[i, j] <- paste0("C: ", paste(confounders[[j]], collapse = ", "))
+            }
+          }
+        }
+      }
+    }
+  }
 
   if (collectMods) {
     r <- list(r, collectedMods)

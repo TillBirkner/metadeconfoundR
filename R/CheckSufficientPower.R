@@ -1,4 +1,4 @@
-#' @import futile.logger
+#' @import logger
 
 
 CheckSufficientPower <- function(metaMat,
@@ -9,7 +9,6 @@ CheckSufficientPower <- function(metaMat,
                                  robustCutoffRho, # new SKF20200221
                                  typeCategorical, # new SKF20200221
                                  typeContinuous, # new SKF20200221
-                                 verbosity,
                                  RVnames,
                                  startStop,
                                  deconfF # new TB20220704
@@ -28,17 +27,18 @@ CheckSufficientPower <- function(metaMat,
     noControl <- length(metaMat[metaMat[,1] == 0, ])
   }
 
-  flog.debug(paste("CheckSufficientPower -- covariates: ",
-                   paste(covariates, collapse = ", ")),
-             name = "my.logger")
-  flog.debug(paste("CheckSufficientPower -- noCovariates:",
-                   noCovariates),
-             name = "my.logger")
+  logger::log_debug(namespace = "metadeconfoundR", paste("CheckSufficientPower -- covariates: ",
+                   paste(covariates, collapse = ", ")))
+  logger::log_debug(namespace = "metadeconfoundR", paste("CheckSufficientPower -- noCovariates:",
+                   noCovariates))
 
 
   if (noCondition < robustCutoff | noControl < robustCutoff) {
-    flog.error(msg = paste("Not enough(robustCutoff =", robustCutoff, ") samples in either case or controle group."),
-               name = "my.logger")
+    logger::log_error(namespace = "metadeconfoundR", paste("Not enough (robustCutoff =",
+                           robustCutoff,
+                           ") samples for either case (== 1) or control (== 0) group in metaMat column one (",
+                           covariates[1],
+                           "). Make sure column one of metaMat is a binary (0/1) variable."))
     stop(paste("Not enough(robustCutoff =", robustCutoff, ") samples in either case or controle group."))
   }
 
@@ -50,25 +50,6 @@ CheckSufficientPower <- function(metaMat,
                                             data = FALSE))
   rownames(robustCombination) <- colnames(robustCombination) <- covariates
 
-  ## ---- getVariableType
-  getVariableType <- function (values, variable) {
-    # variable == name of covariate
-    if (is.numeric (values) &&
-        all (values %in% c (0, 1)) &&
-        ! (! is.null(typeContinuous) && variable %in% typeContinuous) &&
-        ! (! is.null(typeCategorical) && variable %in% typeCategorical)) {
-      return ("binary") # treat as binary
-    }
-    else if ((is.numeric (values) ||
-              (! is.null (typeContinuous) && variable %in% typeContinuous)) &&
-             ! (! is.null (typeCategorical) && variable %in% typeCategorical)) {
-      return ("continuous") # treat as continuous
-    }
-    else {
-      return ("categorical") # treat as categorical
-    }
-  }
-
   for (i in seq_along(covariates)) {
 
     if (!is.na(RVnames[[1]]) && covariates[i] %in% RVnames) {
@@ -76,7 +57,7 @@ CheckSufficientPower <- function(metaMat,
       next
     }
 
-    variableType <- getVariableType (metaMat [, i], covariates [i])
+    variableType <- VarType(metaMat [, i], covariates [i], typeCategorical, typeContinuous)
 
     if (variableType == "binary" || variableType == "categorical") {
       # how many samples have a value != the majority value
@@ -119,8 +100,8 @@ CheckSufficientPower <- function(metaMat,
 
       toCompare <- na.exclude(metaMat[, c(i,j)])
 
-      variableType1 <- getVariableType (toCompare [, 1], covariates [i])
-      variableType2 <- getVariableType (toCompare [, 2], covariates [j])
+      variableType1 <- VarType (toCompare [, 1], covariates [i], typeCategorical, typeContinuous)
+      variableType2 <- VarType (toCompare [, 2], covariates [j], typeCategorical, typeContinuous)
 
       robust1 <- FALSE
 

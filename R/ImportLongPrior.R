@@ -50,7 +50,6 @@
 #'                                   logLevel = "ERROR")
 #'}
 
-#' @import futile.logger
 #' @importFrom reshape2 dcast
 #' @export
 

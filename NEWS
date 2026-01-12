@@ -1,3 +1,37 @@
+Version 1.0.5
+  - "confounded confounders" will now be removed from the status label of a confounded variable.
+    - Example: If the association of D with feature Y is confounded by C1 and C2, but the association of C1 with Y is in turn confounded by C2, then only C2 will be listed as confounder of Y~D
+  - improvments in some logging messages
+  - featureMat is now checked for non-numeric columns at start-up.
+
+Version 1.0.4
+  - MetaDeconfound()
+    - improved error handling for glms/glmers whith highly collinear metavariables
+    - bugfix in confidence interval calculations
+    - bugfix for ncol(fatureMat) == 1
+    - new optional input argument "mediationMat"
+      - perform mediation analysis between features of featureMat and mediadtionMat, controlled for effects from variables in metaMat
+      - features in mediationMat will not be tested for confounding effects on each other or variables from metaMat
+    - new optinoal argument "mediationMat"
+      - supply a second omics space to perform mediation analysis between featureMat and mediationMat
+    - new optional argument "adjustLevel"
+      - specify different multiple testing p-value correction approaches
+        - 1: correct for number of features per metavariable (default)
+        - 2: correct for number of features x number of meatavariables
+        - 3: correct for number of features x number of mediationMat features (default when mediationMat is supllied)
+
+  - BuildHeatmap()
+    - new options "starSize" and "starNudge_y" to control size and positioning of confounding status asterisks/circles
+    - metavariables can be split into separate groups by adding a "grounpingVar" columns to metaDeconfOutput.
+      - this is done by default when mediationMat is supplied to MetaDeconfound()
+      - uses facet_grid(), so output can be tweaked using "+ theme(strip.XXX)" options
+
+  - BuildConfounderMap()
+    - new plot generating function
+    - for each feature it creates a circos plot of confounder-confounded relations between metavariables associated to this feature.
+    - returns a list of ggraph ggplot2 plots
+    - ggraph package must be loaded for plotting elements of the returned list.
+
 Version 1.0.3
   - implementation of new funtion GetPartialEfSizes()
     - adds partial R-squared as additional effect size metric
@@ -10,6 +44,7 @@ Version 1.0.3
   - bug fix of bug disabling computation of confidence intervalls of lrts
   - implementaion of truly linear computation mode when nnodes = 1
   - additional test to filter out non trustworthy lrts in some scenarios with highly colinear metavariables
+  - stricter tests for complete separaion when glms are computed
 
   - BuildHeatmap()
     - added "plotPartial" argument to choose between
@@ -17,7 +52,6 @@ Version 1.0.3
       - "partial": plotting signed partial R-squared, including an additional column showing the total explainable variance per feature
       - "partialRel": plotting proportion of explainable variance of a feature tracable to a metavariable
       - "partialNorm": plotting respective normalized partial effect size
-
 
 Version 1.0.2
   - CRAN release

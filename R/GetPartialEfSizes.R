@@ -127,7 +127,9 @@ GetPartialEfSizes <- function(featureMat,
       }
       partialRsq <- fullRsq - reducedRsq
       relPartialRsq <- partialRsq/fullRsq
-      normPartialRsq <- partialRsq/(partialRsq + 1 - fullRsq) # 1- fullRSQ == residual R2
+      normPartialRsq <- partialRsq/(partialRsq + 1 - fullRsq)
+      # 1- fullRSQ == residual R2
+      # (partialRsq + 1 - fullRsq) is equal to (1 - reducedRsq)
       if (!is.na(subTemp$Ds) & (subTemp$Ds < 0)) {
         # negative effect size
         partialRsq <- partialRsq * (-1)

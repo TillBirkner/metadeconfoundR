@@ -14,14 +14,16 @@ BuildHeatmap(
   intermedData = FALSE,
   featureNames = NULL,
   metaVariableNames = NULL,
-  d_range = "fit",
+  d_range = "full",
   d_col = c("blue", "white", "red"),
   keepMeta = NULL,
   keepFeature = NULL,
   trusted = c("OK_sd", "OK_nc", "OK_d", "AD"),
   tileBordCol = "black",
   reOrder = "both",
-  plotPartial = "Ds"
+  plotPartial = "Ds",
+  starSize = 2,
+  starNudge_y = 0
 )
 }
 \arguments{
@@ -58,10 +60,10 @@ names used as column names in metaDeconfOutput. These human readable
 names will be displayed in the final plot. First column: machine-readable,
 second column: human-readable.}
 
-\item{d_range}{range of effect sizes shown; "full": (default) range from
--1 to +1;
+\item{d_range}{range of effect size colors shown; "full": (default) range from
+-1 to +1 (best for comparability between multiple plots);
 "fit": range reduced according to maximum and minimum effect size
-present in resulting plot}
+present in resulting plot (better color resolution for weaker effects)}
 
 \item{d_col}{set color range for effect size as c(minimum, middle, maximum),
 default c("red", "white", "blue")}
@@ -81,9 +83,16 @@ as trustworthy, not-confounded signal. default = c("OK_sd", "OK_nc", "OK_d", "AD
 
 \item{tileBordCol}{tile border color of  heatmap tiles, default: "black"}
 
-\item{reOrder}{reorder features and/or metadata? possible options: c("both", "feat", "meta", "none"), default: "both"}
+\item{reOrder}{reorder features and/or metadata? possible options: c("both",
+"feat", "meta", "none"), default: "both"}
 
-\item{plotPartial}{choose which effect site should be plotted. options: c("Ds", "partial", "partialRel, partialNorm"), default: "Ds"}
+\item{plotPartial}{choose which effect site should be plotted.
+options: c("Ds", "partial", "partialRel, partialNorm"), default: "Ds"}
+
+\item{starSize}{size of asterisks/circles in resulting heatmap, default: 2}
+
+\item{starNudge_y}{nudge y-axis position of asterisks/circles in
+resulting heatmap, default: 0}
 }
 \value{
 ggplot2 object
