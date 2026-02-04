@@ -1,10 +1,6 @@
-Based on feedback on submission of metadeconfoundR v1.0.1, the following changes were made in v1.0.1:
-  - changed Title in DESCRIPTION to title case
-  - added reference for method described in the Description field of DESCRIPTION
+After submission of metadeconfoundR v1.0.5  on 12.01.2026 failed due to exceeded 
+automatic check times, I reduced number and size of testthat tests, roughly 
+halving the time needed to run testthat.R on all tested platforms.
   
-── R CMD check results ──────────────────────────── metadeconfoundR 1.0.2 ────
-Duration: 1m 12s
-
-0 errors ✔ | 0 warnings ✔ | 0 notes ✔
-
-R CMD check succeeded
+Till Brirkner
+04.02.2026
