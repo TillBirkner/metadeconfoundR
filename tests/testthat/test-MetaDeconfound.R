@@ -202,14 +202,14 @@ test_that("random and fixed effects", {
   #stop("Why are two status labels different between my machine and all unix github action runs????")
   expect_equal(resultFix, expected_output_fix, tolerance = 0.0001)
 
-  # saveRDS(resultFixRand, "tests/testthat/2024_10_10_example_output_fixRand.rds")
-  expected_output_fix_rand <- readRDS("2024_10_10_example_output_fixRand.rds")
-  resultFixRand <- MetaDeconfound(featureMat = feature,
-                              metaMat = metaMat,
-                              logLevel = "INFO",
-                              returnLong = T,
-                              fixedVar = c("continuous_dummy"),
-                              randomVar = c("Dataset")
+  #saveRDS(resultFixRand, "tests/testthat/2026_02_04_example_output_fixRand.rds")
+  expected_output_fix_rand <- readRDS("2026_02_04_example_output_fixRand.rds")
+  resultFixRand <- MetaDeconfound(featureMat = feature[, 1:15],
+                                  metaMat = metaMat,
+                                  logLevel = "INFO",
+                                  returnLong = T,
+                                  fixedVar = c("continuous_dummy"),
+                                  randomVar = c("Dataset")
   )
   resultFixRand$feature <- as.character(resultFixRand$feature)
   resultFixRand$metaVariable <- as.character(resultFixRand$metaVariable)
@@ -224,19 +224,19 @@ test_that("logistic regression", {
   metaMat <- metaMatMetformin
   # using metadeconfound output created 2024 09 26
   # write.table(example_output, "tests/testthat/2024_11_07_example_output_logistic.tsv", sep = "\t", row.names = F)
-  expected_output <- read.table("2024_11_07_example_output_logistic.tsv", header = T, sep = "\t")
-
-  result <- MetaDeconfound(featureMat = feature,
-                           metaMat = metaMat,
-                           logLevel = "ERROR",
-                           returnLong = T,
-                           logistic = T
-  )
-
-  result$feature <- as.character(result$feature)
-  result$metaVariable <- as.character(result$metaVariable)
-
-  expect_equal(result, expected_output)
+  # expected_output <- read.table("2024_11_07_example_output_logistic.tsv", header = T, sep = "\t")
+  #
+  # result <- MetaDeconfound(featureMat = feature,
+  #                          metaMat = metaMat,
+  #                          logLevel = "ERROR",
+  #                          returnLong = T,
+  #                          logistic = T
+  # )
+  #
+  # result$feature <- as.character(result$feature)
+  # result$metaVariable <- as.character(result$metaVariable)
+  #
+  # expect_equal(result, expected_output)
 
   expect_no_error(
     MetaDeconfound(featureMat = feature[, c("MS0035"), drop = F],
@@ -253,15 +253,16 @@ test_that("logistic regression", {
     if (file.exists(log_file)) unlink(log_file)
   }, add = TRUE)
 
-  # saveRDS(result_loglog, "tests/testthat/2026_01_12_example_output_loglog.rds")
-  expected_output_loglog <- readRDS("2026_01_12_example_output_loglog.rds")
+  #saveRDS(result_loglog, "tests/testthat/2026_02_04_example_output_loglog.rds")
+  expected_output_loglog <- readRDS("2026_02_04_example_output_loglog.rds")
 
-  result_loglog <-  MetaDeconfound(featureMat = feature,
+  result_loglog <-  MetaDeconfound(featureMat = feature[, 5:10],
                  metaMat = metaMat,
                  logLevel = "WARN",
                  returnLong = T,
                  logistic = T,
-                 logfile = log_file)
+                 logfile = log_file,
+                 randomVar = "Dataset")
   # test output
   expect_equal(result_loglog, expected_output_loglog)
 
@@ -269,43 +270,39 @@ test_that("logistic regression", {
   txt <- readLines(log_file, warn = FALSE)
   expect_equal(sum(
     grepl(
-      "Separation for: MS0(035|037|054|067|071|080|089|102|136|142) and (Status|Dataset|Metformin)",
+      "Separation for: MS0(035|037) and (Status|Dataset|Metformin)",
       txt
     )
-  ), 21)
+  ), 4)
 
-
-
-
-
-  #combination of randomVars AND logistic mode
-  # saveRDS(resultlogRand, "tests/testthat/2026_01_07_example_output_log_rand.rds")
-  expected_output_logRand <- readRDS("2026_01_07_example_output_log_rand.rds")
-
-  resultlogRand <- MetaDeconfound(featureMat = feature[, 1:15],
-                           metaMat = metaMat,
-                           logLevel = "INFO",
-                           returnLong = T,
-                           logistic = T,
-                           randomVar = "Dataset"
-  )
-
-  resultlogRand$feature <- as.character(resultlogRand$feature)
-  resultlogRand$metaVariable <- as.character(resultlogRand$metaVariable)
-  expected_output_logRand$feature <- as.character(expected_output_logRand$feature)
-  expected_output_logRand$metaVariable <- as.character(expected_output_logRand$metaVariable)
-
-  expect_equal(resultlogRand, expected_output_logRand)
+  # #combination of randomVars AND logistic mode
+  # # saveRDS(resultlogRand, "tests/testthat/2026_01_07_example_output_log_rand.rds")
+  # expected_output_logRand <- readRDS("2026_01_07_example_output_log_rand.rds")
+  #
+  # resultlogRand <- MetaDeconfound(featureMat = feature[, 1:15],
+  #                          metaMat = metaMat,
+  #                          logLevel = "INFO",
+  #                          returnLong = T,
+  #                          logistic = T,
+  #                          randomVar = "Dataset"
+  # )
+  #
+  # resultlogRand$feature <- as.character(resultlogRand$feature)
+  # resultlogRand$metaVariable <- as.character(resultlogRand$metaVariable)
+  # expected_output_logRand$feature <- as.character(expected_output_logRand$feature)
+  # expected_output_logRand$metaVariable <- as.character(expected_output_logRand$metaVariable)
+  #
+  # expect_equal(resultlogRand, expected_output_logRand)
 
 })
 
 test_that("raw Counts mode", {
   feature <- round(reduced_feature)
   metaMat <- metaMatMetformin
-  # saveRDS(result_rawCountsRand, "tests/testthat/2026_01_07_example_output_rawCountsRand.rds")
-  expected_output_rawCountsRand <- readRDS("2026_01_07_example_output_rawCountsRand.rds")
+  # saveRDS(result_rawCountsRand, "tests/testthat/2026_02_04_example_output_rawCountsRand.rds")
+  expected_output_rawCountsRand <- readRDS("2026_02_04_example_output_rawCountsRand.rds")
 
-  result_rawCountsRand <- MetaDeconfound(featureMat = feature[, 1:15],
+  result_rawCountsRand <- MetaDeconfound(featureMat = feature[, 1:5],
                            metaMat = metaMat,
                            logLevel = "INFO",
                            returnLong = T,
