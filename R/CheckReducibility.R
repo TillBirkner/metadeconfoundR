@@ -127,8 +127,6 @@ CheckReducibility <- function(featureMat,
     # find all covariates which on their end have effect on the feature
     # add all those that shall always be tested, and remove those that shall never be tested
     lCovariates <- covariates[which((Qs[i, ] < QCutoff) & (abs(Ds[i, ]) > DCutoff))]
-    lCovariates <- c(lCovariates, deconfT)
-    lCovariates <- lCovariates[!(lCovariates %in% deconfF)]
     # remove names of random variables from this list
     if (!is.na(RVnames[[1]])) {
       lCovariates <- lCovariates[!(lCovariates %in% RVnames)]
@@ -268,33 +266,34 @@ CheckReducibility <- function(featureMat,
       } # end randomVar
 
 
-      # find all covariates which on their end have effect on the feature
-      # test for each of these covariates the forward and reverse formula,
-      #count if lax or strict status achieved
-      confounders <- NULL
-      if (length (lCovariates) > 0 &&
-          (paste0 (lCovariates, collapse = "") != aCovariate ||
-           length (covariates[which(minQValues[i, ] < QCutoff)]) > 1)) {
+      # to all metavariables associated with feature i ( == lCovariates),
+        # add deconfT and potentially those additionally passing QCutoff in minQValues
+        # and remove deconfF and aCovariate
+      otherCovariates <- lCovariates
+      if (!is.null(minQValues[[1]])) {
+        otherCovariates <- unique(c(covariates[which(minQValues[i, ] < QCutoff)], lCovariates))
+      }
+      otherCovariates <- c(otherCovariates, deconfT)
+      otherCovariates <- otherCovariates[!(otherCovariates %in% c(deconfF, aCovariate))]
 
-        #status <- "STRICTLY DECONFOUNDED"
+
+      confounders <- NULL
+      if (length(otherCovariates) > 0 ) {
+        # test for each of these covariates the forward and reverse formula,
+        #count if lax or strict status achieved
+
         status <- "OK_sd"
         # hardest to reach, means no covariate eliminates this signal
 
-        # create vector to collect all confounder names for this feature <-> covariate pair
-        # put new dataframe of qs in here
-        otherCovariates <- lCovariates
-        if (!is.null(minQValues[[1]])) {
-          otherCovariates <- unique(c(covariates[which(minQValues[i, ] < QCutoff)], lCovariates))
-        }
         for (anotherCovariate in otherCovariates) {
+
+          if (collectMods) {
+            collectedMods[[aFeature]][[aCovariate]][[anotherCovariate]] <- list()
+          }
 
           if ((anotherCovariate == aCovariate) ||
               (!isRobust[aCovariate, anotherCovariate])) {
             next
-          }
-
-          if (collectMods) {
-            collectedMods[[aFeature]][[aCovariate]][[anotherCovariate]] <- list()
           }
 
           # remove rows where anotherCovariate has NAs

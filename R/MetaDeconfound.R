@@ -204,7 +204,7 @@ MetaDeconfound <- function(featureMat,
     }
     # merge meta and mediation DFs and set all elements of mediationMat to deconfF
     metaMat <- cbind(metaMat, mediationMat)
-    deconfF <- unique(c(deconfF, colnames(mediationMat)))
+
   }
 
   # check proper naming of rows and columns
@@ -423,7 +423,7 @@ MetaDeconfound <- function(featureMat,
                            sub(pattern = ", ", replacement = "", x = paste0(", ", names(isRobust[[1]][isRobust[[1]] == 0]), collapse = ""))))
   }
 
-
+  deconfF <- unique(c(deconfF, colnames(mediationMat)))
 
   if (is.na(QValues[[1]]) | is.na(DValues[[1]])) {
     # if no external Qs and Ds are supplied, compute them!
