@@ -97,22 +97,41 @@ CheckReducibility <- function(featureMat,
   }
 
 
-  #new TB20240926
-  `%toggleDoPar%` <- `%do%`
-  if (nnodes != 1) {
+  # #new TB20240926
+  # `%toggleDoPar%` <- `%do%`
+  # if (nnodes != 1) {
+  #   `%toggleDoPar%` <- `%dopar%`
+  # }
+  #
+  # # load parallel processing environment
+  # if (.Platform$OS.type == "unix") {
+  #   # unix
+  #   cl <- parallel::makeForkCluster(nnodes = nnodes, outfile = "")
+  #   doParallel::registerDoParallel(cl)
+  # } else {
+  #   # windows
+  #   cl <- parallel::makeCluster(nnodes, type = "PSOCK", outfile = "")
+  #   doParallel::registerDoParallel(cl)
+  # }
+
+  #new TB20260331
+  if (nnodes == 1) {
+    `%toggleDoPar%` <- `%do%`
+    foreach::registerDoSEQ()
+  } else {
     `%toggleDoPar%` <- `%dopar%`
+
+    if (.Platform$OS.type == "unix") {
+      cl <- parallel::makeForkCluster(nnodes, outfile = "")
+    } else {
+      cl <- parallel::makeCluster(nnodes, type = "PSOCK", outfile = "")
+    }
+
+    doParallel::registerDoParallel(cl)
+    on.exit(parallel::stopCluster(cl), add = TRUE)
   }
 
-  # load parallel processing environment
-  if (.Platform$OS.type == "unix") {
-    # unix
-    cl <- parallel::makeForkCluster(nnodes = nnodes, outfile = "")
-    doParallel::registerDoParallel(cl)
-  } else {
-    # windows
-    cl <- parallel::makeCluster(nnodes, type = "PSOCK", outfile = "")
-    doParallel::registerDoParallel(cl)
-  }
+
   i <- 0
   isRobust <- isRobust[[2]]
   #isRobust[!isRobust] <- TRUE
@@ -576,7 +595,7 @@ CheckReducibility <- function(featureMat,
     statusLine
   }# foreach loop
 
-  parallel::stopCluster(cl) # close parallel processing environment
+  #parallel::stopCluster(cl) # close parallel processing environment
   logger::log_debug(namespace = "metadeconfoundR", "Everything done in checkReducibility!")
 
   logger::log_info(namespace = "metadeconfoundR", paste("Deconfounding -- processed 100% of features."))
