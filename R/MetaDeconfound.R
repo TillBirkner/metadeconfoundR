@@ -351,7 +351,8 @@ MetaDeconfound <- function(featureMat,
                             collectMods = FALSE,
                             mediationMat = NULL,
                             noConfConfs = TRUE,
-                            nAGQ = 1
+                            nAGQ = 1,
+                            clusterMethod = "default"
                             ) {
 
   if (nnodes < 2) {
@@ -462,7 +463,9 @@ MetaDeconfound <- function(featureMat,
       adjustLevel = adjustLevel,
       nnodes = nnodes,
       rawCounts = rawCounts,# new TB20221129
-      mediationMat
+      mediationMat = mediationMat,
+      clusterMethod = clusterMethod,
+      logfile = logfile
     )
 
     if ("naiveStop" %in% startStop) {
@@ -518,6 +521,8 @@ MetaDeconfound <- function(featureMat,
                                             nAGQ = nAGQ, # new TB 20221201
                                             collectMods = collectMods, # new TB20220208
                                             noConfConfs = noConfConfs, # new TB20250827
+                                            clusterMethod = clusterMethod,
+                                            logfile = logfile
                                             )
   #}
 

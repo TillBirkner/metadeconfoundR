@@ -21,14 +21,10 @@ NaiveAssociation <- function(featureMat,
                              rawCounts, # new TB20221129
                              adjustMethod,
                              adjustLevel,
-                             mediationMat
+                             mediationMat,
+                             clusterMethod,
+                             logfile
                              ) {
-
-  #new TB20240926
-  `%toggleDoPar%` <- `%do%`
-  if (nnodes != 1) {
-    `%toggleDoPar%` <- `%dopar%`
-  }
 
   #new TB20221125
   if (rawCounts == TRUE) {
@@ -43,15 +39,47 @@ NaiveAssociation <- function(featureMat,
 
   isRobust <- isRobust[[1]]
 
-  # load parralel processing environment
-  if (.Platform$OS.type == "unix") {
-    # unix
-    cl <- parallel::makeForkCluster(nnodes = nnodes, outfile = "")
-    doParallel::registerDoParallel(cl)
+  # #new TB20240926
+  # `%toggleDoPar%` <- `%do%`
+  # if (nnodes != 1) {
+  #   `%toggleDoPar%` <- `%dopar%`
+  # }
+  #
+  # # load parallel processing environment
+  # if (.Platform$OS.type == "unix") {
+  #   # unix
+  #   cl <- parallel::makeForkCluster(nnodes = nnodes, outfile = "")
+  #   doParallel::registerDoParallel(cl)
+  # } else {
+  #   # windows
+  #   cl <- parallel::makeCluster(nnodes, type = "PSOCK", outfile = "")
+  #   doParallel::registerDoParallel(cl)
+  # }
+
+  #new TB20260331
+  if (nnodes == 1) {
+    `%toggleDoPar%` <- `%do%`
+    foreach::registerDoSEQ()
   } else {
-    # windows
-    cl <- parallel::makeCluster(nnodes, type = "PSOCK", outfile = "")
+    `%toggleDoPar%` <- `%dopar%`
+
+    in_rstudio <- requireNamespace("rstudioapi", quietly = TRUE) &&
+      isTRUE(rstudioapi::isAvailable())
+
+    if ((.Platform$OS.type == "unix" && !in_rstudio && clusterMethod != "psock") | clusterMethod == "fork") {
+      cl <- parallel::makeForkCluster(nnodes, outfile = "")
+      logger::log_debug(namespace = "metadeconfoundR", "Using FORK cluster for parallel processing.")
+    } else {
+      outfile <- ""
+      if (!is.null(logfile)) {
+        outfile <- logfile
+      }
+      cl <- parallel::makeCluster(nnodes, type = "PSOCK", outfile = outfile)
+      logger::log_debug(namespace = "metadeconfoundR", "Using PSOCK cluster for parallel processing.")
+    }
+
     doParallel::registerDoParallel(cl)
+    on.exit(parallel::stopCluster(cl), add = TRUE)
   }
 
   # compute steps for progress log.info #TB20240229
@@ -263,7 +291,7 @@ NaiveAssociation <- function(featureMat,
   } # for i (foreach)
 
   # close parallel processing environment
-  parallel::stopCluster(cl)
+  #parallel::stopCluster(cl)
 
 
   logger::log_info(namespace = "metadeconfoundR", paste("NaiveAssociation -- processed 100% of features."))
