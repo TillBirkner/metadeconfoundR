@@ -5,20 +5,20 @@ knitr::opts_chunk$set(
   fig.align = "center"
 )
 
-## ---- echo=F, fig.cap = "Figure 1: metadeconfoundR pipeline overview.", out.width = "99%", dev = "png"----
+## ----echo=F, fig.cap = "Figure 1: metadeconfoundR pipeline overview.", out.width = "99%", dev = "png"----
 knitr::include_graphics("Figures/metadeconfoundROverview_20240605.png")
 
-## ---- echo=F, fig.show='hold', fig.cap = "Figure 2: detailed status labelling decision tree.", out.width = "99%", out.height = "99%", dev = "png"----
+## ----echo=F, fig.show='hold', fig.cap = "Figure 2: detailed status labelling decision tree.", out.width = "99%", out.height = "99%", dev = "png"----
 knitr::include_graphics("Figures/flowChartDecision_mixed_CI.png")
 
 ## ----example, eval=FALSE, echo=TRUE-------------------------------------------
-#  # CRAN
-#  install.packages("metadeconfoundR")
-#  # github stable version
-#  devtools::install_github("TillBirkner/metadeconfoundR")
-#  # github developmental version
-#  devtools::install_github("TillBirkner/metadeconfoundR@develop")
-#  library(metadeconfoundR)
+# # CRAN
+# install.packages("metadeconfoundR")
+# # github stable version
+# devtools::install_github("TillBirkner/metadeconfoundR")
+# # github developmental version
+# devtools::install_github("TillBirkner/metadeconfoundR@develop")
+# library(metadeconfoundR)
 
 ## ----hide, eval=TRUE, echo=FALSE, results="asis", results='hide', message=FALSE----
 library(metadeconfoundR)
@@ -72,12 +72,12 @@ example_outputMedi <- MetaDeconfound(
 )
 
 ## ----runMediPlot, echo=T, eval=FALSE------------------------------------------
-#  BuildHeatmap(
-#    example_outputMedi,
-#    keepMeta = colnames(metaMatMetformin),
-#    d_range = "full"
-#  ) +
-#    theme(strip.background = element_rect(fill = "red"))
+# BuildHeatmap(
+#   example_outputMedi,
+#   keepMeta = colnames(metaMatMetformin),
+#   d_range = "full"
+# ) +
+#   theme(strip.background = element_rect(fill = "red"))
 
 ## ----runMediPlotHidden, echo=F, fig.cap = "Figure 3: BuildHeatmap() output for mediation analysis data", fig.width = 4.5, fig.height=6----
 BuildHeatmap(
@@ -88,9 +88,9 @@ BuildHeatmap(
   theme(strip.background = element_rect(fill = "red"))
 
 ## ----runHeatmap, echo=T, eval=FALSE-------------------------------------------
-#  left <- BuildHeatmap(example_output)
-#  right <- BuildHeatmap(RandDataset_output)
-#  grid.arrange(left, right, ncol = 2)
+# left <- BuildHeatmap(example_output)
+# right <- BuildHeatmap(RandDataset_output)
+# grid.arrange(left, right, ncol = 2)
 
 ## ----runHeatmapHidden, echo=F, fig.cap = "Figure 4: default output of the BuildHeatmap() function", fig.width = 5.5, fig.height=6----
 left <- BuildHeatmap(example_output) + labs(title = "example_output")
@@ -98,12 +98,12 @@ right <- BuildHeatmap(RandDataset_output)  + labs(title = "RandDataset_output")
 grid.arrange(left, right, ncol = 2)
 
 ## ----runCun, echo=T, eval=FALSE-----------------------------------------------
-#  BuildHeatmap(
-#    example_output,
-#    cuneiform = TRUE,
-#    keepMeta = colnames(metaMatMetformin),
-#    d_range = "full"
-#  )
+# BuildHeatmap(
+#   example_output,
+#   cuneiform = TRUE,
+#   keepMeta = colnames(metaMatMetformin),
+#   d_range = "full"
+# )
 
 ## ----runCunHidden, echo=F, fig.cap = "Figure 5: alternative cuneiform output of the BuildHeatmap() function", fig.width = 3.5, fig.height=6----
 BuildHeatmap(example_output, cuneiform = TRUE, keepMeta = colnames(metaMatMetformin), d_range = "full")
@@ -123,7 +123,7 @@ library(ggraph)
 plotObject$MS0001
 
 ## ----produceLongOut, eval=FALSE-----------------------------------------------
-#  print(example_output[101:105, ])
+# print(example_output[101:105, ])
 
 ## ----headLongInput, echo=FALSE------------------------------------------------
 knitr::kable(example_output[101:105, ])
@@ -135,16 +135,16 @@ minQValues <- ImportLongPrior(longPrior = example_output,
                                 metaMat = metaMatMetformin)
 
 ## ----fakeshowminQ, eval=FALSE-------------------------------------------------
-#  print(minQValues[1:5, 1:5])
+# print(minQValues[1:5, 1:5])
 
 ## ----showminQValues, echo=FALSE-----------------------------------------------
 knitr::kable(minQValues[1:5, 1:5])
 
 ## ----runInformedMetadeconf, eval=FALSE----------------------------------------
-#  
-#  example_output2 <- MetaDeconfound(featureMat = reduced_feature,
-#                                    metaMat = metaMatMetformin,
-#                                    minQValues = minQValues)
+# 
+# example_output2 <- MetaDeconfound(featureMat = reduced_feature,
+#                                   metaMat = metaMatMetformin,
+#                                   minQValues = minQValues)
 
 ## ----runPartial, eval=TRUE, echo=TRUE, nobreak=TRUE, message=FALSE------------
 ex_out_partial <- GetPartialEfSizes(
@@ -153,6 +153,13 @@ ex_out_partial <- GetPartialEfSizes(
   metaDeconfOutput = RandDataset_output,
   randomVar = c("Dataset")
 )
+
+## ----showPartialPlotting, eval=FALSE, echo=TRUE, nobreak=TRUE, message=FALSE----
+# 
+# BuildHeatmap(ex_out_partial,
+#              plotPartial = "partial",
+#              d_cutoff = 0.0000001
+#             )
 
 ## ----runPartialPlotting, eval=TRUE, echo=FALSE, message=FALSE, fig.width = 4.5, fig.height=5, fig.cap="Figure 8: BuildHeatmap() plotting of partial effect sizes calculated by GetPartialEfSizes()"----
 
