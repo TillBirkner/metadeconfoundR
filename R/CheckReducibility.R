@@ -33,7 +33,9 @@ CheckReducibility <- function(featureMat,
                               maintenance,
                               nAGQ,
                               collectMods, # new TB20220208
-                              noConfConfs # new TB20250827
+                              noConfConfs, # new TB20250827
+                              clusterMethod,
+                              logfile
                               ) {
 
 
@@ -97,22 +99,50 @@ CheckReducibility <- function(featureMat,
   }
 
 
-  #new TB20240926
-  `%toggleDoPar%` <- `%do%`
-  if (nnodes != 1) {
+  # #new TB20240926
+  # `%toggleDoPar%` <- `%do%`
+  # if (nnodes != 1) {
+  #   `%toggleDoPar%` <- `%dopar%`
+  # }
+  #
+  # # load parallel processing environment
+  # if (.Platform$OS.type == "unix") {
+  #   # unix
+  #   cl <- parallel::makeForkCluster(nnodes = nnodes, outfile = "")
+  #   doParallel::registerDoParallel(cl)
+  # } else {
+  #   # windows
+  #   cl <- parallel::makeCluster(nnodes, type = "PSOCK", outfile = "")
+  #   doParallel::registerDoParallel(cl)
+  # }
+
+  #new TB20260331
+  if (nnodes == 1) {
+    `%toggleDoPar%` <- `%do%`
+    foreach::registerDoSEQ()
+  } else {
     `%toggleDoPar%` <- `%dopar%`
+
+    in_rstudio <- requireNamespace("rstudioapi", quietly = TRUE) &&
+      isTRUE(rstudioapi::isAvailable())
+
+    if ((.Platform$OS.type == "unix" && !in_rstudio && clusterMethod != "psock") | clusterMethod == "fork") {
+      cl <- parallel::makeForkCluster(nnodes, outfile = "")
+      logger::log_debug(namespace = "metadeconfoundR", "Using FORK cluster for parallel processing.")
+    } else {
+      outfile <- ""
+      if (!is.null(logfile)) {
+        outfile <- logfile
+      }
+      cl <- parallel::makeCluster(nnodes, type = "PSOCK", outfile = outfile)
+      logger::log_debug(namespace = "metadeconfoundR", "Using PSOCK cluster for parallel processing.")
+    }
+
+    doParallel::registerDoParallel(cl)
+    on.exit(parallel::stopCluster(cl), add = TRUE)
   }
 
-  # load parallel processing environment
-  if (.Platform$OS.type == "unix") {
-    # unix
-    cl <- parallel::makeForkCluster(nnodes = nnodes, outfile = "")
-    doParallel::registerDoParallel(cl)
-  } else {
-    # windows
-    cl <- parallel::makeCluster(nnodes, type = "PSOCK", outfile = "")
-    doParallel::registerDoParallel(cl)
-  }
+
   i <- 0
   isRobust <- isRobust[[2]]
   #isRobust[!isRobust] <- TRUE
@@ -127,8 +157,6 @@ CheckReducibility <- function(featureMat,
     # find all covariates which on their end have effect on the feature
     # add all those that shall always be tested, and remove those that shall never be tested
     lCovariates <- covariates[which((Qs[i, ] < QCutoff) & (abs(Ds[i, ]) > DCutoff))]
-    lCovariates <- c(lCovariates, deconfT)
-    lCovariates <- lCovariates[!(lCovariates %in% deconfF)]
     # remove names of random variables from this list
     if (!is.na(RVnames[[1]])) {
       lCovariates <- lCovariates[!(lCovariates %in% RVnames)]
@@ -163,7 +191,9 @@ CheckReducibility <- function(featureMat,
     }
 
     aFeature <- as.character (features [i])
-    for (j in seq_along(covariates)) {
+    leftCovariates <- covariates
+
+    for (j in seq_along(covariates)) { # first pass through covars to filter out NS and reducible to randomVars
       aCovariate <- as.character (covariates [j])
 
       status <- "NS"
@@ -180,10 +210,12 @@ CheckReducibility <- function(featureMat,
           # randomVars will have NA Qs, so are always caught here
           # set label to NA for all random vars
           statusLine[j] <- NA
+          leftCovariates <- leftCovariates[leftCovariates != aCovariate]
           next
         }
 
         statusLine[j] <- status
+        leftCovariates <- leftCovariates[leftCovariates != aCovariate]
         next
       }
 
@@ -204,7 +236,7 @@ CheckReducibility <- function(featureMat,
       if (!(is.na(randomVar[[1]]) & !(aCovariate %in% fixedVar)) |
           !(is.na(fixedVar[[1]]) & !(aCovariate %in% fixedVar))) {
         # if either random or fixed Var is supplied and aCovariate != fixedVar, do a naive test
-          # whether association is reducible to these random/fixed Vars
+        # whether association is reducible to these random/fixed Vars
 
         head <- "stats::lm (rank (FeatureValue) ~ "
         tail <- paste0(", data = subMerge)", collapse = "")
@@ -262,39 +294,67 @@ CheckReducibility <- function(featureMat,
         if (!is.na(aP_mixed) && aP_mixed >= PHS_cutoff) {
 
           statusLine[j] <- status
+          leftCovariates <- leftCovariates[leftCovariates != aCovariate]
           next
         }
 
       } # end randomVar
+    } # end first loop through covariates
 
 
-      # find all covariates which on their end have effect on the feature
-      # test for each of these covariates the forward and reverse formula,
-      #count if lax or strict status achieved
+    # remove covariates reducible to random/fixed effects
+    lCovariates <- lCovariates[lCovariates %in% leftCovariates]
+
+    for (j in seq_along(covariates)) {
+      aCovariate <- as.character (covariates [j])
+
+      if (!aCovariate %in% leftCovariates) {
+        next
+      }
+
+
+      subMerge <- metaMat
+      subMerge$FeatureValue <- featureMat [,i]
+
+      #remove NAs only in feature and acovariate column
+      subMerge <- subMerge[!is.na(subMerge$FeatureValue), ]
+      subMerge <- eval (parse (text = paste0 ("subset (subMerge, ! is.na (", aCovariate, "))")))
+
+      # rank transfer the metavariables listed in doRanks
+      if (!is.na(doRanks[[1]])) {
+        for (toRank in doRanks) {
+          subMerge[toRank] <- rank(subMerge[toRank])
+        }
+      }
+
+      # to all metavariables associated with feature i ( == lCovariates),
+        # add deconfT and potentially those additionally passing QCutoff in minQValues
+        # and remove deconfF and aCovariate
+      otherCovariates <- lCovariates
+      if (!is.null(minQValues[[1]])) {
+        otherCovariates <- unique(c(covariates[which(minQValues[i, ] < QCutoff)], lCovariates))
+      }
+      otherCovariates <- c(otherCovariates, deconfT)
+      otherCovariates <- otherCovariates[!(otherCovariates %in% c(deconfF, aCovariate))]
+
+
       confounders <- NULL
-      if (length (lCovariates) > 0 &&
-          (paste0 (lCovariates, collapse = "") != aCovariate ||
-           length (covariates[which(minQValues[i, ] < QCutoff)]) > 1)) {
+      if (length(otherCovariates) > 0 ) {
+        # test for each of these covariates the forward and reverse formula,
+        #count if lax or strict status achieved
 
-        #status <- "STRICTLY DECONFOUNDED"
         status <- "OK_sd"
         # hardest to reach, means no covariate eliminates this signal
 
-        # create vector to collect all confounder names for this feature <-> covariate pair
-        # put new dataframe of qs in here
-        otherCovariates <- lCovariates
-        if (!is.null(minQValues[[1]])) {
-          otherCovariates <- unique(c(covariates[which(minQValues[i, ] < QCutoff)], lCovariates))
-        }
         for (anotherCovariate in otherCovariates) {
+
+          if (collectMods) {
+            collectedMods[[aFeature]][[aCovariate]][[anotherCovariate]] <- list()
+          }
 
           if ((anotherCovariate == aCovariate) ||
               (!isRobust[aCovariate, anotherCovariate])) {
             next
-          }
-
-          if (collectMods) {
-            collectedMods[[aFeature]][[aCovariate]][[anotherCovariate]] <- list()
           }
 
           # remove rows where anotherCovariate has NAs
@@ -577,7 +637,7 @@ CheckReducibility <- function(featureMat,
     statusLine
   }# foreach loop
 
-  parallel::stopCluster(cl) # close parallel processing environment
+  #parallel::stopCluster(cl) # close parallel processing environment
   logger::log_debug(namespace = "metadeconfoundR", "Everything done in checkReducibility!")
 
   logger::log_info(namespace = "metadeconfoundR", paste("Deconfounding -- processed 100% of features."))

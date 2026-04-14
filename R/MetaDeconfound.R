@@ -204,7 +204,7 @@ MetaDeconfound <- function(featureMat,
     }
     # merge meta and mediation DFs and set all elements of mediationMat to deconfF
     metaMat <- cbind(metaMat, mediationMat)
-    deconfF <- unique(c(deconfF, colnames(mediationMat)))
+
   }
 
   # check proper naming of rows and columns
@@ -351,7 +351,8 @@ MetaDeconfound <- function(featureMat,
                             collectMods = FALSE,
                             mediationMat = NULL,
                             noConfConfs = TRUE,
-                            nAGQ = 1
+                            nAGQ = 1,
+                            clusterMethod = "default"
                             ) {
 
   if (nnodes < 2) {
@@ -423,7 +424,7 @@ MetaDeconfound <- function(featureMat,
                            sub(pattern = ", ", replacement = "", x = paste0(", ", names(isRobust[[1]][isRobust[[1]] == 0]), collapse = ""))))
   }
 
-
+  deconfF <- unique(c(deconfF, colnames(mediationMat)))
 
   if (is.na(QValues[[1]]) | is.na(DValues[[1]])) {
     # if no external Qs and Ds are supplied, compute them!
@@ -462,7 +463,9 @@ MetaDeconfound <- function(featureMat,
       adjustLevel = adjustLevel,
       nnodes = nnodes,
       rawCounts = rawCounts,# new TB20221129
-      mediationMat
+      mediationMat = mediationMat,
+      clusterMethod = clusterMethod,
+      logfile = logfile
     )
 
     if ("naiveStop" %in% startStop) {
@@ -518,6 +521,8 @@ MetaDeconfound <- function(featureMat,
                                             nAGQ = nAGQ, # new TB 20221201
                                             collectMods = collectMods, # new TB20220208
                                             noConfConfs = noConfConfs, # new TB20250827
+                                            clusterMethod = clusterMethod,
+                                            logfile = logfile
                                             )
   #}
 

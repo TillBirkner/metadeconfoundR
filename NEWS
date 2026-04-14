@@ -1,3 +1,7 @@
+Version 1.0.6
+  - associations of metavariables found to be fully reducible to the supplied random/fixed effects allone are now removed from list potential confounders of other metavariables associated to the same feature.
+  - instabilities resulting from parallel processing within an Rstudio GUI on Unix systems have been adressed
+
 Version 1.0.5
   - "confounded confounders" will now be removed from the status label of a confounded variable.
     - Example: If the association of D with feature Y is confounded by C1 and C2, but the association of C1 with Y is in turn confounded by C2, then only C2 will be listed as confounder of Y~D

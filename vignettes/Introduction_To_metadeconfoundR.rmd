@@ -464,6 +464,17 @@ ex_out_partial <- GetPartialEfSizes(
 )
 ```
 
+Output of `GetPartialEfSizes()` can be graphically summarized using `BuildHeatmap()`, but will show the partial effect sizes only if the `plotPartial` parameter is set. Note that the marginal effect sizes now get replaced by the specified partial R² values. The default effect size cutoff (`d_cutoff`) of 0.01 might need to be adjusted to be less strict.
+
+```{r showPartialPlotting, eval=FALSE, echo=TRUE, nobreak=TRUE, message=FALSE}
+
+BuildHeatmap(ex_out_partial,
+             plotPartial = "partial",
+             d_cutoff = 0.0000001
+            )
+```
+
+
 ```{r runPartialPlotting, eval=TRUE, echo=FALSE, message=FALSE, fig.width = 4.5, fig.height=5, fig.cap="Figure 8: BuildHeatmap() plotting of partial effect sizes calculated by GetPartialEfSizes()"}
 
 partialHM_Rand <- BuildHeatmap(ex_out_partial,
