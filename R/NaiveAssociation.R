@@ -23,7 +23,8 @@ NaiveAssociation <- function(featureMat,
                              adjustLevel,
                              mediationMat,
                              clusterMethod,
-                             logfile
+                             logfile,
+                             clr_mode
                              ) {
 
   #new TB20221125
@@ -222,37 +223,69 @@ NaiveAssociation <- function(featureMat,
   }
 
   else if (variableType == "categorical" && conVar) {
-    # KW test if false binary and 	# SKF20200221
 
-    aP <- stats::kruskal.test (
-      g = as.factor(subMerge [[aCovariate]]),
-      x = subMerge [["FeatureValue"]])$p.value
+    if (clr_mode) {
+      formulaVar <- paste0 (
+        "stats::aov (FeatureValue ~ ",
+        aCovariate,
+        ", data = subMerge)",
+        collapse = ""
+      )
+      lmVar <- eval (parse (text = as.character (formulaVar)))
+      aP <- summary(lmVar)[[1]]$`Pr(>F)`[1]
+    } else {
+      # KW test if false binary and 	# SKF20200221
+      aP <- stats::kruskal.test (
+        g = as.factor(subMerge [[aCovariate]]),
+        x = subMerge [["FeatureValue"]])$p.value
+    }
 
     aD <- Inf
   }
 
   else if (variableType == "binary" && conVar) {
-    # MWU test if binary and 	# SKF20200221
+    if (clr_mode) {
 
-    aP <- suppressWarnings(stats::wilcox.test (
+      corTestObj <- suppressWarnings(stats::cor.test (subMerge [, aCovariate],
+                                                      subMerge [, "FeatureValue"],
+                                                      method = "pearson"))
+
+      aP <- suppressWarnings(stats::t.test (
         subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"],
         subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"]))$p.value
 
-    aD <- CliffsDelta(
-      as.vector (
-        na.exclude (
-          subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"])),
-      as.vector (
-        na.exclude (
-          subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"])))
+      aD <- corTestObj$estimate # point-biserial correlation  == pearsons r for binary var
+
+    } else {
+      # MWU test if binary and 	# SKF20200221
+      aP <- suppressWarnings(stats::wilcox.test (
+        subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"],
+        subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"]))$p.value
+
+      aD <- CliffsDelta(
+        as.vector (
+          na.exclude (
+            subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"])),
+        as.vector (
+          na.exclude (
+            subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"])))
+    }
   }
 
   else if (variableType == "continuous" && conVar) {
     # spearman test if continuous and numerical 	# SKF20200221
 
-    corTestObj <- suppressWarnings(stats::cor.test (subMerge [, aCovariate],
-                                                    subMerge [, "FeatureValue"],
-                                                    method = "spearman"))
+    methodName <- "spearman"
+    if (clr_mode) {
+      methodName <- "pearson"
+    }
+
+    corTestObj <- suppressWarnings(
+      stats::cor.test(
+        subMerge [, aCovariate],
+        subMerge [, "FeatureValue"],
+        method = methodName))
+
     aP <- corTestObj$p.value
     aD <- corTestObj$estimate
     # aP <- stats::cor.test (subMerge [, aCovariate],

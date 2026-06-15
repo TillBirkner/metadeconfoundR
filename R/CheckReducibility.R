@@ -35,7 +35,8 @@ CheckReducibility <- function(featureMat,
                               collectMods, # new TB20220208
                               noConfConfs, # new TB20250827
                               clusterMethod,
-                              logfile
+                              logfile,
+                              clr_mode
                               ) {
 
 
@@ -263,6 +264,10 @@ CheckReducibility <- function(featureMat,
 
         logger::log_debug(namespace = "metadeconfoundR", paste("LRT_randOnly_for", aFeature, aCovariate, sep = "\t"))
 
+        if (clr_mode) {
+          head <- sub("rank (FeatureValue)", "FeatureValue", head)
+        }
+
         mixedmodel1Text <- paste0 (head,
                                    aCovariate,
                                    randomVarLine,
@@ -432,6 +437,10 @@ CheckReducibility <- function(featureMat,
                   anotherCovariate,
                   sep = "\t"
                   ))
+
+          if (clr_mode) {
+            modAlg <- sub("rank (FeatureValue)", "FeatureValue", modAlg)
+          }
 
           # compute the three needed linear models
           lmBothText <- paste0 (modAlg,

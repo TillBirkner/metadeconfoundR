@@ -1,7 +1,7 @@
 Package: metadeconfoundR
 Type: Package
 Title: Covariate-Sensitive Analysis of Cross-Sectional High-Dimensional Data
-Version: 1.0.6
+Version: 1.0.7
 Authors@R: c(person(given = "Till",
            family = "Birkner",
            role = c("aut", "cre"),
@@ -36,5 +36,5 @@ Suggests:
     covr,
     rstudioapi
 VignetteBuilder: knitr
-RoxygenNote: 7.3.3
 Config/testthat/edition: 3
+Config/roxygen2/version: 8.0.0
