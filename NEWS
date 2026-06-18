@@ -1,3 +1,7 @@
+Version 1.0.7
+  - experimental clr_mode argument added: switch to parametric tests and modelling, enabling analysis of clr-transformed data.
+  - expanded status label interpretation section in vignette
+
 Version 1.0.6
   - associations of metavariables found to be fully reducible to the supplied random/fixed effects allone are now removed from list potential confounders of other metavariables associated to the same feature.
   - instabilities resulting from parallel processing within an Rstudio GUI on Unix systems have been adressed
