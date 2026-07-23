@@ -192,109 +192,107 @@ NaiveAssociation <- function(featureMat,
         formulaNull <- paste0 ("stats::glm (FeatureValue ~ 1, data = subSubMerge, family = \"binomial\")", collapse = "")
         lmNull <- eval (parse (text = as.character (formulaNull)))
 
-    aP <- NA
-    glmSepTested <- update(lmVar, method="detect_separation")
-    if (glmSepTested$outcome) {
-      logger::log_warn(namespace = "metadeconfoundR",
-        paste(
-          "Separation for:", aFeature, "and",
-          aCovariate))
-    } else {
-      aP <- lmtest::lrtest (lmNull, lmVar)$'Pr(>Chisq)' [2]
-    }
+        aP <- NA
+        glmSepTested <- update(lmVar, method="detect_separation")
+        if (glmSepTested$outcome) {
+          logger::log_warn(namespace = "metadeconfoundR",
+            paste(
+              "Separation for:", aFeature, "and",
+              aCovariate))
+        } else {
+          aP <- lmtest::lrtest (lmNull, lmVar)$'Pr(>Chisq)' [2]
+        }
 
-    if (variableType == "categorical") {
-      aD <- Inf
-    } else if (variableType == "binary") {
-      aD <- stats::cor.test (subMerge [, aCovariate],
-                             subMerge [, "FeatureValue"],
-                             )$estimate
-    } else  if (variableType == "continuous") {
-      aD <- CliffsDelta(
-        as.vector (
-          na.exclude (
-            subMerge [subMerge [["FeatureValue"]] == 0, aCovariate])),
-        as.vector (
-          na.exclude (
-            subMerge [subMerge [["FeatureValue"]] == 1, aCovariate])))
-    }
-    #aD <- lmVar$coef [2]
+        if (variableType == "categorical") {
+          aD <- Inf
+        } else if (variableType == "binary") {
+          aD <- stats::cor.test (subMerge [, aCovariate],
+                                 subMerge [, "FeatureValue"],
+                                 )$estimate
+        } else  if (variableType == "continuous") {
+          aD <- CliffsDelta(
+            as.vector (
+              na.exclude (
+                subMerge [subMerge [["FeatureValue"]] == 0, aCovariate])),
+            as.vector (
+              na.exclude (
+                subMerge [subMerge [["FeatureValue"]] == 1, aCovariate])))
+        }
+        #aD <- lmVar$coef [2]
 
-  }
+      }
+      else if (variableType == "categorical" && conVar) {
 
-  else if (variableType == "categorical" && conVar) {
+        if (clr_mode) {
+          formulaVar <- paste0 (
+            "stats::aov (FeatureValue ~ ",
+            aCovariate,
+            ", data = subMerge)",
+            collapse = ""
+          )
+          lmVar <- eval (parse (text = as.character (formulaVar)))
+          aP <- summary(lmVar)[[1]]$`Pr(>F)`[1]
+        } else {
+          # KW test if false binary and 	# SKF20200221
+          aP <- stats::kruskal.test (
+            g = as.factor(subMerge [[aCovariate]]),
+            x = subMerge [["FeatureValue"]])$p.value
+        }
 
-    if (clr_mode) {
-      formulaVar <- paste0 (
-        "stats::aov (FeatureValue ~ ",
-        aCovariate,
-        ", data = subMerge)",
-        collapse = ""
-      )
-      lmVar <- eval (parse (text = as.character (formulaVar)))
-      aP <- summary(lmVar)[[1]]$`Pr(>F)`[1]
-    } else {
-      # KW test if false binary and 	# SKF20200221
-      aP <- stats::kruskal.test (
-        g = as.factor(subMerge [[aCovariate]]),
-        x = subMerge [["FeatureValue"]])$p.value
-    }
+        aD <- Inf
+      }
 
-    aD <- Inf
-  }
+      else if (variableType == "binary" && conVar) {
+        if (clr_mode) {
+          corTestObj <- suppressWarnings(stats::cor.test (subMerge [, aCovariate],
+                                                          subMerge [, "FeatureValue"],
+                                                          method = "pearson"))
 
-  else if (variableType == "binary" && conVar) {
-    if (clr_mode) {
+          aP <- suppressWarnings(stats::t.test (
+            subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"],
+            subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"]))$p.value
 
-      corTestObj <- suppressWarnings(stats::cor.test (subMerge [, aCovariate],
-                                                      subMerge [, "FeatureValue"],
-                                                      method = "pearson"))
+          aD <- corTestObj$estimate # point-biserial correlation  == pearsons r for binary var
 
-      aP <- suppressWarnings(stats::t.test (
-        subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"],
-        subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"]))$p.value
+        } else {
+          # MWU test if binary and 	# SKF20200221
+          aP <- suppressWarnings(stats::wilcox.test (
+            subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"],
+            subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"]))$p.value
 
-      aD <- corTestObj$estimate # point-biserial correlation  == pearsons r for binary var
+          aD <- CliffsDelta(
+            as.vector (
+              na.exclude (
+                subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"])),
+            as.vector (
+              na.exclude (
+                subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"])))
+        }
+      }
 
-    } else {
-      # MWU test if binary and 	# SKF20200221
-      aP <- suppressWarnings(stats::wilcox.test (
-        subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"],
-        subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"]))$p.value
+      else if (variableType == "continuous" && conVar) {
+        # spearman test if continuous and numerical 	# SKF20200221
 
-      aD <- CliffsDelta(
-        as.vector (
-          na.exclude (
-            subMerge [subMerge [[aCovariate]] == 0, "FeatureValue"])),
-        as.vector (
-          na.exclude (
-            subMerge [subMerge [[aCovariate]] == 1, "FeatureValue"])))
-    }
-  }
+        methodName <- "spearman"
+        if (clr_mode) {
+          methodName <- "pearson"
+        }
 
-  else if (variableType == "continuous" && conVar) {
-    # spearman test if continuous and numerical 	# SKF20200221
+        corTestObj <- suppressWarnings(
+          stats::cor.test(
+            subMerge [, aCovariate],
+            subMerge [, "FeatureValue"],
+            method = methodName))
 
-    methodName <- "spearman"
-    if (clr_mode) {
-      methodName <- "pearson"
-    }
-
-    corTestObj <- suppressWarnings(
-      stats::cor.test(
-        subMerge [, aCovariate],
-        subMerge [, "FeatureValue"],
-        method = methodName))
-
-    aP <- corTestObj$p.value
-    aD <- corTestObj$estimate
-    # aP <- stats::cor.test (subMerge [, aCovariate],
-    #                        subMerge [, "FeatureValue"],
-    #                        method = "spearman")$p.value
-    # aD <- stats::cor.test (subMerge [, aCovariate],
-    #                        subMerge [, "FeatureValue"],
-    #                        method = "spearman")$estimate
-  }
+        aP <- corTestObj$p.value
+        aD <- corTestObj$estimate
+        # aP <- stats::cor.test (subMerge [, aCovariate],
+        #                        subMerge [, "FeatureValue"],
+        #                        method = "spearman")$p.value
+        # aD <- stats::cor.test (subMerge [, aCovariate],
+        #                        subMerge [, "FeatureValue"],
+        #                        method = "spearman")$estimate
+      }
 
 #     else if (variableType == "categorical" && conVar) {  # now never happens, probably 	# SKF20200221
 # #      else if (con2 && !con5) {  # kruskal-wallis test if
