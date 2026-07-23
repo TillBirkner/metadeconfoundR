@@ -36,7 +36,7 @@ first uses univariate statistics to find associations between omics
 features and disease status or metadata. Using nested linear model
 comparison post hoc testing, those associations are checked for
 confounding effects from other covariates/metadata and a status label is
-returned. Instead of assuming The tool is able to handle large scale
+returned. The tool is able to handle large scale
 multi-omics datasets in a reasonable time, by parallel processing
 suitable for high-performance computing clusters. In addition, results
 can be summarized by a range of plotting functions.
@@ -56,7 +56,7 @@ BMI) are identified. Based on the data type of the respective metadata,
 either `wilcox.test()` (for binary), `cor.test()` (for continuous
 numerical) or `kruskal.test()` (for neither numerical nor binary) is
 used. All three tests are rank-based to minimize assumptions about data
-distribution (*Fig. 1*, left). In addition to collecting p-values for
+distribution (***Fig.\ 1***, left). In addition to collecting p-values for
 all computed tests, effect size is measured as Cliff's Delta and
 Spearman's Rho for binary and continuous data, respectively. Since there
 is no suitable effect size metric for categorical data with more than 2
@@ -65,8 +65,8 @@ pseudo-variables for each level of the categorical metadata to partially
 circumvent this drawback.
 
 In the second step, all hits are checked for confounding effects and a
-status is reported for each feature-metadata combination (*Fig. 1*,
-center and right; *Fig. 2*). A "hit" here is defined as a
+status is reported for each feature-metadata combination (***Fig.\ 1***,
+center and right; ***Fig.\ 2***). A "hit" here is defined as a
 feature-metadata association with small enough fdr-corrected p-value and
 big enough effect size reported from the first, naive part of the
 pipeline. Thresholds for both parameters can be set via `QCutoff` and
@@ -94,6 +94,7 @@ step of the pipeline.
 
 Importantly, `metadeconfoundR` will always **rank-transform the
 features** during analysis.
+
 
 ```{r, echo=F, fig.show='hold', fig.cap = "Figure 2: detailed status labelling decision tree.", out.width = "99%", out.height = "99%", dev = "png"}
 knitr::include_graphics("Figures/flowChartDecision_mixed_CI.png")
@@ -126,8 +127,8 @@ library(kableExtra)
 
 ## Input
 
-Minimal input consists of two data.frames for feature data (*Tab. 1*)
-and metadata (*Tab. 2*), respectively. Both data.frames must have one
+Minimal input consists of two data.frames for feature data (***Tab.\ 1***)
+and metadata (***Tab.\ 2***), respectively. Both data.frames must have one
 row per sample (sample names as rownames) with matching order of
 sampleIDs and one feature/meta-variable per column. The first column of
 the metadata data.frame must be binary (i.e be numeric and consist of
@@ -166,8 +167,7 @@ example_output <- MetaDeconfound(
 ```
 
 **Random and/or fixed effects** can be included in the modeling process
-by supplying the `randomVar` and/or `fixedVar` parameter (*Fig. 3,
-right*).
+by supplying the `randomVar` and/or `fixedVar` parameter (***Fig.\ 3***, right).
 
 ```{r runExampleRand, eval=TRUE, echo=TRUE, nobreak=TRUE, message = FALSE}
 RandDataset_output <- MetaDeconfound(
@@ -181,10 +181,36 @@ RandDataset_output <- MetaDeconfound(
 
 For a full list of input parameters please refer to the help page.
 
+### Input data requirements
+
+When using default mode in `MetaDeconfound()`, feature values are internally rank-transformed. Consequently, any monotonic preprocessing or transformation that preserves the ranking order (e.g., log transformation) will not affect the results. Only preprocessing steps that intentionally modify the ordering of observations (e.g. rarefaction or TSS normalization of microbiome count data) need to be applied before running `MetaDeconfound()`, as the preprocessing or normalization steps are not performed within this framework.
+
+The default rank-based workflow remains the standard analysis mode because it provides a robust, distribution-agnostic framework that performs consistently across sparse, zero-inflated, and heterogeneous datasets without requiring omics-specific modelling assumptions. 
+
+However, preprocessing approaches that intentionally encode biologically relevant information in quantitative distances between observations (e.g., CLR transformation) may be better suited to analysis modes that operate directly on the transformed values. In this special case, the `clr_mode` can be activated to switch the analysis from using non-parametric/rank-based approaches to a parametric equivalent. Note that no ranking, transformation, or normalization is performed within metadeconfoundR in this mode. Therefore, users should supply data for which parametric linear models are considered appropriate. A full comparison of the methodologies employed for the different analysis modes can be found in ***Tab.\ 3*** below. Unless the user is confident that the requirements of the parametric methods in `clr_mode` are met, we advise using the more robust default mode.
+
+
+**Table 3: Comparison of tests and models used in different MetaDeconfound() modes.** 
+
+| mode |  | default | rawCounts | logistic | clr\_mode |
+| :---- | :---- | :---- | :---- | :---- | :---- |
+| **feature data  type** |  | everything not like the other modes | raw count data | binary data (presence/absence) | CLR-like data |
+| **internal feature transform. for naive tests** |  | none | TSS transformation | none | none |
+| **continuous metadata** | **test** | spearman cor.test | spearman cor.test | glm(family \= "binomial") \+ lrtest() | pearson cor.test |
+|  | **effect size** | Spearman's Rho | Spearman's Rho | Cliff’s Delta | Pearson's r |
+| **binary metadata** | **test** | wilcox.test | wilcox.test | glm(family \= "binomial") \+ lrtest() | t.test |
+|  | **effect size** | Cliff’s Delta | Cliff’s Delta | Phi coefficient | Pearson's r |
+| **categorical metadata**  | **test** | kruskal.test | kruskal.test | glm(family \= "binomial") \+ lrtest() | lm() \+ F-test |
+|  | **effect size** | NA | NA | NA | NA |
+| **rank transformation of features** |  | yes | no | no | no |
+| **model type for lrts** | **rand. effects  no** | lm() \+ lrtest() | glm(family \= "binomial") \+ lrtest() | glm(family \= "binomial") \+ lrtest() | lm() \+ lrtest() |
+|  | **yes** | lmer() \+ lrtest() | glmer(family \= "binomial") \+ lrtest() | glmer(family \= "binomial") \+ lrtest() | lmer() \+ lrtest() |
+
+
 ## Output
 
 Output can be returned either as a list of wide format data.frames
-(default) or as a single long format data.frame (*Tab. 3*). In both
+(default) or as a single long format data.frame (***Tab.\ 4***). In both
 cases raw p-values (Ps), multiple testing corrected p-values (Qs),
 corresponding effect sizes (Ds), and confounding status (status) are
 reported for each possible combination of a feature and a meta-variable.
@@ -196,13 +222,14 @@ reducible to a random effect can, thus, have a Q-value \< `QCutoff` and
 still be labeled as "NS" (not significant).
 
 ```{r showTableO, eval=TRUE, echo=FALSE}
-kbl(example_output[1:5, 1:6], caption = "Table 3: example output of MetadDeconfound()")
+kbl(example_output[1:5, 1:6], caption = "Table 4: example output of MetadDeconfound()")
 ```
 
 ### Interpretation
 
 Interpretation of the `MetaDeconfound()` output relies heavily on the assigned status labels as well as the graphical summary supplied by the [BuildHeatmap()] function.
-The possible labels also shown in *Fig. 2* are:
+The possible labels also shown in ***Fig.\ 2*** are:
+
 - "NS" (Not Significant): A non-significant association, or an association fully reducible to a specified fixed or random effect.
 - "OK_nc" (no covariates): A significant association not confounded by other covariates, because there are no additional covariates associated with the same feature.
 - "OK_sd" (strictly deconfounded): A significant association that remains significant even when accounting for other covariates associated with the same feature. These associations are considered robust despite the presence of additional covariates.
@@ -278,7 +305,7 @@ significant and not confounded or confounded associations based on
 corrected p-values. The plot is clustered on both axes and features as
 well as meta-variables without any associations passing effect size and
 significance cutoffs (default: `q_cutoff = 0.1`, `d_cutoff = 0.01`) are
-removed (*Fig. 4*).
+removed (***Fig.\ 4***).
 
 ```{r runHeatmap, echo=T, eval=FALSE}
 left <- BuildHeatmap(example_output)
@@ -294,7 +321,7 @@ grid.arrange(left, right, ncol = 2)
 
 ## options
 
-For both this default heatmap, as well as the alternative cuneiform plot (`cuneiform = TRUE`), a range of customizations are available. In *Fig. 5* meta-variables not passing the effect size and significance cutoffs are manually kept in the plot (`keepMeta`), and the shown range of effect sizes is set from -1 to +1 (`d_range = "full"`). For a full list of options, again, refer to the help page.
+For both this default heatmap, as well as the alternative cuneiform plot (`cuneiform = TRUE`), a range of customizations are available. In ***Fig.\ 5*** meta-variables not passing the effect size and significance cutoffs are manually kept in the plot (`keepMeta`), and the shown range of effect sizes is set from -1 to +1 (`d_range = "full"`). For a full list of options, again, refer to the help page.
 
 ```{r runCun, echo=T, eval=FALSE}
 BuildHeatmap(
@@ -312,7 +339,7 @@ BuildHeatmap(example_output, cuneiform = TRUE, keepMeta = colnames(metaMatMetfor
 ## ggplot2 options
 
 The `BuildHeatmap()` function returns a ggplot2 object. This makes it
-possible to perform some easy alterations manually (*Fig. 6*).
+possible to perform some easy alterations manually (***Fig.\ 6***).
 
 ```{r runpostCustom, echo=T, fig.cap = "Figure 6: post-plotting ggplot2 alterations", fig.width = 1.9, fig.height=6 }
 BuildHeatmap(example_output) +
