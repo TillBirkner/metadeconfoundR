@@ -1,0 +1,28 @@
+bibentry(
+  bibtype  = "Article",
+  title    = "metadeconfoundR: covariate analysis of high-dimensional cross-sectional omics data",
+  author   = c(
+    person("Till", "Birkner"),
+    person("Chia-Yu", "Chen"),
+    person("Morgan", "Essex"),
+    person("Kilian", "Dahm"),
+    person("Ulrike", "Löber"),
+    person("Thomas", "Ulas"),
+    person("Víctor Hugo", "Jarquín-Díaz"),
+    person("Sofia Kirke", "Forslund-Startceva")
+  ),
+  journal  = "Bioinformatics Advances",
+  year     = "2026",
+  volume   = "",
+  number   = "",
+  pages    = "vbag242",
+  doi      = "10.1093/bioadv/vbag242",
+  textVersion = paste(
+    "Birkner T, Chen CY, Essex M, Dahm K, Löber U, Ulas T,",
+    "Jarquín-Díaz VH, Forslund-Startceva SK (2026).",
+    "metadeconfoundR: covariate analysis of high-dimensional",
+    "cross-sectional omics data.",
+    "Bioinformatics Advances, vbag242.",
+    "https://doi.org/10.1093/bioadv/vbag242"
+  )
+)

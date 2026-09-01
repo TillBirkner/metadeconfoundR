@@ -1,6 +1,10 @@
 Version 1.0.7
-  - experimental clr_mode argument added: switch to parametric tests and modelling, enabling analysis of clr-transformed data.
   - expanded status label interpretation section in vignette
+  - MetaDeconfound()
+    - experimental clr_mode argument added: switch to parametric tests and modelling, enabling analysis of clr-transformed data.
+  - BuildHeatmap()
+    - switched asterisk number explanation from subtitle text to actual plot legend
+    - new starLevels argument lets you control the cutoffs for plotting significant associations as 1,2,3 asterisks/circles.
 
 Version 1.0.6
   - associations of metavariables found to be fully reducible to the supplied random/fixed effects allone are now removed from list potential confounders of other metavariables associated to the same feature.

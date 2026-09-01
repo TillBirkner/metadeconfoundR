@@ -23,7 +23,8 @@ BuildHeatmap(
   reOrder = "both",
   plotPartial = "Ds",
   starSize = 2,
-  starNudge_y = 0
+  starNudge_y = 0,
+  starLevels = c(0.1, 0.01, 0.001)
 )
 }
 \arguments{
@@ -87,12 +88,16 @@ as trustworthy, not-confounded signal. default = c("OK_sd", "OK_nc", "OK_d", "AD
 "feat", "meta", "none"), default: "both"}
 
 \item{plotPartial}{choose which effect site should be plotted.
-options: c("Ds", "partial", "partialRel, partialNorm"), default: "Ds"}
+options: c("Ds", "partial", "partialRel, partialNorm"), default: "Ds". See
+\link[GetPartialEfSizes]{GetPartialEfSizes} for details.}
 
 \item{starSize}{size of asterisks/circles in resulting heatmap, default: 2}
 
 \item{starNudge_y}{nudge y-axis position of asterisks/circles in
 resulting heatmap, default: 0}
+
+\item{starLevels}{define cutoffs for labeling significant associations with
+one, two, three asterisks/circles, default: c(0.1, 0.01, 0.001)}
 }
 \value{
 ggplot2 object

@@ -128,6 +128,23 @@ test_that("standard options parallel", {
 
 })
 
+
+test_that("clr_mode", {
+  feature <- reduced_feature
+  metaMat <- metaMatMetformin
+  expected_output <- readRDS("2026_09_01_example_output_clrMode.rds")
+
+  result <- MetaDeconfound(featureMat = feature,
+                           metaMat = metaMat,
+                           logLevel = "ERROR",
+                           returnLong = T,
+                           clr_mode = T,
+                           nnodes = 1
+  )
+  #saveRDS(result, "tests/testthat/2026_09_01_example_output_clrMode.rds")
+  expect_equal(result, expected_output)
+})
+
 test_that("random and fixed effects", {
   feature <- reduced_feature
   metaMat <- metaMatMetformin

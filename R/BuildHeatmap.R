@@ -46,10 +46,13 @@
 #' @param reOrder reorder features and/or metadata? possible options: c("both",
 #' "feat", "meta", "none"), default: "both"
 #' @param plotPartial choose which effect site should be plotted.
-#' options: c("Ds", "partial", "partialRel, partialNorm"), default: "Ds"
+#' options: c("Ds", "partial", "partialRel, partialNorm"), default: "Ds". See
+#' \link[GetPartialEfSizes]{GetPartialEfSizes} for details.
 #' @param starSize size of asterisks/circles in resulting heatmap, default: 2
 #' @param starNudge_y nudge y-axis position of asterisks/circles in
 #' resulting heatmap, default: 0
+#' @param starLevels define cutoffs for labeling significant associations with
+#' one, two, three asterisks/circles, default: c(0.1, 0.01, 0.001)
 #' @return ggplot2 object
 #' @details for more details and explanations please see the package vignette.
 #' @examples
@@ -90,7 +93,8 @@ BuildHeatmap <- function(metaDeconfOutput,
                          reOrder = "both",
                          plotPartial = "Ds", # 20240905 TB
                          starSize = 2, # 20241114 TB
-                         starNudge_y = 0
+                         starNudge_y = 0,
+                         starLevels = c(0.1, 0.01, 0.001)
                          ) {
 
 
@@ -103,6 +107,10 @@ BuildHeatmap <- function(metaDeconfOutput,
 
   if (length(trusted) == 0) {
     stop('"trusted" must contain at least one trusted status label')
+  }
+
+  if (starLevels[1] != q_cutoff) {
+    warning('First starLevels value does not match q_cutoff. Adjustment of starLevels might be needed!')
   }
 
   fromIntermed <- FALSE
@@ -173,7 +181,7 @@ BuildHeatmap <- function(metaDeconfOutput,
 
   # assign stars according to significance level
   effectSize$stars <- cut(fdr$Qs,
-                          breaks = c(-Inf, 0.001, 0.01, 0.1, Inf),
+                          breaks = c(-Inf, starLevels[3], starLevels[2], starLevels[1], Inf),
                           label=c("***", "**", "*", ""))
   # remove NS entries
   effectSize$stars[insignificant] <- ""
@@ -381,6 +389,13 @@ BuildHeatmap <- function(metaDeconfOutput,
     signifMeaning <- c("deconfounded")
     legendShapes <- c(8)
   }
+  star_legend_strings <- paste0("< ", starLevels)
+  star_legend_df <- data.frame(
+    x = 1,
+    y = 1,
+    star_level = factor(star_legend_strings,
+                        levels = star_legend_strings)
+  )
 
   # include added name colums into plots!!
   if (cuneiform) {
@@ -457,14 +472,34 @@ BuildHeatmap <- function(metaDeconfOutput,
                            midpoint = 0,
                            guide = guide_colorbar (display = "gradient"),
                            limits = c(lowerLim,upperLim)) +
-      # add significance stars/circles for deconfounded/confounded associations
+      #add significance stars/circles for deconfounded/confounded associations
       geom_text(aes(label= .data$stars, colour = .data$status),
                 size=starSize,
                 key_glyph = "point", nudge_y = starNudge_y) +
+      geom_text(
+        data = star_legend_df,
+        aes(x = x, y = y, alpha = star_level, label = star_level),
+        inherit.aes = FALSE,
+        size = 0
+      ) +
+      scale_alpha_manual(
+        name = "adjusted p-values",
+        values = setNames(c(1, 1, 1), star_legend_strings[1:3]),
+        labels = setNames(c("*", "**", "***"), star_legend_strings[1:3])
+      ) +
       scale_color_manual(name = "confounding status",
                          values = signifCol,
                          labels = signifMeaning) +
-      guides(color = guide_legend(override.aes = list(shape = legendShapes) ) ) +
+      guides(color = guide_legend(override.aes = list(shape = legendShapes)),
+             alpha = guide_legend(
+               override.aes = list(
+                 label = star_legend_strings,
+                 colour = "black",
+                 size = 3,
+                 hjust = 0
+               ),
+               nrow = 3)
+             ) +
       facet_grid(cols = vars(.data$groupingVar), space = "free_x", drop = T, scales = "free_x") +
       # make it pretty
       theme_classic() +
@@ -483,7 +518,6 @@ BuildHeatmap <- function(metaDeconfOutput,
 
             ) +
       labs(title="Summarizing heatmap",
-           subtitle="p.adjust-values: < 0.001 = ***, < 0.01 = **, < 0.1 = * ",
            x = "Metadata variables",
            y = "Omics features")
 
