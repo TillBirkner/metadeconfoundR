@@ -89,7 +89,7 @@ as trustworthy, not-confounded signal. default = c("OK_sd", "OK_nc", "OK_d", "AD
 
 \item{plotPartial}{choose which effect site should be plotted.
 options: c("Ds", "partial", "partialRel, partialNorm"), default: "Ds". See
-\link[GetPartialEfSizes]{GetPartialEfSizes} for details.}
+\link[metadeconfoundR]{GetPartialEfSizes} for details.}
 
 \item{starSize}{size of asterisks/circles in resulting heatmap, default: 2}
 

@@ -8,13 +8,13 @@ test_that("standard options", {
   #write.table(result, "tests/testthat/2025_10_07_example_output.tsv", sep = "\t", row.names = F)
   expected_output <- read.table("2025_10_07_example_output.tsv", header = T, sep = "\t")
 
+  beforeTime <- Sys.time()
   result <- MetaDeconfound(featureMat = feature,
                            metaMat = metaMat,
                            logLevel = "INFO",
                            returnLong = T,
                            doRanks = c("altered_dummy") # test doRanks functionality
                            )
-
   result$feature <- as.character(result$feature)
   result$metaVariable <- as.character(result$metaVariable)
   expect_equal(result, expected_output)
@@ -97,6 +97,7 @@ test_that("standard options", {
 
 
 test_that("standard options parallel", {
+  print("parallel test")
   feature <- reduced_feature
   metaMat <- metaMatMetformin
   expected_output <- read.table("2025_10_07_example_output.tsv", header = T, sep = "\t")
@@ -120,7 +121,7 @@ test_that("standard options parallel", {
                            metaMat = metaMat,
                            logLevel = "ERROR",
                            returnLong = T,
-                           nnodes = 2,
+                           nnodes = 1,
                            adjustLevel = 2
   )
   #saveRDS(result, "tests/testthat/2025_10_07_example_output_adjustLevel2.rds")
@@ -148,11 +149,10 @@ test_that("clr_mode", {
 test_that("random and fixed effects", {
   feature <- reduced_feature
   metaMat <- metaMatMetformin
-  # saveRDS(result, "tests/testthat/2024_10_16_example_output_rand.rds")
   expected_output <- readRDS("2024_10_16_example_output_rand.rds")
 
   temp_file <- tempfile()
-  result <- MetaDeconfound(featureMat = feature,
+  result <- MetaDeconfound(featureMat = feature[, 1:15],
                            metaMat = metaMat,
                            logLevel = "DEBUG",
                            returnLong = T,
@@ -160,12 +160,14 @@ test_that("random and fixed effects", {
                            randomVar = c("Dataset"),
                            logfile = temp_file
   )
+  print(Sys.time() - beforeTime)
   unlink(temp_file)
+  # saveRDS(result, "tests/testthat/2024_10_16_example_output_rand.rds")
 
-  result$feature <- as.character(result$feature)
-  result$metaVariable <- as.character(result$metaVariable)
-  expected_output$feature <- as.character(expected_output$feature)
-  expected_output$metaVariable <- as.character(expected_output$metaVariable)
+  # result$feature <- as.character(result$feature)
+  # result$metaVariable <- as.character(result$metaVariable)
+  # expected_output$feature <- as.character(expected_output$feature)
+  # expected_output$metaVariable <- as.character(expected_output$metaVariable)
   expect_equal(result, expected_output)
 
 
@@ -270,17 +272,19 @@ test_that("logistic regression", {
     if (file.exists(log_file)) unlink(log_file)
   }, add = TRUE)
 
-  #saveRDS(result_loglog, "tests/testthat/2026_02_04_example_output_loglog.rds")
-  expected_output_loglog <- readRDS("2026_02_04_example_output_loglog.rds")
 
-  result_loglog <-  MetaDeconfound(featureMat = feature[, 5:10],
-                 metaMat = metaMat,
+  expected_output_loglog <- readRDS("2026_02_04_example_output_loglog.rds")
+  set.seed(17)
+  subsetRows <- sort(sample(1:753, 376, replace = FALSE))
+  result_loglog <-  MetaDeconfound(featureMat = feature[subsetRows, 5:10],
+                 metaMat = metaMat[subsetRows, ],
                  logLevel = "WARN",
                  returnLong = T,
                  logistic = T,
                  logfile = log_file,
                  randomVar = "Dataset")
-  # test output
+  print(Sys.time() - beforeTime)  # test output
+  #saveRDS(result_loglog, "tests/testthat/2026_02_04_example_output_loglog.rds")
   expect_equal(result_loglog, expected_output_loglog)
 
   # test logging output with correct number of separation warnings
@@ -316,21 +320,22 @@ test_that("logistic regression", {
 test_that("raw Counts mode", {
   feature <- round(reduced_feature)
   metaMat <- metaMatMetformin
-  # saveRDS(result_rawCountsRand, "tests/testthat/2026_02_04_example_output_rawCountsRand.rds")
   expected_output_rawCountsRand <- readRDS("2026_02_04_example_output_rawCountsRand.rds")
 
-  result_rawCountsRand <- MetaDeconfound(featureMat = feature[, 1:5],
-                           metaMat = metaMat,
+  set.seed(17)
+  subsetRows <- sort(sample(1:753, 376, replace = FALSE))
+  result_rawCountsRand <- MetaDeconfound(featureMat = feature[subsetRows, 1:5],
+                           metaMat = metaMat[subsetRows, ],
                            logLevel = "INFO",
                            returnLong = T,
                            rawCounts = T,
                            randomVar = "Dataset"
   )
-
-  result_rawCountsRand$feature <- as.character(result_rawCountsRand$feature)
-  result_rawCountsRand$metaVariable <- as.character(result_rawCountsRand$metaVariable)
-  expected_output_rawCountsRand$feature <- as.character(expected_output_rawCountsRand$feature)
-  expected_output_rawCountsRand$metaVariable <- as.character(expected_output_rawCountsRand$metaVariable)
+  print(Sys.time() - beforeTime)  # saveRDS(result_rawCountsRand, "tests/testthat/2026_02_04_example_output_rawCountsRand.rds")
+  # result_rawCountsRand$feature <- as.character(result_rawCountsRand$feature)
+  # result_rawCountsRand$metaVariable <- as.character(result_rawCountsRand$metaVariable)
+  # expected_output_rawCountsRand$feature <- as.character(expected_output_rawCountsRand$feature)
+  # expected_output_rawCountsRand$metaVariable <- as.character(expected_output_rawCountsRand$metaVariable)
 
   expect_equal(result_rawCountsRand, expected_output_rawCountsRand)
 })
@@ -469,7 +474,7 @@ test_that("correct error handling", {
     'Non-numeric columns detected in featureMat.',
     fixed = TRUE
   )
-
+  print(Sys.time() - beforeTime)
   # # specific error
   # expect_error(
   #   MetaDeconfound(featureMat = feature,

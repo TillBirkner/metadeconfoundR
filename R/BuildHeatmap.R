@@ -47,7 +47,7 @@
 #' "feat", "meta", "none"), default: "both"
 #' @param plotPartial choose which effect site should be plotted.
 #' options: c("Ds", "partial", "partialRel, partialNorm"), default: "Ds". See
-#' \link[GetPartialEfSizes]{GetPartialEfSizes} for details.
+#' \link[metadeconfoundR]{GetPartialEfSizes} for details.
 #' @param starSize size of asterisks/circles in resulting heatmap, default: 2
 #' @param starNudge_y nudge y-axis position of asterisks/circles in
 #' resulting heatmap, default: 0
@@ -478,7 +478,7 @@ BuildHeatmap <- function(metaDeconfOutput,
                 key_glyph = "point", nudge_y = starNudge_y) +
       geom_text(
         data = star_legend_df,
-        aes(x = x, y = y, alpha = star_level, label = star_level),
+        aes(x = .data$x, y = .data$y, alpha = .data$star_level, label = .data$star_level),
         inherit.aes = FALSE,
         size = 0
       ) +
