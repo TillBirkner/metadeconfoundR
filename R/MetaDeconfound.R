@@ -356,6 +356,10 @@ MetaDeconfound <- function(featureMat,
                             clr_mode = FALSE
                             ) {
 
+  if (clr_mode) {
+    logger::log_warn(namespace = "metadeconfoundR", "clr_mode is being used! Make sure your data meets all requirements for parametric tests and linear model fits.")
+  }
+
   if (nnodes < 2) {
     logger::log_info(namespace = "metadeconfoundR", 'Computing in serial mode. Set nnodes > 1 do to switch to faster parallel processing.')
     nnodes <- 1

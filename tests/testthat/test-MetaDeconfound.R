@@ -137,7 +137,7 @@ test_that("clr_mode", {
 
   result <- MetaDeconfound(featureMat = feature,
                            metaMat = metaMat,
-                           logLevel = "ERROR",
+                           logLevel = "WARN",
                            returnLong = T,
                            clr_mode = T,
                            nnodes = 1
