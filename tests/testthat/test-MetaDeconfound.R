@@ -8,7 +8,7 @@ test_that("standard options", {
   #write.table(result, "tests/testthat/2025_10_07_example_output.tsv", sep = "\t", row.names = F)
   expected_output <- read.table("2025_10_07_example_output.tsv", header = T, sep = "\t")
 
-  beforeTime <- Sys.time()
+  #beforeTime <- Sys.time()
   result <- MetaDeconfound(featureMat = feature,
                            metaMat = metaMat,
                            logLevel = "INFO",
@@ -160,7 +160,7 @@ test_that("random and fixed effects", {
                            randomVar = c("Dataset"),
                            logfile = temp_file
   )
-  print(Sys.time() - beforeTime)
+  #print(Sys.time() - beforeTime)
   unlink(temp_file)
   # saveRDS(result, "tests/testthat/2024_10_16_example_output_rand.rds")
 
@@ -283,7 +283,7 @@ test_that("logistic regression", {
                  logistic = T,
                  logfile = log_file,
                  randomVar = "Dataset")
-  print(Sys.time() - beforeTime)  # test output
+  #print(Sys.time() - beforeTime)  # test output
   #saveRDS(result_loglog, "tests/testthat/2026_02_04_example_output_loglog.rds")
   expect_equal(result_loglog, expected_output_loglog)
 
@@ -331,7 +331,7 @@ test_that("raw Counts mode", {
                            rawCounts = T,
                            randomVar = "Dataset"
   )
-  print(Sys.time() - beforeTime)  # saveRDS(result_rawCountsRand, "tests/testthat/2026_02_04_example_output_rawCountsRand.rds")
+  #print(Sys.time() - beforeTime)  # saveRDS(result_rawCountsRand, "tests/testthat/2026_02_04_example_output_rawCountsRand.rds")
   # result_rawCountsRand$feature <- as.character(result_rawCountsRand$feature)
   # result_rawCountsRand$metaVariable <- as.character(result_rawCountsRand$metaVariable)
   # expected_output_rawCountsRand$feature <- as.character(expected_output_rawCountsRand$feature)
@@ -474,7 +474,7 @@ test_that("correct error handling", {
     'Non-numeric columns detected in featureMat.',
     fixed = TRUE
   )
-  print(Sys.time() - beforeTime)
+  #print(Sys.time() - beforeTime)
   # # specific error
   # expect_error(
   #   MetaDeconfound(featureMat = feature,
