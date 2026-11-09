@@ -57,6 +57,30 @@ GetPartialEfSizes <- function(featureMat,
                               randomVar = NA,
                               fixedVar = NA) {
   output <- metaDeconfOutput
+
+  # check proper naming of rows and columns
+  faultyColnamesMeta <- colnames(metaMat)[which(colnames(metaMat) != make.names(colnames(metaMat)))]
+  faultyColnamesFeat <- colnames(featureMat)[which(colnames(featureMat) != make.names(colnames(featureMat)))]
+  faultyRownamesMeta <-rownames(metaMat)[which(rownames(metaMat) != make.names(rownames(metaMat)))]
+  if (length(c(faultyColnamesMeta, faultyColnamesFeat, faultyRownamesMeta)) > 0) {
+    warning(
+      paste0(
+        "\n\tUnallowed characters detected in rownames and/or colnames of featureMat and/or metaMat!\n",
+        "\tmetadeconfoundR will try to remove these characters using the make.names() function."
+      )
+    )
+    colnames(metaMat) <- make.names(colnames(metaMat), unique = T)
+    colnames(featureMat) <- make.names(colnames(featureMat), unique = T)
+    rownames(metaMat) <- make.names(rownames(metaMat), unique = T)
+    rownames(featureMat) <- make.names(rownames(featureMat), unique = T)
+  }
+
+  missingFeat <- any(!unique(output$feature) %in% colnames(featureMat))
+  missingMet <- any(!unique(output$metaVariable) %in% colnames(metaMat))
+  if (missingFeat|missingMet) {
+    stop("Features and/or metadata variables not matching between featureMat/metaMat and metaDeconfOutput!")
+  }
+
   # add new columns to the metadeconfoundR output
   output$partial <- NA
   output$partialRel <- NA

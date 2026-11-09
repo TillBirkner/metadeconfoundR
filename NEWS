@@ -5,6 +5,7 @@ Version 1.0.7
   - BuildHeatmap()
     - switched asterisk number explanation from subtitle text to actual plot legend
     - new starLevels argument lets you control the cutoffs for plotting significant associations as 1,2,3 asterisks/circles.
+    - improved colnames/rownames handling in GetPartialEfSizes()
 
 Version 1.0.6
   - associations of metavariables found to be fully reducible to the supplied random/fixed effects allone are now removed from list potential confounders of other metavariables associated to the same feature.
